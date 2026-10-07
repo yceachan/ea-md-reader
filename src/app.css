@@ -12,9 +12,9 @@ svg { width: 18px; height: 18px; flex-shrink: 0; }
 .wordmark-dot { color: var(--kb-accent); }
 .brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .app-logo { width: 27px; height: 27px; }
-.toolbar .icon-button { background: var(--kb-accent); color: #fffdf6; }
-.toolbar .icon-button:hover:not(:disabled), .toolbar .icon-button.selected { background: var(--kb-accent-hover); color: #fffdf6; }
-.toolbar .icon-accent { stroke: #edab74; fill: #edab74; }
+.toolbar .icon-button { background: #fff; color: var(--kb-accent); }
+.toolbar .icon-button:hover:not(:disabled), .toolbar .icon-button.selected { background: var(--kb-accent-faint); color: var(--kb-accent); }
+.toolbar .icon-accent { stroke: currentColor; fill: currentColor; }
 .icon-accent { display: none; }
 .toolbar .icon-button .icon-accent { display: block; }
 .file-menu { position: relative; }
@@ -160,8 +160,8 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .toolbar { -webkit-app-region: drag; user-select: none; padding-right: 0; gap: 18px; }
 .toolbar button, .file-menu, .toolbar-actions, .window-controls { -webkit-app-region: no-drag; }
 .window-controls { display: flex; align-self: stretch; margin-left: 3px; border-left: 1px solid var(--kb-line); }
-.window-controls button { display: flex; align-items: center; justify-content: center; width: 39px; border: 0; background: none; color: var(--kb-text-muted); }
+.window-controls button { display: flex; align-items: center; justify-content: center; width: 39px; border: 0; background: #fff; color: var(--kb-accent); }
 .window-controls svg { width: 14px; height: 14px; }
-.window-controls button:hover { background: var(--kb-accent-faint); color: var(--kb-text); }
+.window-controls button:hover { background: var(--kb-accent-faint); color: var(--kb-accent); }
 .window-controls .window-close:hover { background: #b55b4e; color: white; }
 @media (max-width: 940px) { .toolbar { padding-right: 0; gap: 10px; } }
