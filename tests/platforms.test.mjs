@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, writeFile, rm, stat, access } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, readFile, writeFile, rm, stat, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -47,13 +47,6 @@ test('TODO 打包、安装和卸载入口在执行外部命令或写入前退出
       assert.match(result.stderr, /目前要求/);
     }
     await assert.rejects(access(marker), { code: 'ENOENT' });
-    const supportedPlatform = { linux: 'kde', darwin: 'mac' }[process.platform];
-    if (supportedPlatform) {
-      const failedBuild = spawnSync(process.execPath, ['scripts/pack.mjs', `--platform=${supportedPlatform}`], { cwd: resolve('.'), env, encoding: 'utf8' });
-      assert.equal(failedBuild.status, 1);
-      assert.match(failedBuild.stderr, /Command failed/);
-      assert.deepEqual(JSON.parse(await readFile(marker, 'utf8')), ['run', 'build']);
-    }
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
@@ -66,11 +59,17 @@ test('KDE 模块保留安装产物、启动器、desktop 校验与卸载行为',
     const data = join(directory, 'data');
     const state = join(directory, 'state');
     const calls = join(directory, 'calls');
+    const root = join(directory, 'repository');
+    await mkdir(join(root, 'assets/icons'), { recursive: true });
+    for (const file of ['emd.svg', 'emd.desktop']) await cp(resolve('assets', file), join(root, 'assets', file));
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=', 'base64');
+    await writeFile(join(root, 'assets/emd.png'), png);
+    for (const size of [16, 24, 32, 48, 64, 128, 256, 512]) await writeFile(join(root, `assets/icons/${size}.png`), png);
     await mkdir(source); await mkdir(commands);
     await writeFile(join(source, 'emd'), '#!/bin/sh\nexit 0\n');
     for (const name of ['update-desktop-database', 'kbuildsycoca6']) await writeFile(join(commands, name), `#!/bin/sh\nprintf '%s\\n' '${name}' >> '${calls}'\n`, { mode: 0o755 });
     const env = { ...process.env, XDG_DATA_HOME: data, XDG_STATE_HOME: state, XDG_CURRENT_DESKTOP: 'KDE', PATH: `${commands}:${process.env.PATH}` };
-    const context = JSON.stringify({ root: resolve('.'), home, source });
+    const context = JSON.stringify({ root, home, source });
     execFileSync(process.execPath, ['--input-type=module', '-e', "import { install } from './scripts/platforms/kde.mjs'; await install(JSON.parse(process.argv[1]));", context], { env });
     const launcher = join(home, '.local/bin/emd');
     assert.ok((await stat(join(data, 'emd/emd'))).mode & 0o111);

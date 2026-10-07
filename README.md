@@ -93,6 +93,7 @@ HTML 在隔离的 iframe 中运行。页面脚本无法访问应用接口、Node
 
 ```sh
 npm ci
+npm run build
 npm run pack
 npm run install:local
 ```
@@ -108,7 +109,7 @@ node scripts/install.mjs --platform=kde /路径/到/解压目录
 
 不指定平台时按当前机器选择：Linux GNOME 会命中 `gnome` 的 TODO 入口，其他 Linux 环境沿用 KDE 配置（包括没有桌面环境的构建机器）；macOS 自动使用 `mac`；Windows 命中 `windows` 的 TODO 入口。显式选择 KDE 时仍要求 Linux 主机，本轮没有实现跨系统构建。TODO 平台在构建、外部命令和安装文件写入前退出。
 
-产物在 `release/linux-unpacked/` 和 `release/emd-0.1.0-linux-x64.tar.gz`。安装脚本将已打包应用复制到 `${XDG_DATA_HOME:-~/.local/share}/emd`，创建 `~/.local/bin/emd` 和用户级 desktop/MIME 入口，无需 root 权限。确认 `~/.local/bin` 在 `PATH` 中即可运行命令。
+`pack` 生成 `release/linux-unpacked/`；发行压缩包使用 `npm run dist -- --platform=kde`，生成 `release/emd-0.1.0-linux-x64.tar.gz`。两者均使用已有构建。安装脚本将已打包应用复制到 `${XDG_DATA_HOME:-~/.local/share}/emd`，创建 `~/.local/bin/emd` 和用户级 desktop/MIME 入口，无需 root 权限。确认 `~/.local/bin` 在 `PATH` 中即可运行命令。
 
 便携压缩包解压后可直接运行其中的 `emd` 二进制；使用终端脱离功能及桌面入口，请使用上述安装脚本。也可以给安装脚本指定解压后的目录：
 
@@ -135,11 +136,12 @@ npm run uninstall:local
 
 ```sh
 npm ci
+npm run build
 npm run pack -- --platform=mac
 npm run install:local -- --platform=mac
 ```
 
-在 Mac 上也可以省略 `--platform=mac`。产物为：
+在 Mac 上也可以省略 `--platform=mac`。`pack` 只生成应用目录；`npm run dist -- --platform=mac` 另生成发行档案：
 
 - Apple Silicon：`release/mac-arm64/emd.app`、`release/emd-0.1.0-mac-arm64.dmg` 与 `.zip`。
 - Intel：`release/mac/emd.app`、`release/emd-0.1.0-mac-x64.dmg` 与 `.zip`。
@@ -184,12 +186,34 @@ GNOME 和 Windows 的打包安装入口仍待接入。GitHub Actions 在 Linux x
 
 ## 开发与验证
 
+| 命令 | 能力与产物 | 构建行为 |
+| --- | --- | --- |
+| `dev` | Vite + Electron；React/CSS 热更新，主进程或 preload 修改后重启 | 准备图标与原生程序，无 Vite 发布构建 |
+| `start` | 当前 Electron 源码 + 已有 `dist/`，可传入文档路径 | 无 |
+| `check` | TypeScript 类型检查 | 无产物 |
+| `build` | 图标、原生程序与发布版渲染产物 | 完整构建，不执行检查或测试 |
+| `build:renderer` | 生成 `dist/` | 仅 Vite |
+| `build:native` | Linux 辅助程序，输出到 `native-build/`；其他平台跳过 | CMake 增量编译 |
+| `build:icons` | 从 SVG 生成窗口与桌面 PNG | 仅图标 |
+| `test` | Node 与 Electron UI 检查 | 无 |
+| `test:node` | 文件、设置、平台、编辑会话等契约检查 | 无 |
+| `test:ui` | 已有构建的 Electron UI 检查；Linux 自动创建隔离显示 | 无 |
+| `test:packaged` | 已有应用包的启动、安装与文件打开检查 | 无 |
+| `pack` | 可运行的应用目录，供安装和打包测试 | 使用已有构建 |
+| `dist` | Linux tar.gz、macOS DMG/ZIP，包含应用目录 | 使用已有构建 |
+| `install:local` | 安装已有应用目录，注册用户级命令与桌面入口 | 无 |
+| `uninstall:local` | 移除用户级安装，保留配置与日志 | 无 |
+
+`dev` 使用 `.dev/profile/` 独立配置，退出时清理 Electron 与 Vite 进程。原生 C++ 修改后运行 `build:native` 并重启开发进程。`start` 不监听源码变化，也不更新已有渲染产物；缺少产物时，运行、测试和打包入口会报告对应准备命令。`pack`、`dist`、安装与卸载保留 `--platform` 参数。
+
 ```sh
-npm start
-npm test
+npm run dev                              # 日常开发
+npm start -- 文档.md                      # 运行已有构建
+npm run check && npm run build && npm test # 验证当前源码
+npm run build && npm run pack && npm run install:local # 本地安装
 ```
 
-自动验证优先运行 `npm run build` 与 `npm run test:node`。Electron UI 使用独立虚拟显示或隔离 CI 桌面，不复用用户当前图形会话；Linux 需要 `xprop` 和测试用窗口管理器。`npm test` 覆盖共享文件、平台、设置与编辑会话契约，以及阅读、HTML 隔离、命令、滚轮标签访问、覆盖层和编辑器交互。临时文件使用系统临时目录，截图、进程日志和追踪保存到 `test-results/`。
+Electron UI 使用独立虚拟显示或隔离 CI 桌面；Linux 需要 `xvfb-run`、`openbox` 与 `xprop`。测试参数直接透传，例如 `npm run test:ui -- tests/ui.spec.cjs`。macOS/Windows 使用隔离的原生桌面会话。截图、进程日志和追踪保存到 `test-results/`。
 
 主进程负责文件与原生菜单，沙箱化渲染进程只通过限定的 IPC 接口操作已打开的文件。Markdown 中的 HTML 经 DOMPurify 清理，Markdown 文档脚本不会执行。独立 HTML 文件通过专用协议加载原始文件快照。HTML 的内容安全策略允许内嵌脚本与样式，iframe 沙箱隔离应用权限。应用自身的脚本策略保持不变。
 

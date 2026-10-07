@@ -49,13 +49,12 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y xvfb openbox x11-utils desktop-file-utils libgtk-3-0 libnss3 libasound2t64 cmake g++ extra-cmake-modules libkf5kio-dev
       - run: npm ci
-      - name: Build native application and archives
+      - run: npm run check
+      - run: npm run build
+      - name: Package native application and archives
         if: matrix.platform != 'windows'
         id: package
-        run: npm run pack -- --platform=${{ matrix.platform }}
-      - name: Build shared reader on Windows
-        if: runner.os == 'Windows'
-        run: npm run build
+        run: npm run dist -- --platform=${{ matrix.platform }}
       - name: Report Windows installation scope
         if: runner.os == 'Windows'
         run: Write-Output 'Windows runs shared build, file, command and Electron UI checks. Windows packaging and installation remain unsupported and are checked as explicit failures.'
@@ -77,27 +76,27 @@ jobs:
         if: runner.os == 'Linux'
         env:
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/reader
-        run: xvfb-run -a -s '-screen 0 2560x1440x24' sh -c 'openbox >/tmp/emd-openbox.log 2>&1 & npx playwright test --reporter=line,html'
+        run: npm run test:ui -- --reporter=line,html
       - name: Packaged app on Linux
         if: always() && runner.os == 'Linux' && steps.package.outcome == 'success'
         env:
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/packaged
-        run: xvfb-run -a -s '-screen 0 2560x1440x24' npx playwright test --config=playwright.packaged.config.cjs --reporter=line,html
+        run: npm run test:packaged -- --reporter=line,html
       - name: Native Electron UI on macOS
         if: runner.os == 'macOS'
         env:
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/reader
-        run: npx playwright test --reporter=line,html
+        run: npm run test:ui -- --reporter=line,html
       - name: Native Electron UI on Windows
         if: runner.os == 'Windows'
         env:
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/reader
-        run: npx playwright test --reporter=line,html
+        run: npm run test:ui -- --reporter=line,html
       - name: Packaged app and system file dispatch
         if: always() && runner.os == 'macOS' && steps.package.outcome == 'success'
         env:
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/packaged
-        run: npx playwright test --config=playwright.packaged.config.cjs --reporter=line,html
+        run: npm run test:packaged -- --reporter=line,html
       - name: Preserve reports and native artifacts
         if: always()
         uses: actions/upload-artifact@v4

@@ -11,6 +11,14 @@ const { editorSessions } = require('./editor-sessions.cjs');
 const { developerTools } = require('./devtools.cjs');
 const platform = selectPlatform();
 const commandSet = createCommandSet(platform.keyboard);
+const devUrl = !app.isPackaged ? process.env.EMD_DEV_URL : undefined;
+const appUrl = devUrl ?? 'emd://app/index.html';
+if (devUrl) {
+  const url = new URL(devUrl);
+  if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port || url.pathname !== '/index.html' || url.search || url.hash || url.username || url.password) {
+    throw new Error('开发页面必须是本次 Vite 服务的 127.0.0.1 HTTP 地址。');
+  }
+}
 
 app.setName('emd');
 nativeTheme.themeSource = 'light';
@@ -66,7 +74,7 @@ function getDocument(id) {
 }
 function checkedHandler(channel, handler) {
   ipcMain.handle(channel, async (event, ...args) => {
-    if (event.sender !== window.webContents || event.senderFrame.url !== 'emd://app/index.html') throw new Error('无效的应用请求。');
+    if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame || event.senderFrame.url !== appUrl) throw new Error('无效的应用请求。');
     try { return await handler(...args); }
     catch (error) { showError(error); return null; }
   });
@@ -218,11 +226,12 @@ else {
     }
     window.on('focus', () => { void sessions.refresh(); });
     window.on('closed', () => sessions.dispose());
-    window.webContents.on('will-navigate', (event) => event.preventDefault());
+    window.webContents.on('will-navigate', (event, url) => { if (!devUrl || url !== appUrl) event.preventDefault(); });
     window.webContents.on('will-frame-navigate', (event) => {
       // Only the app can load an opened HTML snapshot. Block other frame destinations.
       const url = new URL(event.url);
-      if (event.initiator?.url !== 'emd://app/index.html' || url.protocol !== 'emd-page:' ||
+      if (devUrl && event.isMainFrame && event.url === appUrl) return;
+      if (event.initiator?.url !== appUrl || url.protocol !== 'emd-page:' ||
           url.pathname !== '/index.html' || documents.get(url.host)?.kind !== 'html') event.preventDefault();
     });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -246,6 +255,10 @@ else {
       else throw new Error('无效的窗口操作。');
     });
     checkedHandler('emd:ready', () => {
+      if (rendererReady) {
+        for (const document of documents.values()) send('emd:document', publicDocument(document));
+        if (activeDocumentId) send('emd:activate', activeDocumentId);
+      }
       rendererReady = true;
       send('emd:window-state', window.isMaximized());
       sendDisplayWidth();
@@ -264,7 +277,7 @@ else {
       const value = await settings.profile();
       if (!value) return null;
       const { ['profile-photo']: photo, ...profile } = value;
-      const photoPath = path.isAbsolute(photo) ? photo : path.join(__dirname, '..', 'dist', photo);
+      const photoPath = path.isAbsolute(photo) ? photo : path.join(__dirname, '..', devUrl ? 'public' : 'dist', photo);
       const image = nativeImage.createFromBuffer(await fs.readFile(photoPath));
       if (image.isEmpty()) throw new Error(`头像图片无法读取：${photo}`);
       return { ...profile, photoUrl: image.toDataURL() };
@@ -384,7 +397,7 @@ else {
     window.once('ready-to-show', () => {
       window.show();
     });
-    await window.loadURL('emd://app/index.html');
+    await window.loadURL(appUrl);
     await openPaths(fileArguments(process.argv, process.cwd()));
   }).catch((error) => { console.error(error); dialog.showErrorBox('emd 启动失败', error.message); app.exit(1); });
 }

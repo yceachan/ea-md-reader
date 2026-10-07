@@ -2,6 +2,7 @@ import { homedir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parsePlatformArgs, selectPlatform } from './platforms.mjs';
+import { requireBuild, requirePackage } from './artifacts.mjs';
 
 async function main() {
   const { platform: requested, rest } = parsePlatformArgs(process.argv.slice(2));
@@ -12,6 +13,10 @@ async function main() {
   }
   const platform = selectPlatform(requested);
   const adapter = await platform.load();
+  if (!uninstall) {
+    if (!sources.length) await requirePackage();
+    if (platform.os === 'linux') await requireBuild(['icons']);
+  }
   const context = {
     root: resolve(dirname(fileURLToPath(import.meta.url)), '..'),
     home: homedir(),
