@@ -1,12 +1,12 @@
 # ADR-006：一个调试命令，两处触发入口
 
-状态：拟定，未实施。已知需求和平台范围见 [raw issue](issue.md)。本文维护调试命令与菜单分组，参数验证和测试步骤由 route 维护。
+状态：已实施并关闭。需求与平台范围见 [issue](issue.md)，最终交付见 [close](close.md)。本文维护调试命令与菜单分组，参数验证和测试步骤由 route 维护。
 
 ## 命令与主进程
 
 在 ADR-001 的语义命令配置中增加 `openDeveloperTools`，绑定 F12。快捷键处理与菜单动作进入同一分派点。F12 使用窗口级输入，不注册系统全局快捷键，不改变 F11 全屏命令。
 
-桌面主进程对 Reader 主窗口调用 `webContents.openDevTools({ mode: 'detach' })`。独立控制台保持 Reader 正文宽度，便于比较样式变化。已有控制台时复用并激活，手动关闭后允许再次打开。这个入口只表达打开，不增加用户未请求的第二套切换绑定。
+桌面主进程为控制台创建独立 BrowserWindow，通过 `setDevToolsWebContents` 绑定 Reader 主窗口，再以 detach 模式打开。已有控制台恢复最小化并显示、激活；关闭后销毁自己的窗口，下次命令重新创建。Reader 关闭同步销毁控制台，避免旧实例残留。独立控制台保持 Reader 正文宽度，这个入口只表达打开，不新增切换绑定。[Electron 接口说明](https://www.electronjs.org/docs/latest/api/web-contents#contentssetdevtoolswebcontentsdevtoolswebcontents)明确自定义 DevTools 内容需由调用方管理销毁。
 
 渲染层只发出受限调试动作，不传任意窗口 id、页面 URL 或 webContents。主进程仍验证 IPC 来源，文档 HTML 无权调用。打包构建保留这项用户调试能力，不把入口限定在开发服务器运行期间。
 

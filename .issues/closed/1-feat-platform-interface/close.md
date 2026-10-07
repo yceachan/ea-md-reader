@@ -8,4 +8,4 @@ Linux 构建、共享文件/命令、Electron 阅读与交互及打包入口可�
 
 四平台验证入口已建立，macOS 实机编辑行为按用户确认交由 PR 中 @Lysssyo 协助，见 [mac-followup.md](mac-followup.md)。该交付不宣称 macOS 自动化全绿，也不包含 Windows/GNOME 安装器或公证发布。
 
-独立审查、验证与固定来源的证据见 [artifacts](artifacts/)。最终提交的必需检查与合入状态以 PR #2 为准。
+独立审查、验证与固定来源的证据见 [artifacts](artifacts)。最终提交的必需检查与合入状态以 PR #2 为准。

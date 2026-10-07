@@ -1,6 +1,6 @@
 # 3：编辑器配置与自动重读实施路线
 
-状态：3.1–3.4 已实现，3.0 已有 Linux VS Code 等待探测；3.5 的 Linux 集成已验证，macOS/Windows 原生编辑器验证保留。需求与验收引用 [raw issue](issue.md)，编辑会话决策引用 [ADR-003](adr.md)。本文维护实施阶段与验证方式。
+状态：Linux 首版实施与集成已完成，按本轮范围关闭；macOS/Windows 原生编辑器仍待实机验证。需求引用 [issue](issue.md)，机制引用 [ADR-003](adr.md)，最终交付见 [close](close.md)。
 
 ## 依赖与顺序
 

@@ -4,4 +4,4 @@
 
 共享语义命令、运行时端口、主进程工作区路径关系和四平台 CI 入口已经建立。后续 F12 使用同一命令分派，布局与编辑器按各自 issue 增量添加实际平台能力；Android 按 issue 5 单独接入 native bridge 与文档 URI 授权，现有 Electron 端口不宣称已覆盖 Android。
 
-审查与验证记录见 [artifacts](artifacts/)。原始日志仅保留本地；其他 issue 仍保持暂停。
+审查与验证记录见 [artifacts](artifacts)。原始日志仅保留本地；其他 issue 仍保持暂停。

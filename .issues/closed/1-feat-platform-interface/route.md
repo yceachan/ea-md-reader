@@ -4,7 +4,7 @@
 
 先冻结原工作区来源，独立审查并修复 macOS PR。在最终提交完成原生验证后 squash 合入主线。随后从主线建立唯一 issue 1 集成分支，汇总 HTML 来源、共享命令、运行时平台模块与 Windows 路径修复；审查组合差异，Linux 开发基线与共享接口审查通过后 squash 合入；macOS 实机行为按用户确认在 PR 中跟进。
 
-辅助 worktree 统一置于 `~/worktrees/ea-md-reader/root/`。`integration-issue1` 是当前唯一集成出口，其余目录保留已固定的来源或暂停的原型。主工作区中的另一项未提交主题工作独立保留。
+issue 1 合入后，桌面收尾成果统一回到 `/home/pi/work/ea-md-reader` 的 `main`。2026-10-07 清理全部辅助 worktree、本地 PR/probe 分支与旧 stash；历史来源已存入仓库外的恢复档案，暂停的 Android 需求继续由 issue 5 维护。
 
 | 运行机 | 共享验证 | 原生追加验证 |
 | --- | --- | --- |
