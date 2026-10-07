@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, shell, nativeTheme, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, shell, nativeTheme, nativeImage, screen } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -6,6 +6,7 @@ const { fileArguments, readDocument, publicDocument, saveDocument, scanWorkspace
 
 const { selectPlatform } = require('./platforms/index.cjs');
 const { createCommandSet, consumeInput } = require('./commands.cjs');
+const { settingsStore, editorKind } = require('./settings.cjs');
 const platform = selectPlatform();
 const commandSet = createCommandSet(platform.keyboard);
 
@@ -88,6 +89,7 @@ async function dispatchCommand(id, documentId = activeDocumentId) {
   else if (id === 'zoomOut') window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 0.5);
   else if (id === 'zoomReset') window.webContents.setZoomLevel(0);
   else send('emd:action', { id: command.id, documentId });
+  if (['zoomIn', 'zoomOut', 'zoomReset'].includes(id)) sendDisplayWidth();
   return true;
 }
 function commandItem(id) {
@@ -99,6 +101,13 @@ function focusWindow() {
   if (window.isMinimized()) window.restore();
   window.show();
   window.focus();
+}
+function sendDisplayWidth() {
+  send('emd:display-width', screen.getDisplayMatching(window.getBounds()).workAreaSize.width / window.webContents.getZoomFactor());
+}
+async function chooseEditor() {
+  const result = await dialog.showOpenDialog(window, { title: '选择编辑器', properties: ['openFile'] });
+  return result.canceled ? null : platform.validateEditor(result.filePaths[0]);
 }
 
 if (!isPrimary) app.quit();
@@ -153,6 +162,7 @@ else {
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
     toggleFullscreen = platform.createFullscreenToggle(window);
+    const settings = settingsStore(path.join(app.getPath('userData'), 'setting.toml'));
     window.webContents.on('will-navigate', (event) => event.preventDefault());
     window.webContents.on('will-frame-navigate', (event) => {
       // Only the app can load an opened HTML snapshot. Block other frame destinations.
@@ -170,7 +180,10 @@ else {
     });
     window.on('maximize', () => send('emd:window-state', true));
     window.on('unmaximize', () => send('emd:window-state', false));
-    window.on('resize', () => send('emd:window-state', window.isMaximized()));
+    window.on('resize', () => { send('emd:window-state', window.isMaximized()); sendDisplayWidth(); });
+    window.on('move', sendDisplayWidth);
+    screen.on('display-metrics-changed', sendDisplayWidth);
+    window.on('closed', () => screen.removeListener('display-metrics-changed', sendDisplayWidth));
     checkedHandler('emd:window', (action) => {
       if (action === 'minimize') window.minimize();
       else if (action === 'maximize') { if (window.isMaximized()) window.unmaximize(); else window.maximize(); }
@@ -180,10 +193,18 @@ else {
     checkedHandler('emd:ready', () => {
       rendererReady = true;
       send('emd:window-state', window.isMaximized());
+      sendDisplayWidth();
       for (const [channel, payload] of pending.splice(0)) window.webContents.send(channel, payload);
       return commandSet.hints;
     });
     checkedHandler('emd:command', dispatchCommand);
+    checkedHandler('emd:settings', () => settings.get());
+    checkedHandler('emd:editor-choice', async (kind) => {
+      editorKind(kind);
+      const program = await chooseEditor();
+      return program === null ? settings.get() : settings.setEditor(kind, program);
+    });
+    checkedHandler('emd:editor-clear', (kind) => settings.setEditor(editorKind(kind), null));
     checkedHandler('emd:active-document', (id) => {
       if (id !== null) getDocument(id);
       activeDocumentId = id;
@@ -193,10 +214,11 @@ else {
     checkedHandler('emd:workspace', async (id, requestedRoot) => {
       const document = getDocument(id);
       if (requestedRoot !== undefined && !workspaceRoots.has(requestedRoot)) throw new Error('无效的工作区请求。');
-      const { root } = workspaceContext(document.path, requestedRoot);
-      const workspace = await scanWorkspace(root, document.path);
+      const context = workspaceContext(document.path, requestedRoot);
+      const { root } = context;
       workspaceRoots.add(root);
-      return workspace;
+      try { return await scanWorkspace(root, document.path); }
+      catch (error) { return { ...context, name: path.basename(root), nodes: null, error: error.message }; }
     });
     checkedHandler('emd:workspace-open', async (root, filePath, newTab, activeId) => {
       if (!workspaceRoots.has(root) || typeof filePath !== 'string' || typeof newTab !== 'boolean') throw new Error('无效的工作区请求。');
@@ -206,10 +228,11 @@ else {
       if (!newTab) { getDocument(activeId); document.id = activeId; }
       documents.set(document.id, document);
       send('emd:document', publicDocument(document));
+      return true;
     });
     checkedHandler('emd:workspace-menu', async (root, filePath, activeId) => {
-      if (!workspaceRoots.has(root) || typeof filePath !== 'string') throw new Error('无效的工作区请求。');
-      const canonicalPath = await fs.realpath(filePath);
+      if (!workspaceRoots.has(root) || (filePath !== null && typeof filePath !== 'string')) throw new Error('无效的工作区请求。');
+      const canonicalPath = filePath === null ? root : await fs.realpath(filePath);
       if (canonicalPath !== root && !isWithin(root, canonicalPath)) throw new Error('文件不在当前工作区内。');
       getDocument(activeId);
       const isFile = (await fs.stat(canonicalPath)).isFile();
@@ -219,8 +242,8 @@ else {
           { label: '在新标签页打开', click: () => send('emd:workspace-action', { action: 'new-tab', path: canonicalPath }) },
           { type: 'separator' },
         ] : []),
-        { label: '在文件管理器中显示', click: () => shell.showItemInFolder(canonicalPath) },
-        { label: '刷新工作区', click: () => send('emd:workspace-action', { action: 'refresh' }) },
+        ...(filePath === null ? [] : [{ label: '在文件管理器中显示', click: () => shell.showItemInFolder(canonicalPath) }]),
+        { label: '重新载入工作树', click: () => send('emd:workspace-action', { action: 'refresh' }) },
       ]).popup({ window });
     });
     checkedHandler('emd:save', async (id) => {

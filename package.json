@@ -13,7 +13,7 @@
     "install:local": "node scripts/install.mjs",
     "uninstall:local": "node scripts/install.mjs --uninstall",
     "build:icons": "node scripts/render-icons.mjs",
-    "test:node": "node --test tests/files.test.cjs tests/platforms.test.mjs tests/mac-platform.test.mjs tests/commands.test.cjs tests/runtime-platforms.test.cjs",
+    "test:node": "node --test tests/files.test.cjs tests/platforms.test.mjs tests/mac-platform.test.mjs tests/commands.test.cjs tests/runtime-platforms.test.cjs tests/settings.test.cjs",
     "test:ui": "playwright test"
   },
   "devDependencies": {
@@ -58,5 +58,8 @@
   },
   "engines": {
     "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "smol-toml": "1.9.0"
   }
 }

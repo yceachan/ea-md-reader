@@ -7,6 +7,10 @@ function subscribe(channel, listener) {
 contextBridge.exposeInMainWorld('emd', {
   window: (action) => ipcRenderer.invoke('emd:window', action),
   onWindowState: (listener) => subscribe('emd:window-state', listener),
+  onDisplayWidth: (listener) => subscribe('emd:display-width', listener),
+  settings: () => ipcRenderer.invoke('emd:settings'),
+  chooseEditor: (kind) => ipcRenderer.invoke('emd:editor-choice', kind),
+  clearEditor: (kind) => ipcRenderer.invoke('emd:editor-clear', kind),
   ready: () => ipcRenderer.invoke('emd:ready'),
   command: (id, documentId) => ipcRenderer.invoke('emd:command', id, documentId),
   activeDocument: (id) => ipcRenderer.invoke('emd:active-document', id),

@@ -3,16 +3,19 @@ import Article from './components/Article';
 import Outline from './components/Outline';
 import Workspace from './components/Workspace';
 import PanelResize from './components/PanelResize';
+import Settings from './components/Settings';
+import logo from '../assets/emd.svg';
 import type { RenderResult } from './lib/markdown';
 
 const MIN_READING_WIDTH = 360;
 const AUTO_READING_WIDTH = 520;
 const PANEL_GUTTER = 5;
 
-function Icon({ name }: { name: 'workspace' | 'menu' | 'open' | 'save' | 'close' | 'refresh' | 'outline' | 'search' | 'minimize' | 'maximize' | 'restore' }) {
+function Icon({ name }: { name: 'workspace' | 'menu' | 'settings' | 'open' | 'save' | 'close' | 'refresh' | 'outline' | 'search' | 'minimize' | 'maximize' | 'restore' }) {
   const paths = {
     workspace: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M5.5 8h1M5.5 12h1" /></>,
     menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+    settings: <><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" /><circle cx="16" cy="17" r="3" /></>,
     open: <><path d="M3 7V5a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v2" /><path d="M3 7v12h16l3-10H7L3 19" /></>,
     save: <><path d="M12 3v12m-4-4 4 4 4-4M4 15v5h16v-5" /></>,
     minimize: <path d="M5 12h14" />,
@@ -23,7 +26,7 @@ function Icon({ name }: { name: 'workspace' | 'menu' | 'open' | 'save' | 'close'
     outline: <><path d="M8 5h13M8 12h13M8 19h13" /><circle cx="3" cy="5" r=".5" /><circle cx="3" cy="12" r=".5" /><circle cx="3" cy="19" r=".5" /></>,
     search: <><circle cx="10" cy="10" r="6" /><path d="m15 15 6 6" /></>,
   };
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}<circle className="icon-accent" cx="20" cy="4" r="1" /></svg>;
 }
 
 export default function App() {
@@ -31,9 +34,11 @@ export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [headings, setHeadings] = useState<Record<string, RenderResult['headings']>>({});
   const [maximized, setMaximized] = useState(false);
-  const [panels, setPanels] = useState({ left: true, right: true });
+  const [panels, setPanels] = useState({ left: false, right: false });
   const [panelWidths, setPanelWidths] = useState({ left: 240, right: 240 });
   const [availableWidth, setAvailableWidth] = useState(window.innerWidth);
+  const [displayWidth, setDisplayWidth] = useState(window.screen.availWidth);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const workspaceRoot = useRef<string | undefined>(undefined);
   const [hints, setHints] = useState<CommandHints | null>(null);
   const [commandAvailability, setCommandAvailability] = useState<CommandAvailability | null>(null);
@@ -50,20 +55,33 @@ export default function App() {
   const commands = useRef<(action: CommandAction) => void>(() => {});
   const workspaceActions = useRef<(action: WorkspaceAction) => void>(() => {});
   const workspaceElement = useRef<HTMLElement>(null);
-  const widthsRef = useRef(panelWidths);
-  widthsRef.current = panelWidths;
+  const tabbar = useRef<HTMLElement>(null);
+  const workspaceTrigger = useRef<HTMLButtonElement>(null);
+  const outlineTrigger = useRef<HTMLButtonElement>(null);
   const active = tabs.find((tab) => tab.id === activeId);
   const leftWidth = Math.min(panelWidths.left, availableWidth - MIN_READING_WIDTH - PANEL_GUTTER);
   const rightWidth = Math.min(panelWidths.right, availableWidth - MIN_READING_WIDTH - PANEL_GUTTER);
+  const leftOverlay = availableWidth < panelWidths.left + AUTO_READING_WIDTH + PANEL_GUTTER;
+  const rightOverlay = availableWidth <= displayWidth / 2 || availableWidth < (panels.left && !leftOverlay ? leftWidth + PANEL_GUTTER : 0) + panelWidths.right + AUTO_READING_WIDTH + PANEL_GUTTER;
+  const overlaySide = active && panels.left && leftOverlay ? 'left' : active?.kind === 'markdown' && panels.right && rightOverlay ? 'right' : null;
+
+  function closeOverlay(side = overlaySide) {
+    if (!side) return;
+    setPanels((current) => ({ ...current, [side]: false }));
+    (side === 'left' ? workspaceTrigger : outlineTrigger).current?.focus();
+  }
 
   function togglePanel(side: 'left' | 'right') {
     const other = side === 'left' ? 'right' : 'left';
     setPanels((current) => ({ ...current, [side]: !current[side],
-      ...(!current[side] && availableWidth < panelWidths.left + panelWidths.right + MIN_READING_WIDTH + PANEL_GUTTER ? { [other]: false } : {}),
+      ...(!current[side] && (side === 'left' ? leftOverlay : rightOverlay) && (other === 'left' ? leftOverlay : rightOverlay) ? { [other]: false } : {}),
     }));
   }
-  function openWorkspaceFile(path: string, newTab: boolean) {
-    if (workspace && activeId) void window.emd.workspaceOpen(workspace.root, path, newTab, activeId);
+  async function openWorkspaceFile(path: string, newTab: boolean) {
+    if (workspace && activeId) {
+      const opened = await window.emd.workspaceOpen(workspace.root, path, newTab, activeId);
+      if (opened && leftOverlay) closeOverlay('left');
+    }
   }
   workspaceActions.current = ({ action, path }) => {
     if (action === 'refresh') setWorkspaceRevision((value) => value + 1);
@@ -98,6 +116,7 @@ export default function App() {
       saveAs: () => { void save(documentId); }, closeTab: () => { void close(documentId); }, reloadDocument: () => { void reload(documentId); },
       toggleFileMenu: () => setFileMenu((value) => !value), findInDocument: () => { setFinding(true); findInput.current?.focus(); },
       nextTab: () => nextTab(1), previousTab: () => nextTab(-1),
+      openSettings: () => setSettingsOpen(true),
     };
     actions[id]?.();
   };
@@ -105,6 +124,7 @@ export default function App() {
   useEffect(() => {
     const cleanups = [
       window.emd.onWindowState(setMaximized),
+      window.emd.onDisplayWidth(setDisplayWidth),
       window.emd.onDocument((document) => {
         setTabs((current) => current.some((tab) => tab.id === document.id) ? current.map((tab) => tab.id === document.id ? document : tab) : [...current, document]);
         setActiveId(document.id); setAnchor(null);
@@ -119,19 +139,26 @@ export default function App() {
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
   useEffect(() => {
-    let previous: { left: boolean; right: boolean } | null = null;
-    const observer = new ResizeObserver(([entry]) => {
-      const width = entry.contentRect.width;
-      const sizes = widthsRef.current;
-      const next = { left: width >= sizes.left + AUTO_READING_WIDTH + PANEL_GUTTER, right: width >= sizes.left + sizes.right + AUTO_READING_WIDTH + PANEL_GUTTER };
-      setAvailableWidth(width);
-      const old = previous;
-      setPanels((current) => ({ left: old?.left === next.left ? current.left : next.left, right: old?.right === next.right ? current.right : next.right }));
-      previous = next;
-    });
+    const observer = new ResizeObserver(([entry]) => setAvailableWidth(entry.contentRect.width));
     observer.observe(workspaceElement.current!);
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    if (leftOverlay && rightOverlay && panels.left && panels.right) setPanels((current) => ({ ...current, right: false }));
+  }, [leftOverlay, rightOverlay, panels.left, panels.right]);
+  useEffect(() => {
+    const element = tabbar.current;
+    if (!element) return;
+    function scroll(event: WheelEvent) {
+      if (event.ctrlKey || !event.deltaY) return;
+      event.preventDefault();
+      const amount = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaMode === 2 ? element!.clientWidth * event.deltaY : event.deltaY;
+      element!.scrollLeft += amount;
+    }
+    element.addEventListener('wheel', scroll, { passive: false });
+    return () => element.removeEventListener('wheel', scroll);
+  }, [tabs.length > 0]);
+  useEffect(() => { if (activeId) document.getElementById(`tab-${activeId}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }, [activeId]);
   useEffect(() => { void window.emd.activeDocument(activeId).then(setCommandAvailability); }, [activeId]);
   useEffect(() => {
     if (!active) { setWorkspace(null); setWorkspaceLoading(false); return; }
@@ -140,7 +167,7 @@ export default function App() {
     void window.emd.workspace(active.id, workspaceRoot.current).then((result) => {
       if (!canceled) {
         if (result) workspaceRoot.current = result.root;
-        setWorkspace(result); setWorkspaceLoading(false);
+        if (result) setWorkspace(result); setWorkspaceLoading(false);
       }
     });
     return () => { canceled = true; };
@@ -169,11 +196,10 @@ export default function App() {
 
   const sections = activeId ? headings[activeId] ?? [] : [];
   return <div className="app" onKeyDown={(event) => {
-    if (event.key === 'Escape') { setFileMenu(false); setFinding(false); setMessage(null); }
+    if (!settingsOpen && event.key === 'Escape') { closeOverlay(); setFileMenu(false); setFinding(false); setMessage(null); }
   }}>
     <header className="toolbar" onDoubleClick={(event) => { if (!(event.target as Element).closest('button, .file-menu')) void window.emd.window('maximize'); }}>
-      <button className={`icon-button workspace-trigger ${panels.left && active ? 'selected' : ''}`} title="显示 / 隐藏工作区" aria-label="显示工作区" aria-pressed={panels.left && !!active} disabled={!active} onClick={() => togglePanel('left')}><Icon name="workspace" /></button>
-      <span className="wordmark">Ea<span className="wordmark-dot">.</span>Md<span className="wordmark-dot">.</span>Reader</span>
+      <span className="brand"><img className="app-logo" src={logo} alt="" /><span className="wordmark">Ea<span className="wordmark-dot">.</span>Md<span className="wordmark-dot">.</span>Reader</span></span>
       <div className="file-actions">
         <div className="file-menu">
           <button className="icon-button menu-trigger" title={`文件菜单 · ${hints?.toggleFileMenu ?? ''}`} aria-label="文件" aria-haspopup="menu" aria-expanded={fileMenu} onClick={() => { void window.emd.command('toggleFileMenu'); }}><Icon name="menu" /></button>
@@ -183,18 +209,21 @@ export default function App() {
             <div className="menu-divider" />
             <button role="menuitem" disabled={!commandAvailability?.closeTab} onClick={() => { setFileMenu(false); void window.emd.command('closeTab'); }}>关闭标签页 <kbd>{hints?.closeTab}</kbd></button>
             <div className="menu-divider" />
+            <button role="menuitem" onClick={() => { setFileMenu(false); void window.emd.command('openSettings'); }}>设置…</button>
             <button role="menuitem" onClick={() => { setFileMenu(false); void window.emd.command('openDeveloperTools'); }}>开发者控制台 <kbd>{hints?.openDeveloperTools}</kbd></button>
             <div className="menu-divider" />
             <button role="menuitem" onClick={() => { void window.emd.command('quit'); }}>退出 <kbd>{hints?.quit}</kbd></button>
           </div>}
         </div>
+        <button ref={workspaceTrigger} className={`icon-button workspace-trigger ${panels.left && active ? 'selected' : ''}`} title="显示 / 隐藏工作区" aria-label="显示工作区" aria-pressed={panels.left && !!active} disabled={!active} onClick={() => togglePanel('left')}><Icon name="workspace" /></button>
+        <button className="icon-button" title="设置" aria-label="设置" onClick={() => { void window.emd.command('openSettings'); }}><Icon name="settings" /></button>
         <button className="icon-button" title={`打开文件 · ${hints?.openDocument ?? ''}`} aria-label="打开文件" onClick={() => { void window.emd.command('openDocument'); }}><Icon name="open" /></button>
         <button className="icon-button" title={`另存为 · ${hints?.saveAs ?? ''}`} aria-label="另存为" disabled={!commandAvailability?.saveAs} onClick={() => { void window.emd.command('saveAs'); }}><Icon name="save" /></button>
       </div>
       <span className="toolbar-path" title={active?.path}>{active?.path ?? 'Markdown / HTML 阅读器'}</span>
       <div className="toolbar-actions">
         <button className="icon-button" title={`查找 · ${hints?.findInDocument ?? ''}`} aria-label="查找" disabled={!commandAvailability?.findInDocument} onClick={() => { void window.emd.command('findInDocument'); }}><Icon name="search" /></button>
-        <button className={`icon-button ${panels.right && active?.kind === 'markdown' ? 'selected' : ''}`} title="显示目录" aria-label="显示目录" aria-pressed={panels.right && active?.kind === 'markdown'} disabled={active?.kind !== 'markdown'} onClick={() => togglePanel('right')}><Icon name="outline" /></button>
+        <button ref={outlineTrigger} className={`icon-button ${panels.right && active?.kind === 'markdown' ? 'selected' : ''}`} title="显示目录" aria-label="显示目录" aria-pressed={panels.right && active?.kind === 'markdown'} disabled={active?.kind !== 'markdown'} onClick={() => togglePanel('right')}><Icon name="outline" /></button>
       </div>
       <div className="window-controls">
         <button aria-label="最小化窗口" title="最小化" onClick={() => { void window.emd.window('minimize'); }}><Icon name="minimize" /></button>
@@ -202,7 +231,7 @@ export default function App() {
         <button className="window-close" aria-label="关闭窗口" title="关闭" onClick={() => { void window.emd.window('close'); }}><Icon name="close" /></button>
       </div>
     </header>
-    {tabs.length > 0 && <nav className="tabbar" role="tablist" aria-label="已打开的文件">
+    {tabs.length > 0 && <nav ref={tabbar} className="tabbar" role="tablist" aria-label="已打开的文件">
       {tabs.map((tab) => <div className={`tab ${tab.id === activeId ? 'active' : ''}`} key={tab.id}
         onMouseDown={(event) => { if (event.button === 1) event.preventDefault(); }}
         onAuxClick={(event) => { if (event.button === 1) { event.preventDefault(); void window.emd.command('closeTab', tab.id); } }}>
@@ -213,12 +242,14 @@ export default function App() {
     </nav>}
     {finding && <div className="findbar"><Icon name="search" /><input ref={findInput} aria-label="查找内容" placeholder="在文档中查找…" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void window.emd.find(query, !event.shiftKey); } }} /><button title="上一个" onClick={() => { void window.emd.find(query, false); }}>↑</button><button title="下一个" onClick={() => { void window.emd.find(query, true); }}>↓</button><button className="icon-button" aria-label="关闭查找" onClick={() => setFinding(false)}><Icon name="close" /></button></div>}
     <main className="workspace" ref={workspaceElement}>
+      {overlaySide && <button className="panel-backdrop" aria-label="关闭面板覆盖层" onClick={() => closeOverlay()} />}
       {active && panels.left && <>
-        <aside className="workspace-sidebar sidebar" aria-label="工作区面板" style={{ width: leftWidth }}>
+        <aside className={`workspace-sidebar sidebar ${leftOverlay ? 'panel-overlay left' : ''}`} aria-label="工作区面板" style={{ width: leftOverlay ? panelWidths.left : leftWidth }}>
+          {leftOverlay && <button className="panel-close" aria-label="关闭工作区面板" onClick={() => closeOverlay('left')}><Icon name="close" /></button>}
           <Workspace workspace={workspace} loading={workspaceLoading} activePath={active.path} onOpen={openWorkspaceFile}
-            onMenu={(path) => { if (workspace) void window.emd.workspaceMenu(workspace.root, path, active.id); }} onRefresh={() => setWorkspaceRevision((value) => value + 1)} />
+            onMenu={(path) => { if (workspace) void window.emd.workspaceMenu(workspace.root, path, active.id); }} />
         </aside>
-        <PanelResize side="left" width={leftWidth} maxWidth={Math.min(420, availableWidth - (panels.right && active.kind === 'markdown' ? rightWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(left) => setPanelWidths((current) => ({ ...current, left }))} />
+        {!leftOverlay && <PanelResize side="left" width={leftWidth} maxWidth={Math.min(420, availableWidth - (panels.right && !rightOverlay && active.kind === 'markdown' ? rightWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(left) => setPanelWidths((current) => ({ ...current, left }))} />}
       </>}
       <div className="reading-area">
       {!tabs.length && <section className="welcome">
@@ -243,16 +274,19 @@ export default function App() {
         </article>}
       </section>)}
       </div>
-      {active?.kind === 'markdown' && <aside className={`outline sidebar ${panels.right ? '' : 'collapsed'}`} aria-label="目录面板" style={{ width: panels.right ? rightWidth : 0 }}>
-        {panels.right && <PanelResize side="right" width={rightWidth} maxWidth={Math.min(420, availableWidth - (panels.left ? leftWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(right) => setPanelWidths((current) => ({ ...current, right }))} />}
-        <button className="panel-toggle" aria-label={`${panels.right ? '折叠' : '展开'}目录面板`} title={`${panels.right ? '折叠' : '展开'}目录面板`} aria-expanded={panels.right} onClick={() => togglePanel('right')}>
+      {active?.kind === 'markdown' && <aside className={`outline sidebar ${panels.right ? (rightOverlay ? 'panel-overlay right' : '') : 'collapsed'}`} aria-label="目录面板" style={{ width: panels.right ? rightOverlay ? panelWidths.right : rightWidth : 0 }}>
+        {panels.right && !rightOverlay && <PanelResize side="right" width={rightWidth} maxWidth={Math.min(420, availableWidth - (panels.left && !leftOverlay ? leftWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(right) => setPanelWidths((current) => ({ ...current, right }))} />}
+        {panels.right && rightOverlay && <button className="panel-close" aria-label="关闭目录面板" onClick={() => closeOverlay('right')}><Icon name="close" /></button>}
+        {!rightOverlay && <button className="panel-toggle" aria-label={`${panels.right ? '折叠' : '展开'}目录面板`} title={`${panels.right ? '折叠' : '展开'}目录面板`} aria-expanded={panels.right} onClick={() => togglePanel('right')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={panels.right ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} /></svg>
-        </button>
+        </button>}
         <div className="outline-content" hidden={!panels.right}><Outline key={active.path} headings={sections} onSelect={(id) => {
         document.getElementById(`panel-${activeId}`)?.querySelectorAll<HTMLElement>('[id]').forEach((element) => { if (element.id === id) element.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        if (rightOverlay) closeOverlay('right');
         }} /></div>
       </aside>}
     </main>
+    {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} error={message?.error ? message.text : undefined} />}
     {message && <div className={`notification ${message.error ? 'error' : ''}`} role={message.error ? 'alert' : 'status'}><span>{message.text}</span><button className="icon-button" aria-label="关闭提示" onClick={() => setMessage(null)}><Icon name="close" /></button></div>}
     <footer className="statusbar"><span><span className="status-dot" />{active ? '只读' : '就绪'}</span><span>{tabs.length ? `${tabs.length} 个标签页` : 'emd 0.1.0'}</span><span className="status-spacer" />{active && <><span>UTF-8</span><button className="status-reload" title={`重新读取文件 · ${hints?.reloadDocument ?? ''}`} aria-label="重新读取文件" onClick={() => { void window.emd.command('reloadDocument'); }}><Icon name="refresh" /></button>{active.kind === 'markdown' && <span className="progress">{progress}%</span>}</>}</footer>
   </div>;

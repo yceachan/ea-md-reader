@@ -1,4 +1,5 @@
 module.exports = {
+  validateEditor: require('./editor.cjs').validateExecutable,
   keyboard: require('./control-keyboard.cjs'),
   createFullscreenToggle(window) {
     // Electron 44's transparent Windows window changes bounds and emits events,

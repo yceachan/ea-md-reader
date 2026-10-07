@@ -215,6 +215,7 @@ test('全屏使用本平台绑定，工作区祖先由主进程返回', async ()
     application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, entry, nested] });
     const page = await application.firstWindow();
     await expect(page.getByRole('tab')).toHaveCount(2);
+    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
     await page.getByRole('tab').first().click();
     await expect(page.locator('.workspace-root')).toHaveAttribute('title', directory);
     await page.getByRole('tab').last().click();

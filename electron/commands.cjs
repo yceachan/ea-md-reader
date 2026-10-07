@@ -14,6 +14,7 @@ const definitions = [
   { id: 'toggleFullscreen', label: '全屏', platformBinding: 'fullscreen' },
   { id: 'toggleFileMenu', label: '文件菜单', key: 'F', modifiers: ['Alt'] },
   { id: 'openDeveloperTools', label: '开发者控制台', key: 'F12', modifiers: [] },
+  { id: 'openSettings', label: '设置…' },
 ];
 
 function createCommandSet(keyboard) {
@@ -24,6 +25,7 @@ function createCommandSet(keyboard) {
     Alt: { input: 'alt', accelerator: 'Alt', hint: keyboard.altHint },
   };
   const items = definitions.map((definition) => {
+    if (!definition.key && !definition.platformBinding) return { ...definition, hint: '' };
     const binding = definition.platformBinding ? keyboard[definition.platformBinding] : definition;
     const mapped = binding.modifiers.map((name) => modifiers[name]);
     return { ...definition, key: binding.key, inputModifiers: mapped.map((item) => item.input),
@@ -40,6 +42,7 @@ function createCommandSet(keyboard) {
     if (input.type !== 'keyDown' || input.isComposing) return null;
     const key = input.key.toLowerCase();
     return items.find((command) => {
+      if (!command.key) return false;
       const plus = command.id === 'zoomIn';
       const keyMatches = plus ? ['+', '='].includes(key) : key === command.key.toLowerCase();
       if (!keyMatches) return false;

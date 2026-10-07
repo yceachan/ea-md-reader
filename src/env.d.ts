@@ -1,9 +1,15 @@
+/// <reference types="vite/client" />
+
 type ReaderDocument = { id: string; path: string; name: string; text: string; } & (
   { kind: 'markdown' } | { kind: 'html'; pageUrl: string }
 );
 interface WorkspaceNode { name: string; path: string; children?: WorkspaceNode[]; }
-interface ReaderWorkspace { root: string; name: string; nodes: WorkspaceNode[]; activeAncestors: string[]; }
-type ReaderCommand = 'openDocument' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu' | 'openDeveloperTools';
+type ReaderWorkspace = { root: string; name: string; activeAncestors: string[]; } & (
+  { nodes: WorkspaceNode[]; error?: never } | { nodes: null; error: string }
+);
+type ReaderCommand = 'openDocument' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu' | 'openDeveloperTools' | 'openSettings';
+type EditorKind = 'markdown' | 'html';
+interface ReaderSettings { editors: Record<EditorKind, { program: string } | null>; }
 type CommandHints = Record<ReaderCommand, string>;
 type CommandAvailability = Record<ReaderCommand, boolean>;
 interface CommandAction { id: ReaderCommand; documentId: string | null; }
@@ -12,12 +18,16 @@ interface Window {
   emd: {
     window(action: 'minimize' | 'maximize' | 'close'): Promise<void>;
     onWindowState(listener: (maximized: boolean) => void): () => void;
+    onDisplayWidth(listener: (width: number) => void): () => void;
+    settings(): Promise<ReaderSettings | null>;
+    chooseEditor(kind: EditorKind): Promise<ReaderSettings | null>;
+    clearEditor(kind: EditorKind): Promise<ReaderSettings | null>;
     ready(): Promise<CommandHints>;
     command(id: ReaderCommand, documentId?: string): Promise<boolean>;
     activeDocument(id: string | null): Promise<CommandAvailability>;
     workspace(id: string, root?: string): Promise<ReaderWorkspace | null>;
-    workspaceOpen(root: string, path: string, newTab: boolean, activeId: string): Promise<void>;
-    workspaceMenu(root: string, path: string, activeId: string): Promise<void>;
+    workspaceOpen(root: string, path: string, newTab: boolean, activeId: string): Promise<boolean | null>;
+    workspaceMenu(root: string, path: string | null, activeId: string): Promise<void>;
     onWorkspaceAction(listener: (action: WorkspaceAction) => void): () => void;
     save(id: string): Promise<string | null>;
     close(id: string): Promise<void>;
@@ -31,5 +41,3 @@ interface Window {
     onError(listener: (message: string) => void): () => void;
   };
 }
-
-/// <reference types="vite/client" />

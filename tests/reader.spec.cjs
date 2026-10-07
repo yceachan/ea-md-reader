@@ -22,6 +22,7 @@ test('HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和
     const page = await application.firstWindow();
     const frame = page.frameLocator('.document-panel:not([hidden]) .html-page');
     await expect(frame.locator('h1')).toHaveText('交互页面');
+    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
     await expect(page.getByRole('tab', { selected: true })).toContainText('HTML');
     await expect(page.getByRole('treeitem', { name: 'HTML 交互 页面.HTML' })).toBeVisible();
     await expect(page.getByRole('button', { name: '显示目录', exact: true })).toBeDisabled();
@@ -62,7 +63,9 @@ test('HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和
     await page.getByRole('treeitem', { name: 'MD 入口.md' }).click();
     await expect(page.getByRole('tab')).toHaveCount(1);
     await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('Markdown 入口');
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
     await page.getByRole('treeitem', { name: 'HTML 交互 页面.HTML' }).click({ modifiers: ['Alt'] });
     await expect(page.getByRole('tab')).toHaveCount(2);
     await expect(frame.locator('h1')).toHaveText('已重新读取 HTML');
@@ -117,16 +120,16 @@ test('渲染、只读、多标签、另存为、重读、第二次启动及相�
     expect(await page.evaluate(() => typeof window.require)).toBe('undefined');
     await expect(page.locator('.vp-doc iframe, .vp-doc script')).toHaveCount(0);
     await page.locator('.document-panel').evaluate((panel) => { panel.scrollTop = 0; });
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
     await page.getByRole('button', { name: '折叠 静心阅读', exact: true }).click();
     await expect(page.getByRole('navigation', { name: '本文目录' }).getByRole('button', { name: '代码与公式', exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: '展开 静心阅读', exact: true }).click();
     await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(700, 650));
+    await expect(page.locator('.outline.panel-overlay')).toBeVisible();
+    await page.getByRole('button', { name: '关闭目录面板', exact: true }).click();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toHaveCount(0);
-    await page.getByRole('button', { name: '展开目录面板', exact: true }).click();
-    await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
-    await page.getByRole('button', { name: '折叠目录面板', exact: true }).click();
-    await expect(page.getByRole('button', { name: '展开目录面板', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '显示目录', exact: true })).toHaveAttribute('aria-pressed', 'false');
     expect(await page.locator('.app').evaluate((element) => getComputedStyle(element).borderRadius)).toBe('10px');
     await application.evaluate(({ BrowserWindow, screen }) => {
       const window = BrowserWindow.getAllWindows()[0];
@@ -210,6 +213,19 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
     application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, fixture], env: { ...process.env, XDG_CONFIG_HOME: path.join(directory, 'config'), XDG_CACHE_HOME: path.join(directory, 'cache') } });
     const page = await application.firstWindow();
     page.on('pageerror', (error) => errors.push(error.message));
+    async function wideWindow() {
+      await application.evaluate(({ BrowserWindow, screen }) => {
+        const window = BrowserWindow.getAllWindows()[0];
+        const area = screen.getDisplayMatching(window.getBounds()).workAreaSize;
+        window.setSize(Math.floor(area.width * 0.8), Math.min(850, area.height - 100));
+        window.webContents.setZoomFactor(window.getContentBounds().width / 1600);
+      });
+      await page.evaluate(() => window.emd.ready());
+      await expect.poll(() => page.evaluate(() => window.innerWidth)).toBeGreaterThan(1500);
+    }
+    await wideWindow();
+    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
     const tree = page.getByRole('navigation', { name: '工作区文件' });
     await expect(tree.getByRole('treeitem', { name: 'MD 入口.md', exact: true })).toBeVisible();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
@@ -237,12 +253,14 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
       };
     });
     await tree.getByRole('treeitem', { name: 'MD 正文.md' }).click({ button: 'right' });
-    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['在当前标签页打开', '在新标签页打开', '', '在文件管理器中显示', '刷新工作区']);
+    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['在当前标签页打开', '在新标签页打开', '', '在文件管理器中显示', '重新载入工作树']);
     await application.evaluate(() => global.workspaceMenu.items[0].click());
     await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('正文');
     await expect(page.getByRole('tab')).toHaveCount(3);
     await fs.writeFile(path.join(directory, '新文档.md'), '# 新文档');
-    await page.getByRole('button', { name: '刷新工作区', exact: true }).click();
+    await page.locator('.workspace-sidebar .sidebar-scroll').click({ button: 'right', position: { x: 40, y: 250 } });
+    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['重新载入工作树']);
+    await application.evaluate(() => global.workspaceMenu.items[0].click());
     await expect(tree.getByRole('treeitem', { name: 'MD 新文档.md' })).toBeVisible();
     await expect(page.locator('.workspace-root')).toHaveAttribute('title', directory);
     await page.evaluate(async ({ root, outside }) => { await window.emd.workspaceOpen(root, outside, false, document.querySelector('[role=tab][aria-selected=true]').id.slice(4)); }, { root: directory, outside });
@@ -289,31 +307,33 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
     const outlineBox = await page.locator('.outline').boundingBox();
     expect(Math.abs(overlay.y + overlay.height / 2 - outlineBox.y - outlineBox.height / 2)).toBeLessThan(1);
 
-    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(900, 650));
-    await expect(page.getByRole('navigation', { name: '本文目录' })).toHaveCount(0);
-    await expect(tree).toBeVisible();
-    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(620, 650));
+    await application.evaluate(({ BrowserWindow }) => {
+      const window = BrowserWindow.getAllWindows()[0];
+      window.webContents.setZoomFactor(1);
+      window.setSize(620, 650);
+    });
+    await expect(page.locator('.workspace-sidebar.panel-overlay')).toBeVisible();
+    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
     await expect(tree).toHaveCount(0);
+    const narrowWidth = (await dimensions()).reading;
     await page.getByRole('button', { name: '显示工作区', exact: true }).click();
     await expect(tree).toBeVisible();
-    expect((await dimensions()).reading).toBeGreaterThanOrEqual(360);
-    await page.getByRole('button', { name: '展开目录面板', exact: true }).click();
+    expect((await dimensions()).reading).toBeCloseTo(narrowWidth, 0);
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
     await expect(tree).toHaveCount(0);
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
-    expect((await dimensions()).reading).toBeGreaterThanOrEqual(360);
-    await page.screenshot({ path: test.info().outputPath('emd-workspace-narrow.png') });
-    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1180, 850));
+    expect((await dimensions()).reading).toBeCloseTo(narrowWidth, 0);
+    await page.getByRole('button', { name: '关闭目录面板', exact: true }).click();
+    await wideWindow();
+    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
     await expect(tree).toBeVisible();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
-    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
-    await expect(tree).toHaveCount(0);
-    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
-    await expect(tree).toBeVisible();
-    await page.screenshot({ path: test.info().outputPath('emd-workspace-wide.png') });
 
     // Zoom supplies a 2360px layout viewport even when the window manager caps native window sizes.
-    const viewportWidth = await page.evaluate(() => window.innerWidth);
+    const viewportWidth = await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getContentBounds().width);
     await application.evaluate(({ BrowserWindow }, factor) => BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(factor), viewportWidth / 2360);
+    await page.evaluate(() => window.emd.ready());
     await expect.poll(async () => (await dimensions()).total).toBeGreaterThan(2300);
     async function checkWideContent() {
       const sizes = await page.locator('.document-panel:not([hidden])').evaluate((panel) => {
