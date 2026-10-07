@@ -8,6 +8,7 @@ const { selectPlatform } = require('./platforms/index.cjs');
 const { createCommandSet, consumeInput } = require('./commands.cjs');
 const { settingsStore, editorKind } = require('./settings.cjs');
 const { editorSessions } = require('./editor-sessions.cjs');
+const { developerTools } = require('./devtools.cjs');
 const platform = selectPlatform();
 const commandSet = createCommandSet(platform.keyboard);
 
@@ -20,6 +21,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 let window;
 let toggleFullscreen;
+let openDeveloperTools;
 let rendererReady = false;
 let activeDocumentId = null;
 let applicationMenu = null;
@@ -85,7 +87,7 @@ async function dispatchCommand(id, documentId = activeDocumentId) {
   if (id === 'openDocument') await openDialog();
   else if (id === 'quit') app.quit();
   else if (id === 'toggleFullscreen') toggleFullscreen();
-  else if (id === 'openDeveloperTools') window.webContents.openDevTools({ mode: 'detach' });
+  else if (id === 'openDeveloperTools') openDeveloperTools();
   else if (id === 'zoomIn') window.webContents.setZoomLevel(window.webContents.getZoomLevel() + 0.5);
   else if (id === 'zoomOut') window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 0.5);
   else if (id === 'zoomReset') window.webContents.setZoomLevel(0);
@@ -163,6 +165,7 @@ else {
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
     toggleFullscreen = platform.createFullscreenToggle(window);
+    openDeveloperTools = developerTools(window);
     const settings = settingsStore(path.join(app.getPath('userData'), 'setting.toml'));
     const sessions = editorSessions({ documents, changed: (document) => send('emd:document-update', publicDocument(document)), onError: showError });
     async function editFile(filePath, choose) {

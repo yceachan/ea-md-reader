@@ -9,26 +9,53 @@ test('F12 与文件菜单打开独立控制台，复用、关闭重开且不改�
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-devtools-'));
   let application;
   try {
-    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`] });
+    const packaged = process.env.EMD_PACKAGED === '1';
+    application = await launch({ executablePath: packaged ? path.resolve('release/linux-unpacked/emd') : undefined, args: [...(packaged ? [] : [path.resolve('.')]), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`] });
     const page = await application.firstWindow();
     await expect(page.getByRole('button', { name: '打开 Markdown / HTML' })).toBeVisible();
     const before = await page.locator('.reading-area').boundingBox();
-    const opened = () => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.isDevToolsOpened());
+    const opened = () => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().some(item => item.webContents.getURL().startsWith('devtools://') && item.isVisible()));
     await application.evaluate(({ BrowserWindow }) => {
       const contents = BrowserWindow.getAllWindows()[0].webContents;
       contents.sendInputEvent({ type: 'keyDown', keyCode: 'F12' });
       contents.sendInputEvent({ type: 'keyUp', keyCode: 'F12' });
     });
     await expect.poll(opened).toBe(true);
-    const id = await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.devToolsWebContents.id);
+    const id = await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(item => item.webContents.getURL().startsWith('devtools://')).webContents.id);
     await page.getByRole('button', { name: '文件', exact: true }).click();
     await page.getByRole('menuitem', { name: '开发者控制台' }).click();
-    expect(await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.devToolsWebContents.id)).toBe(id);
+    expect(await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(item => item.webContents.getURL().startsWith('devtools://')).webContents.id)).toBe(id);
     expect(await page.locator('.reading-area').boundingBox()).toEqual(before);
-    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.closeDevTools());
+    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(item => item.webContents.getURL().startsWith('devtools://')).close());
     await expect.poll(opened).toBe(false);
     await page.evaluate(() => window.emd.command('openDeveloperTools'));
     await expect.poll(opened).toBe(true);
+    for (let index = 0; index < 5; index++) {
+      await application.evaluate(({ BrowserWindow }) => {
+        BrowserWindow.getAllWindows().find(item => item.webContents.getURL().startsWith('devtools://')).minimize();
+      });
+      await page.getByRole('button', { name: '文件', exact: true }).click();
+      await page.getByRole('menuitem', { name: '开发者控制台' }).click();
+      await expect.poll(() => application.evaluate(({ BrowserWindow }) => {
+        const tools = BrowserWindow.getAllWindows().find(item => item.webContents.getURL().startsWith('devtools://'));
+        return tools.isVisible() && !tools.isMinimized();
+      })).toBe(true);
+      await application.evaluate(({ BrowserWindow }) => {
+        BrowserWindow.getAllWindows().find(item => item.webContents.getURL().startsWith('devtools://')).close();
+      });
+      await expect.poll(opened).toBe(false);
+      await application.evaluate(({ BrowserWindow }) => {
+        const contents = BrowserWindow.getAllWindows().find(item => item.webContents.getURL() === 'emd://app/index.html').webContents;
+        contents.sendInputEvent({ type: 'keyDown', keyCode: 'F12' }); contents.sendInputEvent({ type: 'keyUp', keyCode: 'F12' });
+      });
+      await expect.poll(opened).toBe(true);
+      expect(await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
+      expect(await page.locator('.reading-area').boundingBox()).toEqual(before);
+    }
+    await application.context().tracing.stop({ path: test.info().outputPath('electron-context-trace.zip') });
+    const readerClosed = application.waitForEvent('close');
+    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(item => item.webContents.getURL() === 'emd://app/index.html').close());
+    await readerClosed; application = null;
   } finally {
     if (application) await close(application);
     await fs.rm(directory, { recursive: true, force: true });
