@@ -67,24 +67,67 @@ test('真实键盘、按钮和原生菜单共用命令，查找输入保留复�
     await expect.poll(() => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFocused())).toBe(true);
     await search.focus();
     clipboard = await application.evaluate(({ clipboard }) => clipboard.readText());
-    await search.fill('原生复制');
-    async function edit(keyCode, action) {
-      await key(keyCode, [primary]);
-      if (process.platform === 'darwin') {
-        // sendInputEvent does not dispatch Cocoa edit selectors (electron#6338).
-        // Check that our handler leaves the input untouched, then invoke the
-        // same native first-responder action used by the menu's edit role.
+    await application.evaluate(({ BrowserWindow }) => {
+      const contents = BrowserWindow.getAllWindows()[0].webContents;
+      const findInPage = contents.findInPage.bind(contents);
+      global.findQueries = new Map();
+      global.completedFindQuery = null;
+      contents.findInPage = (query, options) => {
+        const requestId = findInPage(query, options);
+        global.findQueries.set(requestId, query);
+        return requestId;
+      };
+      contents.on('found-in-page', (_event, result) => {
+        if (result.finalUpdate) global.completedFindQuery = global.findQueries.get(result.requestId);
+      });
+    });
+    async function focusAfterSearch(query) {
+      await application.evaluate(() => { global.completedFindQuery = null; });
+      await search.fill(query);
+      await expect.poll(() => application.evaluate(() => global.completedFindQuery)).toBe(query);
+      await application.evaluate(({ app, BrowserWindow }) => {
+        const window = BrowserWindow.getAllWindows()[0];
+        app.focus({ steal: true });
+        window.focus();
+        window.webContents.focus();
+      });
+      if (process.platform === 'darwin') await expect.poll(() => application.evaluate(({ BrowserWindow }) => {
+        const window = BrowserWindow.getAllWindows()[0];
+        return window.isFocused() && window.webContents.isFocused();
+      })).toBe(true);
+      // Click establishes the native editable responder as well as DOM focus.
+      await search.click();
+      await expect(search).toBeFocused();
+    }
+    if (process.platform === 'darwin') {
+      // Verify key forwarding separately from Cocoa editing. Use fixture text
+      // so a synthetic paste cannot insert the user's original clipboard.
+      await application.evaluate(({ clipboard }) => clipboard.writeText('路由探针'));
+      for (const keyCode of ['A', 'C', 'V']) {
+        await key(keyCode, [primary]);
         const input = await application.evaluate(() => global.commandInputs.at(-1));
         expect(input.key.toLowerCase()).toBe(keyCode.toLowerCase());
         expect(input.prevented).toBe(false);
-        await application.evaluate(({ Menu }, action) => Menu.sendActionToFirstResponder(action), action);
       }
     }
+    async function edit(keyCode, action) {
+      if (process.platform === 'darwin') {
+        await expect(search).toBeFocused();
+        await application.evaluate(({ Menu }, action) => Menu.sendActionToFirstResponder(action), action);
+      } else await key(keyCode, [primary]);
+    }
+    // The debounced find can move DOM focus while window focus and input
+    // selection offsets remain unchanged. Complete it before native editing.
+    await focusAfterSearch('原生复制');
+    await application.evaluate(({ clipboard }) => clipboard.writeText('等待复制'));
     await edit('A', 'selectAll:');
     await expect.poll(() => search.evaluate((input) => input.selectionEnd - input.selectionStart)).toBe(4);
     await edit('C', 'copy:');
     await expect.poll(() => application.evaluate(({ clipboard }) => clipboard.readText())).toBe('原生复制');
-    await search.fill('');
+    // Replace different text so this assertion proves paste actually happened.
+    await focusAfterSearch('等待粘贴');
+    await edit('A', 'selectAll:');
+    await expect.poll(() => search.evaluate((input) => input.selectionEnd - input.selectionStart)).toBe(4);
     await edit('V', 'paste:');
     await expect(search).toHaveValue('原生复制');
     await page.getByRole('button', { name: '关闭查找' }).click();
@@ -120,11 +163,13 @@ test('真实键盘、按钮和原生菜单共用命令，查找输入保留复�
     await expect(search).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {
-    if (application) {
-      if (clipboard !== undefined) await application.evaluate(({ clipboard }, original) => clipboard.writeText(original), clipboard);
-      await close(application);
-    }
-    await fs.rm(directory, { recursive: true, force: true });
+    try {
+      if (application) {
+        try {
+          if (clipboard !== undefined) await application.evaluate(({ clipboard }, original) => clipboard.writeText(original), clipboard);
+        } finally { await close(application); }
+      }
+    } finally { await fs.rm(directory, { recursive: true, force: true }); }
   }
 });
 
