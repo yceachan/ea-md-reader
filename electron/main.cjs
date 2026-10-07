@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, shell, nativeTheme, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, shell, nativeTheme, nativeImage, screen, clipboard } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -25,6 +25,7 @@ let openDeveloperTools;
 let rendererReady = false;
 let activeDocumentId = null;
 let applicationMenu = null;
+let startupDisplayWidth = null;
 const documents = new Map();
 const workspaceRoots = new Set();
 const pending = [];
@@ -106,9 +107,10 @@ function focusWindow() {
   window.focus();
 }
 function sendDisplayWidth() {
-  send('emd:display-width', screen.getDisplayMatching(window.getBounds()).workAreaSize.width / window.webContents.getZoomFactor());
+  send('emd:display-width', (startupDisplayWidth ?? screen.getDisplayMatching(window.getBounds()).workAreaSize.width) / window.webContents.getZoomFactor());
 }
-async function chooseEditor() {
+async function chooseEditor(kind) {
+  if (platform.chooseEditor) return platform.chooseEditor(kind, window);
   const result = await dialog.showOpenDialog(window, { title: '选择编辑器', properties: ['openFile'] });
   return result.canceled ? null : platform.validateEditor(result.filePaths[0]);
 }
@@ -159,14 +161,33 @@ else {
         return new Response('HTML 页面无法读取，请重新打开文件。', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
       }
     });
+    const settings = settingsStore(path.join(app.getPath('userData'), 'setting.toml'));
+    const startupSupported = platform.startupLayout?.supported() === true;
+    const publicSettings = async () => ({ ...await settings.get(), startupSupported });
+    const layout = (await settings.get()).startup.layout;
+    let startup = { root: null, workspace: false, panels: { left: layout === 'default', right: layout === 'default' } };
+    let placement = null, startupError = null;
+    if (startupSupported) {
+      try {
+        startup = await platform.startupLayout.context(layout, process.cwd());
+        placement = await platform.startupLayout.prepare({ layout, ...startup, screen });
+      }
+      catch (error) { startupError = error; }
+    } else if (layout !== 'default') startupError = new Error('启动布局 TODO：当前仅实现 KDE 平台。');
+    const initialRoot = startup.workspace ? startup.root : null;
+    console.info('[emd] 启动布局', JSON.stringify({ layout, cwd: process.cwd(), count: startup.count, panels: startup.panels, geometry: placement?.geometry }));
+    startupDisplayWidth = placement?.displayWidth ?? null;
+    if (initialRoot) workspaceRoots.add(initialRoot);
     window = new BrowserWindow({
-      width: 1180, height: 850, minWidth: 620, minHeight: 440, show: false, frame: false, transparent: true,
+      width: 1180, height: 850, ...placement?.geometry, minWidth: 620, minHeight: 440, show: false, frame: false, transparent: true,
       title: 'Ea.Md.Reader', backgroundColor: '#00000000', icon: nativeImage.createFromPath(path.join(__dirname, '..', 'assets', 'emd.png')).resize({ width: 128, height: 128 }),
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
     toggleFullscreen = platform.createFullscreenToggle(window);
     openDeveloperTools = developerTools(window);
-    const settings = settingsStore(path.join(app.getPath('userData'), 'setting.toml'));
+    if (placement?.dispose) window.once('closed', placement.dispose);
+    if (placement?.applied) placement.applied.then((result) => console.info('[emd] KWin 启动布局已确认', JSON.stringify(result.geometry))).catch((error) => { console.error('[emd] 启动布局失败', error); if (!window.isDestroyed()) showError(new Error(`启动布局失败：${error.message}`)); });
+    if (startupError) { console.error('[emd] 启动布局失败', startupError); showError(new Error(`启动布局失败：${startupError.message}`)); }
     const sessions = editorSessions({ documents, changed: (document) => send('emd:document-update', publicDocument(document)), onError: showError });
     async function editFile(filePath, choose) {
       if (typeof choose !== 'boolean') throw new Error('无效的编辑器请求。');
@@ -174,7 +195,7 @@ else {
       const kind = documentKind(filePath);
       let editor;
       if (choose) {
-        const program = await chooseEditor();
+        const program = await chooseEditor(kind);
         if (program === null) return false;
         editor = { program };
       } else {
@@ -187,6 +208,12 @@ else {
       return [
         { label: '在配置编辑器中打开', click: () => { editFile(filePath, false).catch(showError); } },
         { label: '打开方式…', click: () => { editFile(filePath, true).catch(showError); } },
+      ];
+    }
+    function pathMenu(filePath, root) {
+      return [
+        { label: '复制路径', click: () => clipboard.writeText(filePath) },
+        { label: '复制相对路径', click: () => clipboard.writeText(path.relative(root, filePath) || '.') },
       ];
     }
     window.on('focus', () => { void sessions.refresh(); });
@@ -226,13 +253,35 @@ else {
       return commandSet.hints;
     });
     checkedHandler('emd:command', dispatchCommand);
-    checkedHandler('emd:settings', () => settings.get());
+    checkedHandler('emd:settings', publicSettings);
+    checkedHandler('emd:startup-state', () => ({ workspace: !!initialRoot, root: initialRoot, panels: startup.panels }));
+    checkedHandler('emd:startup-choice', async (value) => {
+      if (!startupSupported) throw new Error('启动布局 TODO：当前仅实现 KDE 平台。');
+      await settings.setStartup(value);
+      return publicSettings();
+    });
+    checkedHandler('emd:profile', async () => {
+      const value = await settings.profile();
+      if (!value) return null;
+      const { ['profile-photo']: photo, ...profile } = value;
+      const photoPath = path.isAbsolute(photo) ? photo : path.join(__dirname, '..', 'dist', photo);
+      const image = nativeImage.createFromBuffer(await fs.readFile(photoPath));
+      if (image.isEmpty()) throw new Error(`头像图片无法读取：${photo}`);
+      return { ...profile, photoUrl: image.toDataURL() };
+    });
+    checkedHandler('emd:profile-link', async (target) => {
+      if (!['email', 'github', 'repository'].includes(target)) throw new Error('无效的资料链接。');
+      const profile = await settings.profile();
+      if (!profile) throw new Error('尚未配置个人资料。');
+      await shell.openExternal(target === 'email' ? `mailto:${profile.email}` : profile[target]);
+    });
     checkedHandler('emd:editor-choice', async (kind) => {
       editorKind(kind);
-      const program = await chooseEditor();
-      return program === null ? settings.get() : settings.setEditor(kind, program);
+      const program = await chooseEditor(kind);
+      if (program !== null) await settings.setEditor(kind, program);
+      return publicSettings();
     });
-    checkedHandler('emd:editor-clear', (kind) => settings.setEditor(editorKind(kind), null));
+    checkedHandler('emd:editor-clear', async (kind) => { await settings.setEditor(editorKind(kind), null); return publicSettings(); });
     checkedHandler('emd:edit-document', (id, choose) => editFile(getDocument(id).path, choose));
     checkedHandler('emd:edit-workspace', async (root, filePath) => {
       if (!workspaceRoots.has(root) || typeof filePath !== 'string') throw new Error('无效的工作区请求。');
@@ -240,9 +289,10 @@ else {
       if (!isWithin(root, canonical)) throw new Error('文件不在当前工作区内。');
       return editFile(canonical, false);
     });
-    checkedHandler('emd:document-menu', (id) => {
+    checkedHandler('emd:document-menu', (id, root) => {
       const document = getDocument(id);
-      Menu.buildFromTemplate([...editorMenu(document.path), { type: 'separator' }, {
+      if (root !== undefined && !workspaceRoots.has(root)) throw new Error('无效的工作区请求。');
+      Menu.buildFromTemplate([...editorMenu(document.path), { type: 'separator' }, ...pathMenu(document.path, root ?? path.dirname(document.path)), { type: 'separator' }, {
         label: commandSet.get('closeTab').label, click: () => { dispatchCommand('closeTab', id).catch(showError); },
       }]).popup({ window });
     });
@@ -253,12 +303,13 @@ else {
       return Object.fromEntries(commandSet.items.map((command) => [command.id, commandEnabled(command.id)]));
     });
     checkedHandler('emd:workspace', async (id, requestedRoot) => {
-      const document = getDocument(id);
+      const document = id === null ? null : getDocument(id);
       if (requestedRoot !== undefined && !workspaceRoots.has(requestedRoot)) throw new Error('无效的工作区请求。');
-      const context = workspaceContext(document.path, requestedRoot);
+      if (!document && requestedRoot === undefined) throw new Error('尚未打开工作区。');
+      const context = document ? workspaceContext(document.path, requestedRoot) : { root: requestedRoot, activeAncestors: [] };
       const { root } = context;
       workspaceRoots.add(root);
-      try { return await scanWorkspace(root, document.path); }
+      try { return await scanWorkspace(root, document?.path); }
       catch (error) { return { ...context, name: path.basename(root), nodes: null, error: error.message }; }
     });
     checkedHandler('emd:workspace-open', async (root, filePath, newTab, activeId) => {
@@ -275,7 +326,7 @@ else {
       if (!workspaceRoots.has(root) || (filePath !== null && typeof filePath !== 'string')) throw new Error('无效的工作区请求。');
       const canonicalPath = filePath === null ? root : await fs.realpath(filePath);
       if (canonicalPath !== root && !isWithin(root, canonicalPath)) throw new Error('文件不在当前工作区内。');
-      getDocument(activeId);
+      if (activeId !== null) getDocument(activeId);
       const isFile = filePath !== null && (await fs.stat(canonicalPath)).isFile();
       Menu.buildFromTemplate([
         ...(isFile ? [
@@ -284,7 +335,11 @@ else {
           { type: 'separator' },
           ...editorMenu(canonicalPath), { type: 'separator' },
         ] : []),
-        ...(filePath === null ? [] : [{ label: '在文件管理器中显示', click: () => shell.showItemInFolder(canonicalPath) }]),
+        ...(filePath === null ? [{ label: '复制工作区路径', click: () => clipboard.writeText(root) }] : [
+          ...pathMenu(canonicalPath, root),
+          { label: '在文件管理器中显示', click: () => shell.showItemInFolder(canonicalPath) },
+        ]),
+        { type: 'separator' },
         { label: '重新载入工作树', click: () => send('emd:workspace-action', { action: 'refresh' }) },
       ]).popup({ window });
     });
@@ -326,7 +381,9 @@ else {
       if (text) window.webContents.findInPage(text, { forward, findNext: true });
       else window.webContents.stopFindInPage('clearSelection');
     });
-    window.once('ready-to-show', () => window.show());
+    window.once('ready-to-show', () => {
+      window.show();
+    });
     await window.loadURL('emd://app/index.html');
     await openPaths(fileArguments(process.argv, process.cwd()));
   }).catch((error) => { console.error(error); dialog.showErrorBox('emd 启动失败', error.message); app.exit(1); });

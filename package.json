@@ -6,14 +6,14 @@
   "license": "MIT",
   "main": "electron/main.cjs",
   "scripts": {
-    "build": "npm run build:icons && tsc --noEmit && vite build",
+    "build": "npm run build:icons && node scripts/build-native.mjs && tsc --noEmit && vite build",
     "start": "npm run build && electron .",
     "test": "npm run build && npm run test:node && npm run test:ui",
     "pack": "node scripts/pack.mjs",
     "install:local": "node scripts/install.mjs",
     "uninstall:local": "node scripts/install.mjs --uninstall",
     "build:icons": "node scripts/render-icons.mjs",
-    "test:node": "node --test tests/files.test.cjs tests/platforms.test.mjs tests/mac-platform.test.mjs tests/commands.test.cjs tests/runtime-platforms.test.cjs tests/settings.test.cjs tests/editor-sessions.test.cjs",
+    "test:node": "node --test tests/files.test.cjs tests/platforms.test.mjs tests/mac-platform.test.mjs tests/commands.test.cjs tests/runtime-platforms.test.cjs tests/settings.test.cjs tests/editor-sessions.test.cjs tests/startup.test.cjs",
     "test:ui": "playwright test"
   },
   "devDependencies": {

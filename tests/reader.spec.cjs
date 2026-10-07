@@ -22,7 +22,7 @@ test('HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和
     const page = await application.firstWindow();
     const frame = page.frameLocator('.document-panel:not([hidden]) .html-page');
     await expect(frame.locator('h1')).toHaveText('交互页面');
-    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
+    await expect(page.getByRole('button', { name: '显示工作区', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('tab', { selected: true })).toContainText('HTML');
     await expect(page.getByRole('treeitem', { name: 'HTML 交互 页面.HTML' })).toBeVisible();
     await expect(page.getByRole('button', { name: '显示目录', exact: true })).toBeDisabled();
@@ -63,7 +63,7 @@ test('HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和
     await page.getByRole('treeitem', { name: 'MD 入口.md' }).click();
     await expect(page.getByRole('tab')).toHaveCount(1);
     await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('Markdown 入口');
-    await page.getByRole('button', { name: '显示目录', exact: true }).click();
+    if (await page.getByRole('button', { name: '显示目录', exact: true }).getAttribute('aria-pressed') === 'false') await page.getByRole('button', { name: '显示目录', exact: true }).click();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
     await page.getByRole('button', { name: '显示目录', exact: true }).click();
     await page.getByRole('treeitem', { name: 'HTML 交互 页面.HTML' }).click({ modifiers: ['Alt'] });
@@ -120,11 +120,12 @@ test('渲染、只读、多标签、另存为、重读、第二次启动及相�
     expect(await page.evaluate(() => typeof window.require)).toBe('undefined');
     await expect(page.locator('.vp-doc iframe, .vp-doc script')).toHaveCount(0);
     await page.locator('.document-panel').evaluate((panel) => { panel.scrollTop = 0; });
-    await page.getByRole('button', { name: '显示目录', exact: true }).click();
+    await expect(page.getByRole('button', { name: '显示目录', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
     await page.getByRole('button', { name: '折叠 静心阅读', exact: true }).click();
     await expect(page.getByRole('navigation', { name: '本文目录' }).getByRole('button', { name: '代码与公式', exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: '展开 静心阅读', exact: true }).click();
+    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
     await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(700, 650));
     await expect(page.locator('.outline.panel-overlay')).toBeVisible();
     await page.getByRole('button', { name: '关闭目录面板', exact: true }).click();
@@ -224,8 +225,6 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
       await expect.poll(() => page.evaluate(() => window.innerWidth)).toBeGreaterThan(1500);
     }
     await wideWindow();
-    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
-    await page.getByRole('button', { name: '显示目录', exact: true }).click();
     const tree = page.getByRole('navigation', { name: '工作区文件' });
     await expect(tree.getByRole('treeitem', { name: 'MD 入口.md', exact: true })).toBeVisible();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
@@ -253,14 +252,14 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
       };
     });
     await tree.getByRole('treeitem', { name: 'MD 正文.md' }).click({ button: 'right' });
-    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['在当前标签页打开', '在新标签页打开', '', '在配置编辑器中打开', '打开方式…', '', '在文件管理器中显示', '重新载入工作树']);
+    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['在当前标签页打开', '在新标签页打开', '', '在配置编辑器中打开', '打开方式…', '', '复制路径', '复制相对路径', '在文件管理器中显示', '', '重新载入工作树']);
     await application.evaluate(() => global.workspaceMenu.items[0].click());
     await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('正文');
     await expect(page.getByRole('tab')).toHaveCount(3);
     await fs.writeFile(path.join(directory, '新文档.md'), '# 新文档');
     await page.locator('.workspace-sidebar .sidebar-scroll').click({ button: 'right', position: { x: 40, y: 250 } });
-    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['重新载入工作树']);
-    await application.evaluate(() => global.workspaceMenu.items[0].click());
+    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['复制工作区路径', '', '重新载入工作树']);
+    await application.evaluate(() => global.workspaceMenu.items.find(item => item.label === '重新载入工作树').click());
     await expect(tree.getByRole('treeitem', { name: 'MD 新文档.md' })).toBeVisible();
     await expect(page.locator('.workspace-root')).toHaveAttribute('title', directory);
     await page.evaluate(async ({ root, outside }) => { await window.emd.workspaceOpen(root, outside, false, document.querySelector('[role=tab][aria-selected=true]').id.slice(4)); }, { root: directory, outside });
@@ -306,6 +305,7 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
     const overlay = await page.getByRole('button', { name: '折叠目录面板', exact: true }).boundingBox();
     const outlineBox = await page.locator('.outline').boundingBox();
     expect(Math.abs(overlay.y + overlay.height / 2 - outlineBox.y - outlineBox.height / 2)).toBeLessThan(1);
+    expect(Math.abs(overlay.x + overlay.width - outlineBox.x)).toBeLessThanOrEqual(1);
 
     await application.evaluate(({ BrowserWindow }) => {
       const window = BrowserWindow.getAllWindows()[0];

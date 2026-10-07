@@ -3,7 +3,61 @@ const { launch, close } = require('./electron-fixture.cjs');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
-const platformArgs = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
+const platformArgs = process.platform === 'linux' ? [process.env.EMD_NATIVE_KDE === '1' ? '--ozone-platform=wayland' : '--ozone-platform=x11'] : [];
+
+test('工作树文件/目录与后台标签复制绝对和相对路径，空白处复制工作区路径', async () => {
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-copy-path-')));
+  let application, originalClipboard;
+  try {
+    const entry = path.join(directory, '入口.md'), folder = path.join(directory, '章节'), nested = path.join(folder, '页面.html');
+    await fs.mkdir(folder);
+    await fs.writeFile(entry, '# 入口'); await fs.writeFile(nested, '<h1>页面</h1>');
+    const packaged = process.env.EMD_PACKAGED === '1';
+    application = await launch({ executablePath: packaged ? path.resolve('release/linux-unpacked/emd') : undefined,
+      args: [...(packaged ? [] : [path.resolve('.')]), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, entry, nested] });
+    const page = await application.firstWindow();
+    await expect(page.getByRole('tab')).toHaveCount(2);
+    await page.getByRole('tab', { name: 'MD 入口.md', exact: true }).click();
+    const activeId = await page.getByRole('tab', { selected: true }).getAttribute('id');
+    if (await page.getByRole('button', { name: '显示工作区', exact: true }).getAttribute('aria-pressed') === 'false') await page.getByRole('button', { name: '显示工作区', exact: true }).click();
+    await expect(page.locator('.workspace-root')).toHaveAttribute('title', directory);
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
+    await application.evaluate(({ Menu }) => {
+      const build = Menu.buildFromTemplate;
+      Menu.buildFromTemplate = (template) => { const menu = build(template); menu.popup = () => { global.pathMenu = menu; }; return menu; };
+    });
+    originalClipboard = await application.evaluate(({ clipboard }) => clipboard.readText());
+    async function context(locator, options = {}) {
+      await application.evaluate(() => { global.pathMenu = null; });
+      await locator.click({ button: 'right', ...options });
+      await expect.poll(() => application.evaluate(() => !!global.pathMenu)).toBe(true);
+    }
+    async function copy(label, wanted) {
+      await application.evaluate((_, label) => global.pathMenu.items.find((item) => item.label === label).click(), label);
+      await expect.poll(() => application.evaluate(({ clipboard }) => clipboard.readText())).toBe(wanted);
+    }
+    const directoryNode = page.getByRole('treeitem', { name: '章节', exact: true });
+    await context(directoryNode);
+    await copy('复制路径', folder); await copy('复制相对路径', '章节');
+    if (await directoryNode.getAttribute('aria-expanded') === 'false') await directoryNode.click();
+    await context(page.getByRole('treeitem', { name: 'HTML 页面.html', exact: true }));
+    await copy('复制路径', nested); await copy('复制相对路径', path.join('章节', '页面.html'));
+    await context(page.getByRole('tab', { name: 'HTML 页面.html', exact: true }));
+    await copy('复制路径', nested); await copy('复制相对路径', path.join('章节', '页面.html'));
+    await expect(page.getByRole('tab', { selected: true })).toHaveAttribute('id', activeId);
+    await context(page.locator('.workspace-root')); await copy('复制相对路径', '.');
+    await context(page.locator('.workspace-sidebar .sidebar-scroll'), { position: { x: 50, y: 300 } });
+    await copy('复制工作区路径', directory);
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  } finally {
+    try {
+      if (application) {
+        try { if (originalClipboard !== undefined) await application.evaluate(({ clipboard }, text) => clipboard.writeText(text), originalClipboard); }
+        finally { await close(application); }
+      }
+    } finally { await fs.rm(directory, { recursive: true, force: true }); }
+  }
+});
 
 test('F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-devtools-'));
@@ -242,7 +296,7 @@ test('全屏使用本平台绑定，工作区祖先由主进程返回', async ()
     application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, entry, nested] });
     const page = await application.firstWindow();
     await expect(page.getByRole('tab')).toHaveCount(2);
-    await page.getByRole('button', { name: '显示工作区', exact: true }).click();
+    if (await page.getByRole('button', { name: '显示工作区', exact: true }).getAttribute('aria-pressed') === 'false') await page.getByRole('button', { name: '显示工作区', exact: true }).click();
     await page.getByRole('tab').first().click();
     await expect(page.locator('.workspace-root')).toHaveAttribute('title', directory);
     await page.getByRole('tab').last().click();

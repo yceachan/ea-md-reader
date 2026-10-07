@@ -1,5 +1,6 @@
 node_modules/
 dist/
+native-build/
 release/
 test-results/
 playwright-report/

@@ -86,4 +86,4 @@ async function saveDocument(document, destination) {
   await fs.writeFile(destination, document.bytes);
 }
 
-module.exports = { fileArguments, documentKind, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES };
+module.exports = { fileArguments, documentKind, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES, MARKDOWN_EXTENSIONS, HTML_EXTENSIONS };

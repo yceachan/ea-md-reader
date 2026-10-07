@@ -54,4 +54,4 @@ async function startMacEditor(editor, filePath) {
   return { completion: null, waitForFile: false };
 }
 
-module.exports = { validateExecutable, validateMacEditor, startExecutable, startMacEditor };
+module.exports = { validateExecutable, validateMacEditor, startExecutable, startMacEditor, startProcess };

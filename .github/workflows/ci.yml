@@ -47,7 +47,7 @@ jobs:
         run: node -e "console.log({platform:process.platform,arch:process.arch,node:process.version}); if(process.arch!==process.env.EXPECTED_ARCH) process.exit(1)"
       - name: Prepare Linux desktop tools
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb openbox x11-utils desktop-file-utils libgtk-3-0 libnss3 libasound2t64
+        run: sudo apt-get update && sudo apt-get install -y xvfb openbox x11-utils desktop-file-utils libgtk-3-0 libnss3 libasound2t64 cmake g++ extra-cmake-modules libkf5kio-dev
       - run: npm ci
       - name: Build native application and archives
         if: matrix.platform != 'windows'

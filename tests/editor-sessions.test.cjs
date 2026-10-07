@@ -9,6 +9,28 @@ const { readDocument, publicDocument } = require('../electron/files.cjs');
 const { startExecutable } = require('../electron/platforms/editor.cjs');
 const { existsSync } = require('node:fs');
 
+test('Linux desktop 应用无需执行位，系统启动保留 Exec 参数与完整文件路径', { skip: process.platform !== 'linux' }, async () => {
+  const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-desktop-editor-')));
+  const keepAlive = setInterval(() => {}, 1000);
+  try {
+    const { validateEditor, startEditor } = require('../electron/platforms/linux-editor.cjs');
+    const desktop = path.join(root, 'Typora.desktop'), script = path.join(root, 'editor.cjs');
+    const output = path.join(root, 'argv.json'), file = path.join(root, '中文 空格 $()&.md');
+    await fs.writeFile(file, '# 正文');
+    await fs.writeFile(script, `require('node:fs').writeFileSync(${JSON.stringify(output)},JSON.stringify(process.argv.slice(2)));`);
+    await fs.writeFile(desktop, `[Desktop Entry]\nType=Application\nName=Controlled editor\nExec="${process.execPath}" "${script}" --fixed-argument %F\nTerminal=false\n`, { mode: 0o644 });
+    assert.equal((await fs.stat(desktop)).mode & 0o111, 0);
+    assert.equal(await validateEditor(desktop), desktop);
+    const session = await startEditor({ program: desktop }, file);
+    assert.equal(session.waitForFile, false);
+    assert.equal(session.completion, null);
+    await until(() => existsSync(output));
+    assert.deepEqual(JSON.parse(await fs.readFile(output, 'utf8')), ['--fixed-argument', file]);
+    await fs.writeFile(desktop, '[Desktop Entry]\nType=Link\nURL=https://example.com\n');
+    await assert.rejects(validateEditor(desktop), /不可用/);
+  } finally { clearInterval(keepAlive); await fs.rm(root, { recursive: true, force: true }); }
+});
+
 async function until(predicate) {
   const deadline = Date.now() + 3000;
   while (!predicate()) { if (Date.now() > deadline) throw new Error('未收到预期编辑更新'); await delay(15); }

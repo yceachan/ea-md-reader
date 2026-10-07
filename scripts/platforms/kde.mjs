@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 export const packOptions = {
   linux: ['dir', 'tar.gz'],
   config: {
+    extraResources: [{ from: 'native-build/emd-application-chooser', to: 'emd-application-chooser' }, { from: 'native-build/emd-kde-startup', to: 'emd-kde-startup' }],
     linux: { category: 'Office', icon: 'assets/emd.png', syncDesktopName: true },
     extraMetadata: { desktopName: 'io.github.yceachan.emd.desktop' },
   },
