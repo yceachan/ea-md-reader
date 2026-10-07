@@ -3,7 +3,7 @@ type ReaderDocument = { id: string; path: string; name: string; text: string; } 
 );
 interface WorkspaceNode { name: string; path: string; children?: WorkspaceNode[]; }
 interface ReaderWorkspace { root: string; name: string; nodes: WorkspaceNode[]; activeAncestors: string[]; }
-type ReaderCommand = 'openDocument' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu';
+type ReaderCommand = 'openDocument' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu' | 'openDeveloperTools';
 type CommandHints = Record<ReaderCommand, string>;
 type CommandAvailability = Record<ReaderCommand, boolean>;
 interface CommandAction { id: ReaderCommand; documentId: string | null; }

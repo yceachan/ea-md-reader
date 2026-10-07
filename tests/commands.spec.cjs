@@ -5,6 +5,36 @@ const os = require('node:os');
 const path = require('node:path');
 const platformArgs = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
 
+test('F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-devtools-'));
+  let application;
+  try {
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`] });
+    const page = await application.firstWindow();
+    await expect(page.getByRole('button', { name: '打开 Markdown / HTML' })).toBeVisible();
+    const before = await page.locator('.reading-area').boundingBox();
+    const opened = () => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.isDevToolsOpened());
+    await application.evaluate(({ BrowserWindow }) => {
+      const contents = BrowserWindow.getAllWindows()[0].webContents;
+      contents.sendInputEvent({ type: 'keyDown', keyCode: 'F12' });
+      contents.sendInputEvent({ type: 'keyUp', keyCode: 'F12' });
+    });
+    await expect.poll(opened).toBe(true);
+    const id = await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.devToolsWebContents.id);
+    await page.getByRole('button', { name: '文件', exact: true }).click();
+    await page.getByRole('menuitem', { name: '开发者控制台' }).click();
+    expect(await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.devToolsWebContents.id)).toBe(id);
+    expect(await page.locator('.reading-area').boundingBox()).toEqual(before);
+    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((item) => item.webContents.getURL() === 'emd://app/index.html').webContents.closeDevTools());
+    await expect.poll(opened).toBe(false);
+    await page.evaluate(() => window.emd.command('openDeveloperTools'));
+    await expect.poll(opened).toBe(true);
+  } finally {
+    if (application) await close(application);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('真实键盘、按钮和原生菜单共用命令，查找输入保留复制粘贴', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-commands-')));
   let application, clipboard;

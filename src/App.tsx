@@ -182,6 +182,9 @@ export default function App() {
             <button role="menuitem" disabled={!commandAvailability?.saveAs} onClick={() => { setFileMenu(false); void window.emd.command('saveAs'); }}>另存为… <kbd>{hints?.saveAs}</kbd></button>
             <div className="menu-divider" />
             <button role="menuitem" disabled={!commandAvailability?.closeTab} onClick={() => { setFileMenu(false); void window.emd.command('closeTab'); }}>关闭标签页 <kbd>{hints?.closeTab}</kbd></button>
+            <div className="menu-divider" />
+            <button role="menuitem" onClick={() => { setFileMenu(false); void window.emd.command('openDeveloperTools'); }}>开发者控制台 <kbd>{hints?.openDeveloperTools}</kbd></button>
+            <div className="menu-divider" />
             <button role="menuitem" onClick={() => { void window.emd.command('quit'); }}>退出 <kbd>{hints?.quit}</kbd></button>
           </div>}
         </div>

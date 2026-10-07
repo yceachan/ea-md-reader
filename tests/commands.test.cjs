@@ -27,6 +27,8 @@ for (const host of ['linux', 'win32', 'darwin']) {
     assert.equal(commands.match(input('f', { control: true, meta: true })), host === 'darwin' ? 'toggleFullscreen' : null);
     assert.equal(commands.match(input('f11')), host === 'darwin' ? null : 'toggleFullscreen');
     assert.equal(commands.match(input('f11', { control: true })), null);
+    assert.equal(commands.match(input('f12')), 'openDeveloperTools');
+    assert.equal(commands.match(input('f12', { [primary]: true })), null);
     for (const key of ['c', 'v', 'a', 'x']) assert.equal(commands.match(input(key, { [primary]: true })), null);
     assert.equal(commands.hints.openDocument, host === 'darwin' ? 'Cmd+O' : 'Ctrl+O');
     assert.equal(commands.get('openDocument').accelerator, host === 'darwin' ? 'Command+O' : 'Control+O');

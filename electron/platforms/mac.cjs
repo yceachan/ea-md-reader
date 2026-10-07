@@ -20,7 +20,7 @@ module.exports = {
         { role: 'paste' }, { role: 'pasteAndMatchStyle' }, { role: 'delete' }, { role: 'selectAll' },
         { type: 'separator' }, commandItem('findInDocument'),
       ] },
-      { label: '视图', submenu: ['zoomIn', 'zoomOut', 'zoomReset', 'toggleFullscreen'].map(commandItem) },
+      { label: '视图', submenu: ['zoomIn', 'zoomOut', 'zoomReset', 'toggleFullscreen', 'openDeveloperTools'].map(commandItem) },
       { role: 'windowMenu', submenu: [
         { role: 'minimize' }, { role: 'zoom' }, { type: 'separator' }, commandItem('nextTab'), commandItem('previousTab'),
       ] },
