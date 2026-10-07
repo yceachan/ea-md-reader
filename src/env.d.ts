@@ -22,6 +22,10 @@ interface Window {
     settings(): Promise<ReaderSettings | null>;
     chooseEditor(kind: EditorKind): Promise<ReaderSettings | null>;
     clearEditor(kind: EditorKind): Promise<ReaderSettings | null>;
+    editDocument(id: string, choose?: boolean): Promise<boolean | null>;
+    editWorkspace(root: string, path: string): Promise<boolean | null>;
+    documentMenu(id: string): Promise<void>;
+    onDocumentUpdate(listener: (document: ReaderDocument) => void): () => void;
     ready(): Promise<CommandHints>;
     command(id: ReaderCommand, documentId?: string): Promise<boolean>;
     activeDocument(id: string | null): Promise<CommandAvailability>;

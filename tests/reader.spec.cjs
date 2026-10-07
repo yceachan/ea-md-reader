@@ -253,7 +253,7 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
       };
     });
     await tree.getByRole('treeitem', { name: 'MD 正文.md' }).click({ button: 'right' });
-    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['在当前标签页打开', '在新标签页打开', '', '在文件管理器中显示', '重新载入工作树']);
+    await expect.poll(() => application.evaluate(() => global.workspaceMenu?.items.map((item) => item.label))).toEqual(['在当前标签页打开', '在新标签页打开', '', '在配置编辑器中打开', '打开方式…', '', '在文件管理器中显示', '重新载入工作树']);
     await application.evaluate(() => global.workspaceMenu.items[0].click());
     await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('正文');
     await expect(page.getByRole('tab')).toHaveCount(3);

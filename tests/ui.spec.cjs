@@ -60,7 +60,8 @@ test('面板初始隐藏，窄屏覆盖层互斥且不改变正文，空白菜�
     await expect(page.locator('.workspace-sidebar .sidebar-header')).toHaveCount(0);
     await application.evaluate(({ Menu }) => {
       const original = Menu.buildFromTemplate;
-      Menu.buildFromTemplate = (template) => { const menu = original(template); menu.popup = () => { global.blankMenu = menu; }; return menu; };
+      global.blankMenuCount = 0;
+      Menu.buildFromTemplate = (template) => { const menu = original(template); menu.popup = () => { global.blankMenu = menu; global.blankMenuCount++; }; return menu; };
     });
     await page.locator('.workspace-sidebar .sidebar-scroll').click({ button: 'right', position: { x: 50, y: 250 } });
     await expect.poll(() => application.evaluate(() => global.blankMenu?.items.map((item) => item.label))).toEqual(['重新载入工作树']);
@@ -71,8 +72,9 @@ test('面板初始隐藏，窄屏覆盖层互斥且不改变正文，空白菜�
     await fs.rename(sourceDirectory, moved);
     await application.evaluate(() => global.blankMenu.items[0].click());
     await expect(page.locator('.workspace-sidebar').getByRole('alert')).toContainText('ENOENT');
-    await fs.rename(moved, sourceDirectory);
     await page.locator('.workspace-sidebar .sidebar-scroll').click({ button: 'right', position: { x: 50, y: 250 } });
+    await expect.poll(() => application.evaluate(() => global.blankMenuCount)).toBe(2);
+    await fs.rename(moved, sourceDirectory);
     await application.evaluate(() => global.blankMenu.items[0].click());
     await expect(page.getByRole('treeitem', { name: 'MD 新文件.md' })).toBeVisible();
     await page.getByRole('button', { name: '显示目录', exact: true }).click();

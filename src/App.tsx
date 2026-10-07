@@ -111,6 +111,13 @@ export default function App() {
     const index = tabs.findIndex((tab) => tab.id === activeId);
     setActiveId(tabs[(index + delta + tabs.length) % tabs.length].id);
   }
+  function updateProgress(id: string | null) {
+    if (!id || id !== activeId) return;
+    const panel = document.getElementById(`panel-${id}`);
+    if (!panel) return;
+    const distance = panel.scrollHeight - panel.clientHeight;
+    setProgress(distance > 0 ? Math.round(panel.scrollTop / distance * 100) : 100);
+  }
   commands.current = ({ id, documentId }) => {
     const actions: Partial<Record<ReaderCommand, () => void>> = {
       saveAs: () => { void save(documentId); }, closeTab: () => { void close(documentId); }, reloadDocument: () => { void reload(documentId); },
@@ -125,6 +132,7 @@ export default function App() {
     const cleanups = [
       window.emd.onWindowState(setMaximized),
       window.emd.onDisplayWidth(setDisplayWidth),
+      window.emd.onDocumentUpdate((document) => setTabs((current) => current.map((tab) => tab.id === document.id ? document : tab))),
       window.emd.onDocument((document) => {
         setTabs((current) => current.some((tab) => tab.id === document.id) ? current.map((tab) => tab.id === document.id ? document : tab) : [...current, document]);
         setActiveId(document.id); setAnchor(null);
@@ -172,7 +180,8 @@ export default function App() {
     });
     return () => { canceled = true; };
   }, [active?.id, active?.path, workspaceRevision]);
-  useEffect(() => { document.title = active ? `${active.name} — Ea.Md.Reader` : 'Ea.Md.Reader'; setProgress(0); }, [active]);
+  useEffect(() => { document.title = active ? `${active.name} — Ea.Md.Reader` : 'Ea.Md.Reader'; }, [active?.name]);
+  useEffect(() => { updateProgress(activeId); }, [activeId]);
   useEffect(() => {
     if (finding) findInput.current?.focus();
     else { setQuery(''); void window.emd.find('', true); }
@@ -181,7 +190,7 @@ export default function App() {
     if (!query) { void window.emd.find('', true); return; }
     const timer = setTimeout(() => { void window.emd.find(query, true); }, 120);
     return () => clearTimeout(timer);
-  }, [query, activeId, active?.path]);
+  }, [query, activeId, active?.path, active?.text]);
   useEffect(() => {
     if (!message || message.error) return;
     const timer = setTimeout(() => setMessage(null), 5000);
@@ -233,6 +242,7 @@ export default function App() {
     </header>
     {tabs.length > 0 && <nav ref={tabbar} className="tabbar" role="tablist" aria-label="已打开的文件">
       {tabs.map((tab) => <div className={`tab ${tab.id === activeId ? 'active' : ''}`} key={tab.id}
+        onContextMenu={(event) => { event.preventDefault(); void window.emd.documentMenu(tab.id); }}
         onMouseDown={(event) => { if (event.button === 1) event.preventDefault(); }}
         onAuxClick={(event) => { if (event.button === 1) { event.preventDefault(); void window.emd.command('closeTab', tab.id); } }}>
         <button className="tab-select" role="tab" aria-selected={tab.id === activeId} aria-controls={`panel-${tab.id}`} id={`tab-${tab.id}`} title={tab.path} onClick={() => { setActiveId(tab.id); setAnchor(null); }}><span className="file-badge">{tab.kind === 'html' ? 'HTML' : 'MD'}</span><span className="tab-name">{tab.name}</span></button>
@@ -247,6 +257,7 @@ export default function App() {
         <aside className={`workspace-sidebar sidebar ${leftOverlay ? 'panel-overlay left' : ''}`} aria-label="工作区面板" style={{ width: leftOverlay ? panelWidths.left : leftWidth }}>
           {leftOverlay && <button className="panel-close" aria-label="关闭工作区面板" onClick={() => closeOverlay('left')}><Icon name="close" /></button>}
           <Workspace workspace={workspace} loading={workspaceLoading} activePath={active.path} onOpen={openWorkspaceFile}
+            onEdit={(path) => { if (workspace) void window.emd.editWorkspace(workspace.root, path); }}
             onMenu={(path) => { if (workspace) void window.emd.workspaceMenu(workspace.root, path, active.id); }} />
         </aside>
         {!leftOverlay && <PanelResize side="left" width={leftWidth} maxWidth={Math.min(420, availableWidth - (panels.right && !rightOverlay && active.kind === 'markdown' ? rightWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(left) => setPanelWidths((current) => ({ ...current, left }))} />}
@@ -261,15 +272,10 @@ export default function App() {
         <p className="welcome-hint">也可以在终端运行 <code>emd 文件.md 页面.html</code></p>
         <div className="welcome-footer"><span>ea-kb 的纸色与排版</span><span>只读阅读 · 多标签页</span></div>
       </section>}
-      {tabs.map((tab) => <section className={`document-panel ${tab.kind === 'html' ? 'html-panel' : ''}`} hidden={tab.id !== activeId} role="tabpanel" aria-labelledby={`tab-${tab.id}`} id={`panel-${tab.id}`} key={`${tab.id}-${tab.path}`} onScroll={(event) => {
-        if (tab.id !== activeId) return;
-        const target = event.currentTarget;
-        const distance = target.scrollHeight - target.clientHeight;
-        setProgress(distance > 0 ? Math.round(target.scrollTop / distance * 100) : 100);
-      }}>
-        {tab.kind === 'html' ? <iframe className="html-page" title={tab.name} src={tab.pageUrl} sandbox="allow-scripts" /> : <article className="article">
+      {tabs.map((tab) => <section className={`document-panel ${tab.kind === 'html' ? 'html-panel' : ''}`} hidden={tab.id !== activeId} role="tabpanel" aria-labelledby={`tab-${tab.id}`} id={`panel-${tab.id}`} key={`${tab.id}-${tab.path}`} onScroll={() => updateProgress(tab.id)}>
+        {tab.kind === 'html' ? <iframe className="html-page" title={tab.name} src={tab.pageUrl} sandbox="allow-scripts" onLoad={() => { if (tab.id === activeId && query) void window.emd.find(query, true); }} /> : <article className="article">
           <div className="document-meta"><span>MARKDOWN</span><span className="meta-dot">·</span><span>{Math.max(1, Math.ceil(tab.text.length / 600))} 分钟阅读</span><span className="readonly-badge">只读</span></div>
-          <Article document={tab} active={tab.id === activeId} anchor={tab.id === activeId ? anchor : null} onHeadings={(id, values) => setHeadings((current) => ({ ...current, [id]: values }))} onError={(text) => setMessage({ text, error: true })} />
+          <Article document={tab} active={tab.id === activeId} anchor={tab.id === activeId ? anchor : null} onHeadings={(id, values) => setHeadings((current) => ({ ...current, [id]: values }))} onRendered={() => updateProgress(tab.id)} onAnchorConsumed={() => setAnchor(null)} onError={(text) => setMessage({ text, error: true })} />
           <div className="document-end"><span />文档结束<span /></div>
         </article>}
       </section>)}
@@ -286,7 +292,7 @@ export default function App() {
         }} /></div>
       </aside>}
     </main>
-    {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} error={message?.error ? message.text : undefined} />}
+    {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} onChanged={() => setMessage(null)} error={message?.error ? message.text : undefined} />}
     {message && <div className={`notification ${message.error ? 'error' : ''}`} role={message.error ? 'alert' : 'status'}><span>{message.text}</span><button className="icon-button" aria-label="关闭提示" onClick={() => setMessage(null)}><Icon name="close" /></button></div>}
     <footer className="statusbar"><span><span className="status-dot" />{active ? '只读' : '就绪'}</span><span>{tabs.length ? `${tabs.length} 个标签页` : 'emd 0.1.0'}</span><span className="status-spacer" />{active && <><span>UTF-8</span><button className="status-reload" title={`重新读取文件 · ${hints?.reloadDocument ?? ''}`} aria-label="重新读取文件" onClick={() => { void window.emd.command('reloadDocument'); }}><Icon name="refresh" /></button>{active.kind === 'markdown' && <span className="progress">{progress}%</span>}</>}</footer>
   </div>;

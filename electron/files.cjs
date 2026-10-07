@@ -17,10 +17,15 @@ function fileArguments(argv, cwd) {
   });
 }
 
-async function readDocument(filePath) {
+function documentKind(filePath) {
   const extension = path.extname(filePath).toLowerCase();
   const kind = HTML_EXTENSIONS.has(extension) ? 'html' : 'markdown';
   if (!HTML_EXTENSIONS.has(extension) && !MARKDOWN_EXTENSIONS.has(extension)) throw new Error('请选择 Markdown 或 HTML 文件（.md、.markdown、.mdown、.mkd、.mkdn、.mdx、.html、.htm）。');
+  return kind;
+}
+
+async function readDocument(filePath) {
+  const kind = documentKind(filePath);
   const canonicalPath = await fs.realpath(filePath);
   const bytes = await fs.readFile(canonicalPath);
   // Fail explicitly for non-UTF-8 input instead of silently changing its contents.
@@ -81,4 +86,4 @@ async function saveDocument(document, destination) {
   await fs.writeFile(destination, document.bytes);
 }
 
-module.exports = { fileArguments, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES };
+module.exports = { fileArguments, documentKind, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES };

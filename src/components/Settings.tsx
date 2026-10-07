@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function Settings({ onClose, error }: { onClose: () => void; error?: string }) {
+export default function Settings({ onClose, onChanged, error }: { onClose: () => void; onChanged: () => void; error?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [settings, setSettings] = useState<ReaderSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ export default function Settings({ onClose, error }: { onClose: () => void; erro
     setBusy(true);
     try {
       const value = await (clear ? window.emd.clearEditor(kind) : window.emd.chooseEditor(kind));
-      if (value) setSettings(value);
+      if (value) { if (value.editors[kind]?.program !== settings?.editors[kind]?.program) onChanged(); setSettings(value); }
     } finally { setBusy(false); }
   }
   return <dialog ref={dialog} className="settings-dialog" aria-labelledby="settings-title"

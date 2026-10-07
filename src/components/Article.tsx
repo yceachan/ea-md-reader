@@ -9,20 +9,26 @@ function diagramJob(job: () => Promise<void>) {
   return next;
 }
 
-export default function Article({ document, active, anchor, onHeadings, onError }: {
+export default function Article({ document, active, anchor, onHeadings, onRendered, onAnchorConsumed, onError }: {
   document: ReaderDocument; active: boolean; anchor: string | null;
   onHeadings: (id: string, headings: RenderResult['headings']) => void;
+  onRendered: () => void;
+  onAnchorConsumed: () => void;
   onError: (message: string) => void;
 }) {
   const element = useRef<HTMLDivElement>(null);
+  const scrollPosition = useRef(0);
   const [result, setResult] = useState<RenderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const headingsCallback = useRef(onHeadings);
   headingsCallback.current = onHeadings;
+  const renderedCallback = useRef(onRendered);
+  renderedCallback.current = onRendered;
 
   useEffect(() => {
     let canceled = false;
-    setResult(null); setError(null);
+    scrollPosition.current = element.current?.closest<HTMLElement>('.document-panel')?.scrollTop ?? 0;
+    setError(null);
     headingsCallback.current(document.id, []);
     renderMarkdown(document.text).then((rendered) => {
       if (canceled) return;
@@ -56,6 +62,9 @@ export default function Article({ document, active, anchor, onHeadings, onError 
       }
     });
     container.replaceChildren(template.content);
+    const panel = container.closest<HTMLElement>('.document-panel');
+    if (panel) panel.scrollTop = Math.min(scrollPosition.current, panel.scrollHeight - panel.clientHeight);
+    renderedCallback.current();
     const zoom = mediumZoom(container.querySelectorAll('img'), { background: 'var(--kb-surface)', margin: 32 });
     const nodes = [...container.querySelectorAll<HTMLElement>('.mermaid')];
     if (nodes.length) {
@@ -89,7 +98,7 @@ export default function Article({ document, active, anchor, onHeadings, onError 
   useEffect(() => {
     if (active && anchor && result) {
       element.current?.querySelectorAll<HTMLElement>('[id]').forEach((heading) => {
-        if (heading.id === anchor) heading.scrollIntoView({ block: 'start' });
+        if (heading.id === anchor) { heading.scrollIntoView({ block: 'start' }); onAnchorConsumed(); }
       });
     }
   }, [active, anchor, result]);

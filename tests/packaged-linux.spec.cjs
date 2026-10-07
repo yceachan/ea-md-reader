@@ -20,6 +20,15 @@ test('Linux 原生打包产物启动且源文件保持只读', async () => {
     await expect(page.locator('.vp-doc h1')).toHaveText('原生包');
     expect(await application.evaluate(() => process.arch)).toBe(process.arch);
     expect(await page.evaluate(() => typeof window.require)).toBe('undefined');
+    expect((await page.evaluate(() => window.emd.settings())).editors.markdown).toBeNull();
+    const bounds = await page.locator('.reading-area').boundingBox();
+    await application.evaluate(({ BrowserWindow }) => {
+      const contents = BrowserWindow.getAllWindows().find((window) => window.webContents.getURL().startsWith('emd://')).webContents;
+      contents.sendInputEvent({ type: 'keyDown', keyCode: 'F12' });
+      contents.sendInputEvent({ type: 'keyUp', keyCode: 'F12' });
+    });
+    await expect.poll(() => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((window) => window.webContents.getURL().startsWith('emd://')).webContents.isDevToolsOpened())).toBe(true);
+    expect(await page.locator('.reading-area').boundingBox()).toEqual(bounds);
     await page.screenshot({ path: test.info().outputPath('packaged-linux.png') });
     expect(await fs.readFile(source)).toEqual(bytes);
   } finally {

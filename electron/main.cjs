@@ -2,11 +2,12 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, shell, nativeT
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { fileArguments, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES } = require('./files.cjs');
+const { fileArguments, documentKind, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES } = require('./files.cjs');
 
 const { selectPlatform } = require('./platforms/index.cjs');
 const { createCommandSet, consumeInput } = require('./commands.cjs');
 const { settingsStore, editorKind } = require('./settings.cjs');
+const { editorSessions } = require('./editor-sessions.cjs');
 const platform = selectPlatform();
 const commandSet = createCommandSet(platform.keyboard);
 
@@ -163,6 +164,30 @@ else {
     });
     toggleFullscreen = platform.createFullscreenToggle(window);
     const settings = settingsStore(path.join(app.getPath('userData'), 'setting.toml'));
+    const sessions = editorSessions({ documents, changed: (document) => send('emd:document-update', publicDocument(document)), onError: showError });
+    async function editFile(filePath, choose) {
+      if (typeof choose !== 'boolean') throw new Error('无效的编辑器请求。');
+      if (!(await fs.stat(filePath)).isFile()) throw new Error('请选择要编辑的文件。');
+      const kind = documentKind(filePath);
+      let editor;
+      if (choose) {
+        const program = await chooseEditor();
+        if (program === null) return false;
+        editor = { program };
+      } else {
+        editor = (await settings.get()).editors[kind];
+        if (!editor) { await dispatchCommand('openSettings'); throw new Error(`请先配置 ${kind === 'markdown' ? 'Markdown' : 'HTML'} 编辑器。`); }
+      }
+      return sessions.open(filePath, () => platform.startEditor(editor, filePath));
+    }
+    function editorMenu(filePath) {
+      return [
+        { label: '在配置编辑器中打开', click: () => { editFile(filePath, false).catch(showError); } },
+        { label: '打开方式…', click: () => { editFile(filePath, true).catch(showError); } },
+      ];
+    }
+    window.on('focus', () => { void sessions.refresh(); });
+    window.on('closed', () => sessions.dispose());
     window.webContents.on('will-navigate', (event) => event.preventDefault());
     window.webContents.on('will-frame-navigate', (event) => {
       // Only the app can load an opened HTML snapshot. Block other frame destinations.
@@ -205,6 +230,19 @@ else {
       return program === null ? settings.get() : settings.setEditor(kind, program);
     });
     checkedHandler('emd:editor-clear', (kind) => settings.setEditor(editorKind(kind), null));
+    checkedHandler('emd:edit-document', (id, choose) => editFile(getDocument(id).path, choose));
+    checkedHandler('emd:edit-workspace', async (root, filePath) => {
+      if (!workspaceRoots.has(root) || typeof filePath !== 'string') throw new Error('无效的工作区请求。');
+      const canonical = await fs.realpath(filePath);
+      if (!isWithin(root, canonical)) throw new Error('文件不在当前工作区内。');
+      return editFile(canonical, false);
+    });
+    checkedHandler('emd:document-menu', (id) => {
+      const document = getDocument(id);
+      Menu.buildFromTemplate([...editorMenu(document.path), { type: 'separator' }, {
+        label: commandSet.get('closeTab').label, click: () => { dispatchCommand('closeTab', id).catch(showError); },
+      }]).popup({ window });
+    });
     checkedHandler('emd:active-document', (id) => {
       if (id !== null) getDocument(id);
       activeDocumentId = id;
@@ -235,12 +273,13 @@ else {
       const canonicalPath = filePath === null ? root : await fs.realpath(filePath);
       if (canonicalPath !== root && !isWithin(root, canonicalPath)) throw new Error('文件不在当前工作区内。');
       getDocument(activeId);
-      const isFile = (await fs.stat(canonicalPath)).isFile();
+      const isFile = filePath !== null && (await fs.stat(canonicalPath)).isFile();
       Menu.buildFromTemplate([
         ...(isFile ? [
           { label: '在当前标签页打开', click: () => send('emd:workspace-action', { action: 'open', path: canonicalPath }) },
           { label: '在新标签页打开', click: () => send('emd:workspace-action', { action: 'new-tab', path: canonicalPath }) },
           { type: 'separator' },
+          ...editorMenu(canonicalPath), { type: 'separator' },
         ] : []),
         ...(filePath === null ? [] : [{ label: '在文件管理器中显示', click: () => shell.showItemInFolder(canonicalPath) }]),
         { label: '重新载入工作树', click: () => send('emd:workspace-action', { action: 'refresh' }) },
@@ -259,6 +298,7 @@ else {
     checkedHandler('emd:close', (id) => {
       getDocument(id);
       documents.delete(id);
+      sessions.releaseUnused();
       if (id === activeDocumentId) activeDocumentId = null;
       updateCommandMenu();
     });

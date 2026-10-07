@@ -1,5 +1,6 @@
 module.exports = {
   validateEditor: require('./editor.cjs').validateMacEditor,
+  startEditor: require('./editor.cjs').startMacEditor,
   createFullscreenToggle: require('./fullscreen.cjs'),
   keyboard: {
     primary: { input: 'meta', accelerator: 'Command', hint: 'Cmd' },
