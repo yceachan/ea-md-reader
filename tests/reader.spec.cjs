@@ -5,9 +5,86 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawn, execFileSync } = require('node:child_process');
 const platformArgs = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
+const { pathToFileURL } = require('node:url');
+
+test('HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和原始字节另存为', async () => {
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-html-ui-')));
+  let application;
+  try {
+    const fixture = path.join(directory, '交互 页面.HTML');
+    const sibling = path.join(directory, '入口.md');
+    const copy = path.join(directory, '副本.html');
+    const html = '\ufeff<!doctype html>\r\n<html><head><style>body{background:rgb(20, 40, 60);color:white}h1{font-size:31px}</style></head><body><h1>交互页面</h1><p>HTML 查找标记</p><button id="count">0</button><a href="https://example.com">离开页面</a><script>document.querySelector("#count").onclick=e=>e.target.textContent=Number(e.target.textContent)+1;try{parent.document.body.dataset.compromised="yes"}catch(e){window.parentBlocked=true}</script></body></html>';
+    await fs.writeFile(fixture, html);
+    await fs.writeFile(sibling, '# Markdown 入口');
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, pathToFileURL(fixture).href],
+      env: { ...process.env, XDG_CONFIG_HOME: path.join(directory, 'config'), XDG_CACHE_HOME: path.join(directory, 'cache') } });
+    const page = await application.firstWindow();
+    const frame = page.frameLocator('.document-panel:not([hidden]) .html-page');
+    await expect(frame.locator('h1')).toHaveText('交互页面');
+    await expect(page.getByRole('tab', { selected: true })).toContainText('HTML');
+    await expect(page.getByRole('treeitem', { name: 'HTML 交互 页面.HTML' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '显示目录', exact: true })).toBeDisabled();
+    await expect(page.getByRole('navigation', { name: '本文目录' })).toHaveCount(0);
+    expect(await frame.locator('body').evaluate((body) => getComputedStyle(body).backgroundColor)).toBe('rgb(20, 40, 60)');
+    expect(await frame.locator('body').evaluate(() => ({ bridge: typeof window.emd, node: typeof window.require, parentBlocked: window.parentBlocked }))).toEqual({ bridge: 'undefined', node: 'undefined', parentBlocked: true });
+    expect(await page.evaluate(() => document.body.dataset.compromised)).toBeUndefined();
+    await frame.locator('#count').click();
+    await expect(frame.locator('#count')).toHaveText('1');
+    await frame.getByRole('link', { name: '离开页面' }).click();
+    await expect.poll(() => page.frames().some((item) => item.url() === 'chrome-error://chromewebdata/')).toBe(true);
+    await page.getByRole('button', { name: '重新读取文件' }).click();
+    await expect(frame.locator('h1')).toHaveText('交互页面');
+    expect(await frame.locator('body').evaluate(() => location.protocol)).toBe('emd-page:');
+
+    await application.evaluate(({ BrowserWindow }) => {
+      BrowserWindow.getAllWindows()[0].webContents.on('found-in-page', (_event, result) => { global.htmlFindResult = result; });
+    });
+    await page.getByRole('button', { name: '查找', exact: true }).click();
+    await page.getByRole('textbox', { name: '查找内容' }).fill('HTML 查找标记');
+    // Electron also counts the query in the app's find input. The other match is inside the frame.
+    await expect.poll(() => application.evaluate(() => global.htmlFindResult?.matches)).toBe(2);
+    await page.getByRole('button', { name: '关闭查找' }).click();
+
+    await application.evaluate(({ dialog }, destination) => {
+      dialog.showSaveDialog = async (_window, options) => { global.htmlSaveOptions = options; return { canceled: false, filePath: destination }; };
+    }, copy);
+    await page.getByRole('button', { name: '另存为', exact: true }).click();
+    await expect(page.getByRole('status')).toContainText('已另存为');
+    expect(await fs.readFile(copy)).toEqual(Buffer.from(html));
+    expect(await application.evaluate(() => global.htmlSaveOptions.filters)).toEqual([{ name: 'HTML', extensions: ['html', 'htm'] }]);
+    await page.getByRole('button', { name: '重新读取文件' }).click();
+    await expect(frame.locator('#count')).toHaveText('0');
+    await fs.writeFile(fixture, html.replace('交互页面', '已重新读取 HTML'));
+    await page.getByRole('button', { name: '重新读取文件' }).click();
+    await expect(frame.locator('h1')).toHaveText('已重新读取 HTML');
+
+    await page.getByRole('treeitem', { name: 'MD 入口.md' }).click();
+    await expect(page.getByRole('tab')).toHaveCount(1);
+    await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('Markdown 入口');
+    await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
+    await page.getByRole('treeitem', { name: 'HTML 交互 页面.HTML' }).click({ modifiers: ['Alt'] });
+    await expect(page.getByRole('tab')).toHaveCount(2);
+    await expect(frame.locator('h1')).toHaveText('已重新读取 HTML');
+    await page.getByRole('tab', { name: 'MD 入口.md' }).click();
+    await page.getByRole('tab', { name: 'HTML 交互 页面.HTML' }).click();
+    await expect(frame.locator('h1')).toHaveText('已重新读取 HTML');
+    await application.evaluate(({ dialog }, source) => {
+      dialog.showOpenDialog = async (_window, options) => { global.htmlOpenOptions = options; return { canceled: false, filePaths: [source] }; };
+    }, fixture);
+    await page.getByRole('button', { name: '打开文件', exact: true }).click();
+    await expect(page.getByRole('tab')).toHaveCount(2);
+    expect(await application.evaluate(() => global.htmlOpenOptions.filters[0].extensions)).toEqual(['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx', 'html', 'htm']);
+    expect(await fs.readFile(fixture, 'utf8')).toBe(html.replace('交互页面', '已重新读取 HTML'));
+    await page.screenshot({ path: test.info().outputPath('emd-html.png') });
+  } finally {
+    if (application) await close(application);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
 
 test('渲染、只读、多标签、另存为、重读、第二次启动及相对图片', async () => {
-  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-ui-')));
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-ui-'));
   const fixture = path.join(directory, '阅读 示例.md');
   const sibling = path.join(directory, '第二页.md');
   const copy = path.join(directory, '副本.md');
@@ -69,7 +146,7 @@ test('渲染、只读、多标签、另存为、重读、第二次启动及相�
     await page.getByRole('button', { name: '还原窗口' }).click();
     await expect(page.getByRole('button', { name: '最大化窗口' })).toBeVisible();
     if (process.platform === 'darwin') {
-      expect(await application.evaluate(({ Menu }) => Menu.getApplicationMenu().items.map((item) => item.role.toLowerCase()))).toEqual(['appmenu', 'editmenu', 'windowmenu']);
+      expect(await application.evaluate(({ Menu }) => Menu.getApplicationMenu().items.filter((item) => item.role).map((item) => item.role.toLowerCase()))).toEqual(['appmenu', 'editmenu', 'windowmenu']);
     } else expect(await application.evaluate(({ Menu }) => Menu.getApplicationMenu())).toBe(null);
     await application.evaluate(({ dialog }, destination) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: destination }); }, copy);
     await page.getByRole('button', { name: '另存为', exact: true }).click();
@@ -277,7 +354,7 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
     await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('入口');
     await page.getByRole('tab').click({ button: 'middle' });
     await expect(page.getByRole('tab')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: '打开 Markdown' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '打开 Markdown / HTML' })).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
     if (application) await close(application);

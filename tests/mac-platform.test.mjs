@@ -9,6 +9,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 const appId = 'io.github.yceachan.emd';
 const launchServices = '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister';
 const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+const posixOnly = { skip: process.platform === 'win32' && 'macOS 安装夹具需要 POSIX shell、权限和框架符号链接' };
 const missing = (file) => assert.rejects(access(file), { code: 'ENOENT' });
 
 async function fixture(t) {
@@ -65,7 +66,7 @@ async function waitForFile(file, ready = () => true) {
   assert.fail(`Launcher did not write ${file}`);
 }
 
-test('macOS 打包包含应用、DMG、ZIP 和只读 Markdown 文件关联', async () => {
+test('macOS 打包包含应用、DMG、ZIP 和只读 Markdown / HTML 文件关联', async () => {
   const { packOptions } = await import('../scripts/platforms/mac.mjs');
   assert.deepEqual(packOptions.mac, ['dir', 'dmg', 'zip']);
   const mac = packOptions.config.mac;
@@ -79,10 +80,10 @@ test('macOS 打包包含应用、DMG、ZIP 和只读 Markdown 文件关联', asy
     assert.equal(association.rank, 'Alternate');
     return association.ext;
   });
-  assert.deepEqual(extensions.toSorted(), ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx'].toSorted());
+  assert.deepEqual(extensions.toSorted(), ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx', 'html', 'htm'].toSorted());
 });
 
-test('macOS 安装保留框架链接和权限，启动器传递字面参数与调用目录', async (t) => {
+test('macOS 安装保留框架链接和权限，启动器传递字面参数与调用目录', posixOnly, async (t) => {
   const { install } = await import('../scripts/platforms/mac.mjs');
   const context = await fixture(t);
   const capture = join(context.directory, 'launch arguments');
@@ -111,7 +112,7 @@ test('macOS 安装保留框架链接和权限，启动器传递字面参数与�
   assert.deepEqual(registrations.map(({ args }) => args), [['-f', context.target]]);
 });
 
-test('macOS 默认产物目录和解包目录均能安装，升级清除旧包文件', async (t) => {
+test('macOS 默认产物目录和解包目录均能安装，升级清除旧包文件', posixOnly, async (t) => {
   const { install } = await import('../scripts/platforms/mac.mjs');
   const context = await fixture(t);
   const output = process.arch === 'arm64' ? 'mac-arm64' : 'mac';
@@ -126,7 +127,7 @@ test('macOS 默认产物目录和解包目录均能安装，升级清除旧包�
   assert.deepEqual(await readdir(dirname(context.target)), ['emd.app']);
 });
 
-test('macOS 无效源包、复制失败与注册失败保留已有安装', async (t) => {
+test('macOS 无效源包、复制失败与注册失败保留已有安装', posixOnly, async (t) => {
   const { install } = await import('../scripts/platforms/mac.mjs');
   const context = await fixture(t);
   const source = await bundle(join(context.directory, 'original/emd.app'));
@@ -167,7 +168,7 @@ test('macOS 无效源包、复制失败与注册失败保留已有安装', async
 });
 
 for (const upgrade of [false, true]) {
-  test(`macOS ${upgrade ? '升级' : '首次安装'}注册后启动器提交失败恢复注册与原文件`, async (t) => {
+  test(`macOS ${upgrade ? '升级' : '首次安装'}注册后启动器提交失败恢复注册与原文件`, posixOnly, async (t) => {
     const { install } = await import('../scripts/platforms/mac.mjs');
     const context = await fixture(t);
     const registration = new Map();
@@ -218,7 +219,7 @@ for (const upgrade of [false, true]) {
   });
 }
 
-test('macOS 注册恢复失败同时报告原故障并继续恢复旧包和启动器', async (t) => {
+test('macOS 注册恢复失败同时报告原故障并继续恢复旧包和启动器', posixOnly, async (t) => {
   const { install } = await import('../scripts/platforms/mac.mjs');
   for (const failure of ['unregister', 'restore']) {
     await t.test(failure, async (t) => {
@@ -356,7 +357,7 @@ for (const upgrade of [false, true]) {
   });
 }
 
-test('macOS 拒绝覆盖或卸载不属于 emd 的应用和命令', async (t) => {
+test('macOS 拒绝覆盖或卸载不属于 emd 的应用和命令', posixOnly, async (t) => {
   const { install, uninstall } = await import('../scripts/platforms/mac.mjs');
   const context = await fixture(t);
   const source = await bundle(join(context.directory, 'source/emd.app'));
@@ -378,7 +379,7 @@ test('macOS 拒绝覆盖或卸载不属于 emd 的应用和命令', async (t) =>
   assert.equal(context.calls.filter(({ command }) => command.endsWith('/lsregister')).length, 0);
 });
 
-test('macOS 拒绝目标应用中被替换成链接的可执行文件', async (t) => {
+test('macOS 拒绝目标应用中被替换成链接的可执行文件', posixOnly, async (t) => {
   const { install, uninstall } = await import('../scripts/platforms/mac.mjs');
   const context = await fixture(t);
   const source = await bundle(join(context.directory, 'source/emd.app'));
@@ -395,7 +396,7 @@ test('macOS 拒绝目标应用中被替换成链接的可执行文件', async (t
   assert.equal(await readFile(join(context.target, 'Contents/Resources.txt'), 'utf8'), 'version one');
 });
 
-test('macOS 拒绝应用和命令路径的符号链接，不修改链接目标', async (t) => {
+test('macOS 拒绝应用和命令路径的符号链接，不修改链接目标', posixOnly, async (t) => {
   const { install, uninstall } = await import('../scripts/platforms/mac.mjs');
   const context = await fixture(t);
   const source = await bundle(join(context.directory, 'source/emd.app'));
@@ -417,7 +418,7 @@ test('macOS 拒绝应用和命令路径的符号链接，不修改链接目标',
   await missing(context.target);
 });
 
-test('macOS 卸载可重复执行并保留用户配置和日志', async (t) => {
+test('macOS 卸载可重复执行并保留用户配置和日志', posixOnly, async (t) => {
   const { install, uninstall } = await import('../scripts/platforms/mac.mjs');
   const context = await fixture(t);
   const source = await bundle(join(context.directory, 'source/emd.app'));

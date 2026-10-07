@@ -38,6 +38,8 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .reading-area { display: flex; flex: 1; min-width: 0; height: 100%; container-type: inline-size; }
 .document-panel { flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden; scrollbar-color: var(--kb-line-strong) transparent; }
 .document-panel[hidden] { display: none; }
+.html-panel { overflow: hidden; }
+.html-page { display: block; width: 100%; height: 100%; border: 0; background: white; }
 .article { width: 100%; padding: 32px clamp(24px, 5cqw, 120px) 50px; }
 .document-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 30px; color: var(--kb-text-subtle); font-size: 10px; letter-spacing: .045em; }
 .document-meta > :first-child { font-size: 9px; letter-spacing: .1em; }

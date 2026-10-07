@@ -1,0 +1,32 @@
+{
+  "runId": 37534770335,
+  "headSha": "f95ed9edd547baadc7b7226bb0a3238317fe4df0",
+  "url": "https://github.com/yceachan/ea-md-reader/actions/runs/37534770335",
+  "snapshotSource": "Observed jobs API response and completed Intel job log",
+  "jobs": [
+    {
+      "name": "windows-2025 / x64",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 112512806169
+    },
+    {
+      "name": "ubuntu-24.04 / x64",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 112512806424
+    },
+    {
+      "name": "macos-15 / arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 112512806572
+    },
+    {
+      "name": "macos-15-intel / x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 112512806692
+    }
+  ]
+}

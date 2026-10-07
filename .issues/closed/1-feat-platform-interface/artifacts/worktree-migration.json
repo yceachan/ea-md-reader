@@ -1,0 +1,51 @@
+[
+  {
+    "branch": "codex/integration-issue1",
+    "from": "/home/pi/work/ea-md-reader-integration",
+    "to": "/home/pi/worktrees/ea-md-reader/root/integration-issue1",
+    "head": "9783a516268256611576ba9e446067a7e2b4f25e",
+    "status": ""
+  },
+  {
+    "branch": "codex/macos-review",
+    "from": "/home/pi/work/ea-md-reader-macos-review",
+    "to": "/home/pi/worktrees/ea-md-reader/root/macos-review",
+    "head": "7051129fd33295905e48dad4e10e94d15e21cc3b",
+    "status": ""
+  },
+  {
+    "branch": "codex/platform-commands",
+    "from": "/home/pi/work/ea-md-reader-platform",
+    "to": "/home/pi/worktrees/ea-md-reader/root/platform-commands",
+    "head": "dce7641e2671b5f037bd1aea35237aa3986d65d9",
+    "status": ""
+  },
+  {
+    "branch": "codex/probe-android",
+    "from": "/home/pi/work/ea-md-reader-probe-android",
+    "to": "/home/pi/worktrees/ea-md-reader/root/probe-android",
+    "head": "a910b409844a09a4ebe92c801c751958f5efd0dd",
+    "status": "M probes/android/index.html"
+  },
+  {
+    "branch": "codex/probe-editor",
+    "from": "/home/pi/work/ea-md-reader-probe-editor",
+    "to": "/home/pi/worktrees/ea-md-reader/root/probe-editor",
+    "head": "a1575a50af756dacdef1df096f634c4c00615b63",
+    "status": ""
+  },
+  {
+    "branch": "codex/probe-kde",
+    "from": "/home/pi/work/ea-md-reader-probe-kde",
+    "to": "/home/pi/worktrees/ea-md-reader/root/probe-kde",
+    "head": "b1bdbd54147262737b6eca94ae12ccf264b53555",
+    "status": ""
+  },
+  {
+    "branch": "codex/probe-layout",
+    "from": "/home/pi/work/ea-md-reader-probe-layout",
+    "to": "/home/pi/worktrees/ea-md-reader/root/probe-layout",
+    "head": "5c890c0afd0fd8e77012945029d144e242c3bfe8",
+    "status": ""
+  }
+]

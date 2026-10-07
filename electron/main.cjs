@@ -2,17 +2,25 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, shell, nativeT
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { fileArguments, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, IMAGE_TYPES } = require('./files.cjs');
+const { fileArguments, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES } = require('./files.cjs');
+
+const { selectPlatform } = require('./platforms/index.cjs');
+const { createCommandSet, consumeInput } = require('./commands.cjs');
+const platform = selectPlatform();
+const commandSet = createCommandSet(platform.keyboard);
 
 app.setName('emd');
 nativeTheme.themeSource = 'light';
-if (process.platform === 'linux') app.setDesktopName('io.github.yceachan.emd.desktop');
 protocol.registerSchemesAsPrivileged([
   { scheme: 'emd', privileges: { standard: true, secure: true, supportFetchAPI: true } },
   { scheme: 'emd-asset', privileges: { standard: true, secure: true } },
+  { scheme: 'emd-page', privileges: { standard: true, secure: true } },
 ]);
 let window;
+let toggleFullscreen;
 let rendererReady = false;
+let activeDocumentId = null;
+let applicationMenu = null;
 const documents = new Map();
 const workspaceRoots = new Set();
 const pending = [];
@@ -42,8 +50,8 @@ async function openPaths(paths) {
 }
 async function openDialog() {
   const result = await dialog.showOpenDialog(window, {
-    title: '打开 Markdown', properties: ['openFile', 'multiSelections'],
-    filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx'] }],
+    title: '打开 Markdown 或 HTML', properties: ['openFile', 'multiSelections'],
+    filters: [{ name: 'Markdown / HTML', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx', 'html', 'htm'] }],
   });
   if (!result.canceled) await openPaths(result.filePaths);
 }
@@ -58,7 +66,33 @@ function checkedHandler(channel, handler) {
     catch (error) { showError(error); return null; }
   });
 }
-function menuAction(action) { send('emd:action', action); }
+function commandEnabled(id, documentId = activeDocumentId) {
+  return !commandSet.get(id).requiresDocument || documents.has(documentId);
+}
+function updateCommandMenu() {
+  if (!applicationMenu) return;
+  for (const command of commandSet.items) {
+    const item = applicationMenu.getMenuItemById(command.id);
+    if (item) item.enabled = commandEnabled(command.id);
+  }
+}
+async function dispatchCommand(id, documentId = activeDocumentId) {
+  const command = commandSet.get(id);
+  if (documentId !== null && documentId !== undefined) getDocument(documentId);
+  if (!commandEnabled(id, documentId)) return false;
+  if (id === 'openDocument') await openDialog();
+  else if (id === 'quit') app.quit();
+  else if (id === 'toggleFullscreen') toggleFullscreen();
+  else if (id === 'zoomIn') window.webContents.setZoomLevel(window.webContents.getZoomLevel() + 0.5);
+  else if (id === 'zoomOut') window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 0.5);
+  else if (id === 'zoomReset') window.webContents.setZoomLevel(0);
+  else send('emd:action', { id: command.id, documentId });
+  return true;
+}
+function commandItem(id) {
+  const { label, accelerator } = commandSet.get(id);
+  return { id, label, accelerator, enabled: commandEnabled(id), click: () => { dispatchCommand(id).catch(showError); } };
+}
 function focusWindow() {
   if (!window || window.isDestroyed()) return;
   if (window.isMinimized()) window.restore();
@@ -72,8 +106,7 @@ else {
     openPaths(fileArguments(argv, cwd));
     focusWindow();
   });
-  app.on('open-file', (event, filePath) => { event.preventDefault(); openPaths([filePath]); focusWindow(); });
-  if (process.platform === 'darwin') app.on('activate', focusWindow);
+  platform.install(app, { openFiles: openPaths, focusWindow });
   app.on('window-all-closed', () => app.quit());
   app.whenReady().then(async () => {
     protocol.handle('emd', (request) => {
@@ -97,35 +130,42 @@ else {
         return new Response('Image unavailable', { status: 404 });
       }
     });
+    protocol.handle('emd-page', (request) => {
+      try {
+        const url = new URL(request.url);
+        const document = getDocument(url.host);
+        if (document.kind !== 'html' || url.pathname !== '/index.html') return new Response('Page unavailable', { status: 404 });
+        // Serve the opened snapshot on a separate origin. Inline scripts have no app or filesystem access.
+        return new Response(document.bytes, { headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; object-src 'none'; base-uri 'none'; form-action 'none'; sandbox allow-scripts",
+        } });
+      } catch (error) {
+        console.error('Cannot read HTML page:', error.message);
+        return new Response('HTML 页面无法读取，请重新打开文件。', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      }
+    });
     window = new BrowserWindow({
       width: 1180, height: 850, minWidth: 620, minHeight: 440, show: false, frame: false, transparent: true,
       title: 'Ea.Md.Reader', backgroundColor: '#00000000', icon: nativeImage.createFromPath(path.join(__dirname, '..', 'assets', 'emd.png')).resize({ width: 128, height: 128 }),
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
+    toggleFullscreen = platform.createFullscreenToggle(window);
     window.webContents.on('will-navigate', (event) => event.preventDefault());
+    window.webContents.on('will-frame-navigate', (event) => {
+      // Only the app can load an opened HTML snapshot. Block other frame destinations.
+      const url = new URL(event.url);
+      if (event.initiator?.url !== 'emd://app/index.html' || url.protocol !== 'emd-page:' ||
+          url.pathname !== '/index.html' || documents.get(url.host)?.kind !== 'html') event.preventDefault();
+    });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     window.webContents.session.setPermissionCheckHandler(() => false);
-    Menu.setApplicationMenu(process.platform === 'darwin' ? Menu.buildFromTemplate([
-      { role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' },
-    ]) : null);
+    applicationMenu = platform.createMenu({ Menu, commandItem });
+    Menu.setApplicationMenu(applicationMenu);
     window.webContents.on('before-input-event', (event, input) => {
-      if (input.type !== 'keyDown') return;
-      const key = input.key.toLowerCase();
-      const control = input.control || input.meta;
-      if (key === 'f11') { event.preventDefault(); window.setFullScreen(!window.isFullScreen()); return; }
-      if (input.alt && key === 'f') { event.preventDefault(); menuAction('fileMenu'); return; }
-      if (!control || input.alt) return;
-      if (key === 'o') { event.preventDefault(); openDialog().catch(showError); }
-      else if (key === 's' && input.shift) { event.preventDefault(); menuAction('save'); }
-      else if (key === 'w') { event.preventDefault(); menuAction('close'); }
-      else if (key === 'r') { event.preventDefault(); menuAction('reload'); }
-      else if (key === 'f') { event.preventDefault(); menuAction('find'); }
-      else if (key === 'tab') { event.preventDefault(); menuAction(input.shift ? 'previous' : 'next'); }
-      else if (key === 'q') { event.preventDefault(); app.quit(); }
-      else if (key === '+' || key === '=') { event.preventDefault(); window.webContents.setZoomLevel(window.webContents.getZoomLevel() + 0.5); }
-      else if (key === '-') { event.preventDefault(); window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 0.5); }
-      else if (key === '0') { event.preventDefault(); window.webContents.setZoomLevel(0); }
+      consumeInput(event, input, commandSet, (id) => { dispatchCommand(id).catch(showError); });
     });
     window.on('maximize', () => send('emd:window-state', true));
     window.on('unmaximize', () => send('emd:window-state', false));
@@ -140,13 +180,20 @@ else {
       rendererReady = true;
       send('emd:window-state', window.isMaximized());
       for (const [channel, payload] of pending.splice(0)) window.webContents.send(channel, payload);
+      return commandSet.hints;
     });
-    checkedHandler('emd:open', openDialog);
+    checkedHandler('emd:command', dispatchCommand);
+    checkedHandler('emd:active-document', (id) => {
+      if (id !== null) getDocument(id);
+      activeDocumentId = id;
+      updateCommandMenu();
+      return Object.fromEntries(commandSet.items.map((command) => [command.id, commandEnabled(command.id)]));
+    });
     checkedHandler('emd:workspace', async (id, requestedRoot) => {
       const document = getDocument(id);
-      const root = requestedRoot ?? path.dirname(document.path);
-      if (root !== path.dirname(document.path) && (!workspaceRoots.has(root) || !isWithin(root, document.path))) throw new Error('无效的工作区请求。');
-      const workspace = await scanWorkspace(root);
+      if (requestedRoot !== undefined && !workspaceRoots.has(requestedRoot)) throw new Error('无效的工作区请求。');
+      const { root } = workspaceContext(document.path, requestedRoot);
+      const workspace = await scanWorkspace(root, document.path);
       workspaceRoots.add(root);
       return workspace;
     });
@@ -178,14 +225,19 @@ else {
     checkedHandler('emd:save', async (id) => {
       const document = getDocument(id);
       const result = await dialog.showSaveDialog(window, {
-        title: '另存为 Markdown', defaultPath: document.path,
-        filters: [{ name: 'Markdown', extensions: ['md', 'markdown'] }],
+        title: document.kind === 'html' ? '另存为 HTML' : '另存为 Markdown', defaultPath: document.path,
+        filters: [document.kind === 'html' ? { name: 'HTML', extensions: ['html', 'htm'] } : { name: 'Markdown', extensions: ['md', 'markdown'] }],
       });
       if (result.canceled) return null;
       await saveDocument(document, result.filePath);
       return result.filePath;
     });
-    checkedHandler('emd:close', (id) => { getDocument(id); documents.delete(id); });
+    checkedHandler('emd:close', (id) => {
+      getDocument(id);
+      documents.delete(id);
+      if (id === activeDocumentId) activeDocumentId = null;
+      updateCommandMenu();
+    });
     checkedHandler('emd:reload', async (id) => {
       const old = getDocument(id);
       const document = await readDocument(old.path);

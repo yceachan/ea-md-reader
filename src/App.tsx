@@ -27,15 +27,17 @@ function Icon({ name }: { name: 'workspace' | 'menu' | 'open' | 'save' | 'close'
 }
 
 export default function App() {
-  const [tabs, setTabs] = useState<MarkdownDocument[]>([]);
+  const [tabs, setTabs] = useState<ReaderDocument[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [headings, setHeadings] = useState<Record<string, RenderResult['headings']>>({});
   const [maximized, setMaximized] = useState(false);
   const [panels, setPanels] = useState({ left: true, right: true });
   const [panelWidths, setPanelWidths] = useState({ left: 240, right: 240 });
   const [availableWidth, setAvailableWidth] = useState(window.innerWidth);
-  const [workspaceRoot, setWorkspaceRoot] = useState<string | null>(null);
-  const [workspace, setWorkspace] = useState<MarkdownWorkspace | null>(null);
+  const workspaceRoot = useRef<string | undefined>(undefined);
+  const [hints, setHints] = useState<CommandHints | null>(null);
+  const [commandAvailability, setCommandAvailability] = useState<CommandAvailability | null>(null);
+  const [workspace, setWorkspace] = useState<ReaderWorkspace | null>(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [workspaceRevision, setWorkspaceRevision] = useState(0);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
@@ -45,7 +47,7 @@ export default function App() {
   const [fileMenu, setFileMenu] = useState(false);
   const [progress, setProgress] = useState(0);
   const findInput = useRef<HTMLInputElement>(null);
-  const commands = useRef<(action: string) => void>(() => {});
+  const commands = useRef<(action: CommandAction) => void>(() => {});
   const workspaceActions = useRef<(action: WorkspaceAction) => void>(() => {});
   const workspaceElement = useRef<HTMLElement>(null);
   const widthsRef = useRef(panelWidths);
@@ -68,9 +70,9 @@ export default function App() {
     else if (path) openWorkspaceFile(path, action === 'new-tab');
   };
 
-  async function save() {
-    if (!active) return;
-    const destination = await window.emd.save(active.id);
+  async function save(id = activeId) {
+    if (!id) return;
+    const destination = await window.emd.save(id);
     if (destination) setMessage({ text: `已另存为 ${destination}`, error: false });
   }
   async function close(id = activeId) {
@@ -81,9 +83,9 @@ export default function App() {
     setHeadings((current) => { const next = { ...current }; delete next[id]; return next; });
     if (id === activeId) setActiveId(tabs[index + 1]?.id ?? tabs[index - 1]?.id ?? null);
   }
-  async function reload() {
-    if (!active) return;
-    const document = await window.emd.reload(active.id);
+  async function reload(id = activeId) {
+    if (!id) return;
+    const document = await window.emd.reload(id);
     if (document) { setTabs((current) => current.map((tab) => tab.id === document.id ? document : tab)); setMessage({ text: '已重新读取文件', error: false }); }
   }
   function nextTab(delta: number) {
@@ -91,13 +93,13 @@ export default function App() {
     const index = tabs.findIndex((tab) => tab.id === activeId);
     setActiveId(tabs[(index + delta + tabs.length) % tabs.length].id);
   }
-  commands.current = (action) => {
-    const actions: Record<string, () => void> = {
-      save: () => { void save(); }, close: () => { void close(); }, reload: () => { void reload(); },
-      fileMenu: () => setFileMenu((value) => !value), find: () => setFinding(true),
-      next: () => nextTab(1), previous: () => nextTab(-1),
+  commands.current = ({ id, documentId }) => {
+    const actions: Partial<Record<ReaderCommand, () => void>> = {
+      saveAs: () => { void save(documentId); }, closeTab: () => { void close(documentId); }, reloadDocument: () => { void reload(documentId); },
+      toggleFileMenu: () => setFileMenu((value) => !value), findInDocument: () => { setFinding(true); findInput.current?.focus(); },
+      nextTab: () => nextTab(1), previousTab: () => nextTab(-1),
     };
-    actions[action]?.();
+    actions[id]?.();
   };
 
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function App() {
       window.emd.onAnchor(setAnchor),
       window.emd.onError((text) => setMessage({ text, error: true })),
     ];
-    void window.emd.ready();
+    void window.emd.ready().then(setHints);
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
   useEffect(() => {
@@ -130,20 +132,19 @@ export default function App() {
     observer.observe(workspaceElement.current!);
     return () => observer.disconnect();
   }, []);
+  useEffect(() => { void window.emd.activeDocument(activeId).then(setCommandAvailability); }, [activeId]);
   useEffect(() => {
-    if (!active) return;
-    setWorkspaceRoot((root) => root && active.path.startsWith(`${root === '/' ? '' : root}/`) ? root : active.path.slice(0, active.path.lastIndexOf('/')) || '/');
-  }, [active?.path]);
-  useEffect(() => {
-    if (!workspaceRoot || !active) return;
+    if (!active) { setWorkspace(null); setWorkspaceLoading(false); return; }
     let canceled = false;
-    setWorkspaceLoading(true);
-    if (workspace?.root !== workspaceRoot) setWorkspace(null);
-    void window.emd.workspace(active.id, workspaceRoot).then((result) => {
-      if (!canceled) { setWorkspace(result); setWorkspaceLoading(false); }
+    if (!workspace) setWorkspaceLoading(true);
+    void window.emd.workspace(active.id, workspaceRoot.current).then((result) => {
+      if (!canceled) {
+        if (result) workspaceRoot.current = result.root;
+        setWorkspace(result); setWorkspaceLoading(false);
+      }
     });
     return () => { canceled = true; };
-  }, [workspaceRoot, workspaceRevision]);
+  }, [active?.id, active?.path, workspaceRevision]);
   useEffect(() => { document.title = active ? `${active.name} — Ea.Md.Reader` : 'Ea.Md.Reader'; setProgress(0); }, [active]);
   useEffect(() => {
     if (finding) findInput.current?.focus();
@@ -175,22 +176,22 @@ export default function App() {
       <span className="wordmark">Ea<span className="wordmark-dot">.</span>Md<span className="wordmark-dot">.</span>Reader</span>
       <div className="file-actions">
         <div className="file-menu">
-          <button className="icon-button menu-trigger" title="文件菜单 · Alt+F" aria-label="文件" aria-haspopup="menu" aria-expanded={fileMenu} onClick={() => setFileMenu((value) => !value)}><Icon name="menu" /></button>
+          <button className="icon-button menu-trigger" title={`文件菜单 · ${hints?.toggleFileMenu ?? ''}`} aria-label="文件" aria-haspopup="menu" aria-expanded={fileMenu} onClick={() => { void window.emd.command('toggleFileMenu'); }}><Icon name="menu" /></button>
           {fileMenu && <div className="menu-popup" role="menu">
-            <button role="menuitem" onClick={() => { setFileMenu(false); void window.emd.open(); }}>打开… <kbd>Ctrl O</kbd></button>
-            <button role="menuitem" disabled={!active} onClick={() => { setFileMenu(false); void save(); }}>另存为… <kbd>Ctrl Shift S</kbd></button>
+            <button role="menuitem" onClick={() => { setFileMenu(false); void window.emd.command('openDocument'); }}>打开… <kbd>{hints?.openDocument}</kbd></button>
+            <button role="menuitem" disabled={!commandAvailability?.saveAs} onClick={() => { setFileMenu(false); void window.emd.command('saveAs'); }}>另存为… <kbd>{hints?.saveAs}</kbd></button>
             <div className="menu-divider" />
-            <button role="menuitem" disabled={!active} onClick={() => { setFileMenu(false); void close(); }}>关闭标签页 <kbd>Ctrl W</kbd></button>
-            <button role="menuitem" onClick={() => { void window.emd.window('close'); }}>退出 <kbd>Ctrl Q</kbd></button>
+            <button role="menuitem" disabled={!commandAvailability?.closeTab} onClick={() => { setFileMenu(false); void window.emd.command('closeTab'); }}>关闭标签页 <kbd>{hints?.closeTab}</kbd></button>
+            <button role="menuitem" onClick={() => { void window.emd.command('quit'); }}>退出 <kbd>{hints?.quit}</kbd></button>
           </div>}
         </div>
-        <button className="icon-button" title="打开文件 · Ctrl+O" aria-label="打开文件" onClick={() => { void window.emd.open(); }}><Icon name="open" /></button>
-        <button className="icon-button" title="另存为 · Ctrl+Shift+S" aria-label="另存为" disabled={!active} onClick={() => { void save(); }}><Icon name="save" /></button>
+        <button className="icon-button" title={`打开文件 · ${hints?.openDocument ?? ''}`} aria-label="打开文件" onClick={() => { void window.emd.command('openDocument'); }}><Icon name="open" /></button>
+        <button className="icon-button" title={`另存为 · ${hints?.saveAs ?? ''}`} aria-label="另存为" disabled={!commandAvailability?.saveAs} onClick={() => { void window.emd.command('saveAs'); }}><Icon name="save" /></button>
       </div>
-      <span className="toolbar-path" title={active?.path}>{active?.path ?? 'Markdown 阅读器'}</span>
+      <span className="toolbar-path" title={active?.path}>{active?.path ?? 'Markdown / HTML 阅读器'}</span>
       <div className="toolbar-actions">
-        <button className="icon-button" title="查找 · Ctrl+F" aria-label="查找" disabled={!active} onClick={() => setFinding((value) => !value)}><Icon name="search" /></button>
-        <button className={`icon-button ${panels.right ? 'selected' : ''}`} title="显示目录" aria-label="显示目录" aria-pressed={panels.right && !!active} disabled={!active} onClick={() => togglePanel('right')}><Icon name="outline" /></button>
+        <button className="icon-button" title={`查找 · ${hints?.findInDocument ?? ''}`} aria-label="查找" disabled={!commandAvailability?.findInDocument} onClick={() => { void window.emd.command('findInDocument'); }}><Icon name="search" /></button>
+        <button className={`icon-button ${panels.right && active?.kind === 'markdown' ? 'selected' : ''}`} title="显示目录" aria-label="显示目录" aria-pressed={panels.right && active?.kind === 'markdown'} disabled={active?.kind !== 'markdown'} onClick={() => togglePanel('right')}><Icon name="outline" /></button>
       </div>
       <div className="window-controls">
         <button aria-label="最小化窗口" title="最小化" onClick={() => { void window.emd.window('minimize'); }}><Icon name="minimize" /></button>
@@ -201,11 +202,11 @@ export default function App() {
     {tabs.length > 0 && <nav className="tabbar" role="tablist" aria-label="已打开的文件">
       {tabs.map((tab) => <div className={`tab ${tab.id === activeId ? 'active' : ''}`} key={tab.id}
         onMouseDown={(event) => { if (event.button === 1) event.preventDefault(); }}
-        onAuxClick={(event) => { if (event.button === 1) { event.preventDefault(); void close(tab.id); } }}>
-        <button className="tab-select" role="tab" aria-selected={tab.id === activeId} aria-controls={`panel-${tab.id}`} id={`tab-${tab.id}`} title={tab.path} onClick={() => { setActiveId(tab.id); setAnchor(null); }}><span className="file-badge">MD</span><span className="tab-name">{tab.name}</span></button>
-        <button className="tab-close" aria-label={`关闭 ${tab.name}`} title="关闭标签页" onClick={() => { void close(tab.id); }}><Icon name="close" /></button>
+        onAuxClick={(event) => { if (event.button === 1) { event.preventDefault(); void window.emd.command('closeTab', tab.id); } }}>
+        <button className="tab-select" role="tab" aria-selected={tab.id === activeId} aria-controls={`panel-${tab.id}`} id={`tab-${tab.id}`} title={tab.path} onClick={() => { setActiveId(tab.id); setAnchor(null); }}><span className="file-badge">{tab.kind === 'html' ? 'HTML' : 'MD'}</span><span className="tab-name">{tab.name}</span></button>
+        <button className="tab-close" aria-label={`关闭 ${tab.name}`} title="关闭标签页" onClick={() => { void window.emd.command('closeTab', tab.id); }}><Icon name="close" /></button>
       </div>)}
-      <button className="new-tab" title="打开更多文件" aria-label="打开更多文件" onClick={() => { void window.emd.open(); }}>+</button>
+      <button className="new-tab" title="打开更多文件" aria-label="打开更多文件" onClick={() => { void window.emd.command('openDocument'); }}>+</button>
     </nav>}
     {finding && <div className="findbar"><Icon name="search" /><input ref={findInput} aria-label="查找内容" placeholder="在文档中查找…" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void window.emd.find(query, !event.shiftKey); } }} /><button title="上一个" onClick={() => { void window.emd.find(query, false); }}>↑</button><button title="下一个" onClick={() => { void window.emd.find(query, true); }}>↓</button><button className="icon-button" aria-label="关闭查找" onClick={() => setFinding(false)}><Icon name="close" /></button></div>}
     <main className="workspace" ref={workspaceElement}>
@@ -214,32 +215,32 @@ export default function App() {
           <Workspace workspace={workspace} loading={workspaceLoading} activePath={active.path} onOpen={openWorkspaceFile}
             onMenu={(path) => { if (workspace) void window.emd.workspaceMenu(workspace.root, path, active.id); }} onRefresh={() => setWorkspaceRevision((value) => value + 1)} />
         </aside>
-        <PanelResize side="left" width={leftWidth} maxWidth={Math.min(420, availableWidth - (panels.right ? rightWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(left) => setPanelWidths((current) => ({ ...current, left }))} />
+        <PanelResize side="left" width={leftWidth} maxWidth={Math.min(420, availableWidth - (panels.right && active.kind === 'markdown' ? rightWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(left) => setPanelWidths((current) => ({ ...current, left }))} />
       </>}
       <div className="reading-area">
       {!tabs.length && <section className="welcome">
         <div className="welcome-mark"><span>e</span><span className="paper-line" /><span className="paper-line short" /></div>
         <p className="eyebrow">A QUIET PLACE TO READ</p>
         <h1>打开一页，静心阅读。</h1>
-        <p className="welcome-description">为 Markdown 留一片安静的空间。<br />公式、代码、图表，保留熟悉的阅读模样。</p>
-        <button className="open-button" onClick={() => { void window.emd.open(); }}><Icon name="open" />打开 Markdown<span>Ctrl O</span></button>
-        <p className="welcome-hint">也可以在终端运行 <code>emd 文件.md</code></p>
+        <p className="welcome-description">阅读 Markdown 与自包含 HTML。<br />公式、代码、图表，以及页面中的交互。</p>
+        <button className="open-button" onClick={() => { void window.emd.command('openDocument'); }}><Icon name="open" />打开 Markdown / HTML<span>{hints?.openDocument}</span></button>
+        <p className="welcome-hint">也可以在终端运行 <code>emd 文件.md 页面.html</code></p>
         <div className="welcome-footer"><span>ea-kb 的纸色与排版</span><span>只读阅读 · 多标签页</span></div>
       </section>}
-      {tabs.map((tab) => <section className="document-panel" hidden={tab.id !== activeId} role="tabpanel" aria-labelledby={`tab-${tab.id}`} id={`panel-${tab.id}`} key={`${tab.id}-${tab.path}`} onScroll={(event) => {
+      {tabs.map((tab) => <section className={`document-panel ${tab.kind === 'html' ? 'html-panel' : ''}`} hidden={tab.id !== activeId} role="tabpanel" aria-labelledby={`tab-${tab.id}`} id={`panel-${tab.id}`} key={`${tab.id}-${tab.path}`} onScroll={(event) => {
         if (tab.id !== activeId) return;
         const target = event.currentTarget;
         const distance = target.scrollHeight - target.clientHeight;
         setProgress(distance > 0 ? Math.round(target.scrollTop / distance * 100) : 100);
       }}>
-        <article className="article">
+        {tab.kind === 'html' ? <iframe className="html-page" title={tab.name} src={tab.pageUrl} sandbox="allow-scripts" /> : <article className="article">
           <div className="document-meta"><span>MARKDOWN</span><span className="meta-dot">·</span><span>{Math.max(1, Math.ceil(tab.text.length / 600))} 分钟阅读</span><span className="readonly-badge">只读</span></div>
           <Article document={tab} active={tab.id === activeId} anchor={tab.id === activeId ? anchor : null} onHeadings={(id, values) => setHeadings((current) => ({ ...current, [id]: values }))} onError={(text) => setMessage({ text, error: true })} />
           <div className="document-end"><span />文档结束<span /></div>
-        </article>
+        </article>}
       </section>)}
       </div>
-      {active && <aside className={`outline sidebar ${panels.right ? '' : 'collapsed'}`} aria-label="目录面板" style={{ width: panels.right ? rightWidth : 0 }}>
+      {active?.kind === 'markdown' && <aside className={`outline sidebar ${panels.right ? '' : 'collapsed'}`} aria-label="目录面板" style={{ width: panels.right ? rightWidth : 0 }}>
         {panels.right && <PanelResize side="right" width={rightWidth} maxWidth={Math.min(420, availableWidth - (panels.left ? leftWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(right) => setPanelWidths((current) => ({ ...current, right }))} />}
         <button className="panel-toggle" aria-label={`${panels.right ? '折叠' : '展开'}目录面板`} title={`${panels.right ? '折叠' : '展开'}目录面板`} aria-expanded={panels.right} onClick={() => togglePanel('right')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={panels.right ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} /></svg>
@@ -250,6 +251,6 @@ export default function App() {
       </aside>}
     </main>
     {message && <div className={`notification ${message.error ? 'error' : ''}`} role={message.error ? 'alert' : 'status'}><span>{message.text}</span><button className="icon-button" aria-label="关闭提示" onClick={() => setMessage(null)}><Icon name="close" /></button></div>}
-    <footer className="statusbar"><span><span className="status-dot" />{active ? '只读' : '就绪'}</span><span>{tabs.length ? `${tabs.length} 个标签页` : 'emd 0.1.0'}</span><span className="status-spacer" />{active && <><span>UTF-8</span><button className="status-reload" title="重新读取文件 · Ctrl+R" aria-label="重新读取文件" onClick={() => { void reload(); }}><Icon name="refresh" /></button><span className="progress">{progress}%</span></>}</footer>
+    <footer className="statusbar"><span><span className="status-dot" />{active ? '只读' : '就绪'}</span><span>{tabs.length ? `${tabs.length} 个标签页` : 'emd 0.1.0'}</span><span className="status-spacer" />{active && <><span>UTF-8</span><button className="status-reload" title={`重新读取文件 · ${hints?.reloadDocument ?? ''}`} aria-label="重新读取文件" onClick={() => { void window.emd.command('reloadDocument'); }}><Icon name="refresh" /></button>{active.kind === 'markdown' && <span className="progress">{progress}%</span>}</>}</footer>
   </div>;
 }

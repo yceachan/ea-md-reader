@@ -1,6 +1,6 @@
 # Ea.Md.Reader (emd)
 
-使用 [ea.kb,io](https://yceachan.github.io/) 排版的只读 Markdown 桌面阅读器，基于 Electron。使用自行绘制的标题栏、窗口按钮与文件菜单，窗口圆角为 10px。仓库名为 `ea-md-reader`，界面标识为 `Ea.Md.Reader`，终端命令名为 `emd`。
+使用 [ea.kb,io](https://yceachan.github.io/) 排版的只读 Markdown 与 HTML 桌面阅读器，基于 Electron。使用自行绘制的标题栏、窗口按钮与文件菜单，窗口圆角为 10px。仓库名为 `ea-md-reader`，界面标识为 `Ea.Md.Reader`，终端命令名为 `emd`。
 
 ## Os Plat
 
@@ -17,33 +17,41 @@ KDE、GNOME 是 Linux 桌面环境；`mac`、`windows` 对应操作系统。脚�
 # teminal
 emd 文档.md
 emd "带 空格的文件.md" 第二页.md
+emd 页面.html
+emd file:///绝对路径/页面.html
 emd
 # 
 #just open md file with emd
 ```
 
-命令立即返回；Linux 使用 `setsid`，macOS 使用 `nohup` 独立运行，关闭终端后继续阅读。再次运行命令会将文件打开到已有窗口的新标签页；同一文件复用已有标签页。Linux 桌面应用菜单中可搜索 **Ea.Md.Reader**，Dolphin 的 Markdown 文件「打开方式」中可选择 **Ea.Md.Reader**；macOS 从 `~/Applications/emd.app` 或 Finder「打开方式」启动。
+命令立即返回；Linux 使用 `setsid`，macOS 使用 `nohup` 独立运行，关闭终端后继续阅读。再次运行命令会将文件打开到已有窗口的新标签页；同一文件复用已有标签页。Linux 桌面应用菜单中可搜索 **Ea.Md.Reader**，Dolphin 的 Markdown 或 HTML 文件「打开方式」中可选择 **Ea.Md.Reader**；macOS 从 `~/Applications/emd.app` 或 Finder「打开方式」启动。
 
-界面提供文件菜单、打开、另存为、多标签页、工作区、目录面板、查找、统一亮色主题和重新读取文件。左侧工作区以打开文件的所在目录为根，递归显示 Markdown 文件及其所在文件夹，不遍历符号链接目录。普通点击在当前标签页打开，`Alt` 点击新开标签页；右键菜单提供打开方式、在文件管理器中显示和刷新。进入子目录文件时保留工作区根目录，切换到工作区外的文件时以它的所在目录建立新工作区。顶部最左侧按钮显示或隐藏工作区。
+界面提供文件菜单、打开、另存为、多标签页、工作区、目录面板、查找、统一亮色主题和重新读取文件。左侧工作区以打开文件的所在目录为根，递归显示 Markdown、HTML 文件及其所在文件夹，不遍历符号链接目录。普通点击在当前标签页打开，`Alt` 点击新开标签页；右键菜单提供打开方式、在文件管理器中显示和刷新。进入子目录文件时保留工作区根目录，切换到工作区外的文件时以它的所在目录建立新工作区。顶部最左侧按钮显示或隐藏工作区。
 
 左右侧栏均可拖拽边界调整宽度，也可聚焦边界后用左右方向键调整。TOC 使用独立面板，章节以缩进区分层级，折叠按钮位于面板左侧中央。窗口变窄时先收起 TOC，再收起工作区，保留手动展开入口；放宽窗口后恢复面板。正文使用扣除可见侧栏后的容器宽度，段落、标题、引用、代码和文档属性均随容器展开；左右边距随容器调整，不设固定阅读列宽。
 
-源文件保持只读；**另存为保存打开时的原始 Markdown 字节**，包括 BOM、CRLF 和 frontmatter，禁止覆盖源文件及其硬链接。磁盘内容改变后按 `Ctrl+R` 重新读取。另存为不会复制引用的图片，移动文档时需要同时保留图片及其相对位置。
+源文件保持只读；另存为保存打开时的原始文件字节，包括 BOM、CRLF 和 frontmatter，禁止覆盖源文件及其硬链接。磁盘内容改变后使用重新读取命令。另存为不会复制引用的图片，移动文档时需要同时保留图片及其相对位置。
 
-| 操作 | 快捷键 |
-| --- | --- |
-| 打开文件，可多选 | Ctrl+O |
-| 另存为 | Ctrl+Shift+S |
-| 关闭当前标签页 | Ctrl+W |
-| 鼠标关闭指定标签页 | 中键点击标签页 |
-| 切换标签页 | Ctrl+Tab / Ctrl+Shift+Tab |
-| 重新读取文件 | Ctrl+R |
-| 文内查找 | Ctrl+F；Enter / Shift+Enter |
-| 放大 / 缩小 / 恢复 | Ctrl++ / Ctrl+- / Ctrl+0 |
+| 操作 | Linux / Windows | macOS |
+| --- | --- | --- |
+| 打开文件，可多选 | Ctrl+O | Cmd+O |
+| 另存为 | Ctrl+Shift+S | Cmd+Shift+S |
+| 关闭当前标签页 | Ctrl+W | Cmd+W |
+| 切换标签页 | Ctrl+Tab / Ctrl+Shift+Tab | Ctrl+Tab / Ctrl+Shift+Tab |
+| 重新读取文件 | Ctrl+R | Cmd+R |
+| 文内查找 | Ctrl+F | Cmd+F |
+| 放大 / 缩小 / 恢复 | Ctrl++ / Ctrl+- / Ctrl+0 | Cmd++ / Cmd+- / Cmd+0 |
+| 全屏 | F11 | Ctrl+Cmd+F |
+| 文件菜单 | Alt+F | Option+F |
+| 退出 | Ctrl+Q | Cmd+Q |
 
-macOS 使用对应的 `Cmd` 快捷键，例如 `Cmd+O`、`Cmd+Shift+S`、`Cmd+W`、`Cmd+R` 和 `Cmd+F`。关闭最后窗口仍退出应用。
+中键点击关闭指定标签页；查找框内 Enter / Shift+Enter 跳转结果。菜单、按钮提示与实际键位使用同一命令定义。关闭最后窗口仍退出应用。
 
-支持 UTF-8 文件，扩展名 `.md`、`.markdown`、`.mdown`、`.mkd`、`.mkdn`、`.mdx`（MDX 按普通 Markdown 阅读，不执行 JSX）。支持 GFM 表格、任务列表、GitHub alerts、`:::callout`、KaTeX 公式、Shiki 代码高亮、Mermaid 和图片放大。相对路径图片按当前文档目录解析；Markdown 相对链接打开为标签页，网页链接交给系统浏览器。
+支持 UTF-8 文件，扩展名 `.md`、`.markdown`、`.mdown`、`.mkd`、`.mkdn`、`.mdx`（MDX 按普通 Markdown 阅读，不执行 JSX）。支持 GFM 表格、任务列表、GitHub alerts、`:::callout`、KaTeX 公式、Shiki 代码高亮、Mermaid 和图片放大。相对路径图片按当前文档目录解析；Markdown 中的 Markdown 或 HTML 相对链接打开为标签页，网页链接交给系统浏览器。
+
+HTML 支持 `.html`、`.htm`，扩展名不区分大小写。页面保留自身排版，执行内嵌 JavaScript，并支持内嵌 CSS、数据 URL 图片和字体。打开、工作区切换、多标签、查找、另存为和重新读取均支持 HTML。HTML 使用页面自己的导航，应用目录面板只用于 Markdown。
+
+HTML 在隔离的 iframe 中运行。页面脚本无法访问应用接口、Node.js 或父页面。页面不加载外部脚本、样式和相对资源，也不跳转到其他页面或打开新窗口。当前支持自包含页面；依赖外部资源的网页需要先将资源内嵌到 HTML 中。
 
 ## 构建与用户级安装（Linux）
 
@@ -74,7 +82,7 @@ node scripts/install.mjs --platform=kde /路径/到/解压目录
 node scripts/install.mjs /路径/到/解压目录
 ```
 
-安装会注册 `text/markdown` 与 `text/x-markdown` 的打开方式，不修改默认应用设置。若要自行设为默认：
+安装会注册 `text/markdown`、`text/x-markdown` 与 `text/html` 的打开方式，不修改默认应用设置。若要自行设为默认：
 
 ```sh
 xdg-mime default io.github.yceachan.emd.desktop text/markdown
@@ -132,12 +140,13 @@ npm run uninstall:local -- --platform=mac
 | `scripts/platforms/kde.mjs`、`assets/emd.desktop` | Linux 解包目录和可执行文件；XDG 数据/日志目录、`~/.local/bin`、`/bin/sh`、`setsid`、desktop/MIME 与 hicolor 图标；`desktop-file-validate`、`update-desktop-database`、KDE Plasma 6 的 `kbuildsycoca6` | GNOME 集成验证；Windows 安装与卸载模块 |
 | `scripts/platforms/mac.mjs` | 当前架构的 `.app` / DMG / ZIP、用户级 Applications、nohup 启动器、Finder 注册和卸载 | Developer ID 签名与公证 |
 | `scripts/render-icons.mjs` | 各平台通过 resvg 生成 PNG；Mac ICNS 由 builder 生成 | Windows ICO；继续以 `assets/emd.svg` 为唯一设计源 |
-| `electron/main.cjs` | Linux 的 `setDesktopName`；当前无边框透明窗口、自绘窗口按钮、应用菜单、快捷键和关闭窗口即退出的生命周期 | 各系统的窗口行为、macOS 菜单/Dock/生命周期、文件打开及快捷键验证 |
-| `src/App.tsx`、`src/components/Workspace.tsx` | 工作区根目录和后代判断使用 `/` | Windows 路径分隔符、盘符与 UNC 路径处理；本轮不改运行时 |
+| `electron/platforms/*.cjs` | Linux 桌面身份、macOS 菜单/Finder/Dock、三平台键位；由 `index.cjs` 集中选择 | 新增有实际差异的平台能力 |
+| `electron/commands.cjs`、`electron/main.cjs` | 语义命令生成键盘匹配、菜单 accelerator 与 UI 提示，主进程统一分派 | 后续命令使用相同定义与分派入口 |
+| `electron/files.cjs`、`src/components/Workspace.tsx` | 主进程用 Node 路径语义返回工作区根目录与活动祖先，渲染层使用路径标识 | 保留 POSIX、Windows 盘符和 UNC 路径契约 |
 | `electron/files.cjs`、本地资源协议 | 使用 Node 的 `path`、`fs`、文件 URL；原始字节保存和 inode 覆盖保护 | 各系统的文件系统语义、符号链接、本地资源 URL 验证 |
 | `tests/reader.spec.cjs`、`tests/mac-platform.test.mjs` | Linux 条件执行 X11 / xprop；macOS 验证菜单、Finder 文件打开、Cmd 快捷键和隔离安装 | GNOME/Wayland、Windows 原生窗口和安装验证 |
 
-GNOME 和 Windows 的打包安装入口仍待接入。
+GNOME 和 Windows 的打包安装入口仍待接入。GitHub Actions 在 Linux x64、macOS arm64/x64、Windows x64 原生运行机验证共享构建、文件、命令和 Electron UI；Linux/macOS 另验证当前打包安装能力。CI 报告与支持平台的档案保留 7 天。
 
 ## 开发与验证
 
@@ -146,9 +155,9 @@ npm start
 npm test
 ```
 
-`npm test` 进行类型检查、生产构建、原始字节保存与覆盖保护、工作区扫描、平台入口、隔离安装与卸载测试，以及真实 Electron 无边框窗口测试：公式、代码、图表、相对图片、多标签、另存为、重新读取、重复启动、HTML 清理、工作区文件切换及右键菜单、面板拖拽与窄窗口布局。需要运行图形会话；Linux 还需要 `xprop` 检查原生图标，无头 Linux 可用 `xvfb-run -a npm test`。KDE 安装测试仅在 Linux 执行，macOS 安装测试使用隔离目录；临时文件和报告使用系统临时目录。
+`npm test` 进行类型检查、生产构建、原始字节保存与覆盖保护、工作区扫描、平台入口、隔离安装与卸载测试，以及真实 Electron 无边框窗口测试：HTML 内嵌 JS/CSS、隔离、查找与重读，公式、代码、图表、相对图片、多标签、另存为、重新读取、重复启动、HTML 清理、工作区文件切换及右键菜单、面板拖拽与窄窗口布局。需要运行图形会话；Linux 还需要 `xprop` 检查原生图标，无头 Linux 可用 `xvfb-run -a npm test`。KDE 安装测试仅在 Linux 执行，macOS 安装测试使用隔离目录；临时文件使用系统临时目录，截图、进程日志和追踪保存到 test-results。
 
-主进程负责文件与原生菜单，沙箱化渲染进程只通过限定的 IPC 接口操作已打开的文件。文档 HTML 经 DOMPurify 清理，应用使用独立协议与 CSP，文档脚本不会执行。
+主进程负责文件与原生菜单，沙箱化渲染进程只通过限定的 IPC 接口操作已打开的文件。Markdown 中的 HTML 经 DOMPurify 清理，Markdown 文档脚本不会执行。独立 HTML 文件通过专用协议加载原始文件快照。HTML 的内容安全策略允许内嵌脚本与样式，iframe 沙箱隔离应用权限。应用自身的脚本策略保持不变。
 
 ## 排版来源
 

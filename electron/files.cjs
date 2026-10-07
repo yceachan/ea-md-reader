@@ -4,6 +4,7 @@ const { randomUUID } = require('node:crypto');
 const { fileURLToPath } = require('node:url');
 
 const MARKDOWN_EXTENSIONS = new Set(['.md', '.markdown', '.mdown', '.mkd', '.mkdn', '.mdx']);
+const HTML_EXTENSIONS = new Set(['.html', '.htm']);
 const IMAGE_TYPES = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.avif': 'image/avif', '.bmp': 'image/bmp', '.ico': 'image/x-icon' };
 
 function fileArguments(argv, cwd) {
@@ -17,20 +18,22 @@ function fileArguments(argv, cwd) {
 }
 
 async function readDocument(filePath) {
-  if (!MARKDOWN_EXTENSIONS.has(path.extname(filePath).toLowerCase())) throw new Error('请选择 Markdown 文件（.md、.markdown、.mdown、.mkd、.mkdn、.mdx）。');
+  const extension = path.extname(filePath).toLowerCase();
+  const kind = HTML_EXTENSIONS.has(extension) ? 'html' : 'markdown';
+  if (!HTML_EXTENSIONS.has(extension) && !MARKDOWN_EXTENSIONS.has(extension)) throw new Error('请选择 Markdown 或 HTML 文件（.md、.markdown、.mdown、.mkd、.mkdn、.mdx、.html、.htm）。');
   const canonicalPath = await fs.realpath(filePath);
   const bytes = await fs.readFile(canonicalPath);
   // Fail explicitly for non-UTF-8 input instead of silently changing its contents.
   const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-  return { id: randomUUID(), path: canonicalPath, name: path.basename(canonicalPath), text, bytes };
+  return { id: randomUUID(), kind, path: canonicalPath, name: path.basename(canonicalPath), text, bytes };
 }
 
 function publicDocument(document) {
   const { bytes, ...result } = document;
-  return result;
+  return document.kind === 'html' ? { ...result, pageUrl: `emd-page://${document.id}/index.html?revision=${randomUUID()}` } : result;
 }
 
-async function scanWorkspace(root) {
+async function scanWorkspace(root, activePath) {
   async function scan(directory) {
     const entries = await fs.readdir(directory, { withFileTypes: true });
     const nodes = [];
@@ -39,18 +42,30 @@ async function scanWorkspace(root) {
       if (entry.isDirectory()) {
         const children = await scan(entryPath);
         if (children.length) nodes.push({ name: entry.name, path: entryPath, children });
-      } else if (entry.isFile() && MARKDOWN_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+      } else if (entry.isFile() && (MARKDOWN_EXTENSIONS.has(path.extname(entry.name).toLowerCase()) || HTML_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))) {
         nodes.push({ name: entry.name, path: entryPath });
       }
     }
     return nodes.sort((a, b) => Number(!a.children) - Number(!b.children) || a.name.localeCompare(b.name, 'zh-CN', { numeric: true }));
   }
-  return { root, name: path.basename(root), nodes: await scan(root) };
+  return { root, name: path.basename(root), nodes: await scan(root), activeAncestors: activePath ? workspaceContext(activePath, root).activeAncestors : [] };
 }
 
-function isWithin(root, filePath) {
-  const relative = path.relative(root, filePath);
-  return relative !== '' && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative);
+function isWithin(root, filePath, paths = path) {
+  const relative = paths.relative(root, filePath);
+  return relative !== '' && !relative.startsWith(`..${paths.sep}`) && relative !== '..' && !paths.isAbsolute(relative);
+}
+
+function workspaceContext(filePath, previousRoot, paths = path) {
+  const root = previousRoot && isWithin(previousRoot, filePath, paths) ? previousRoot : paths.dirname(filePath);
+  const activeAncestors = [];
+  let directory = paths.dirname(filePath);
+  while (isWithin(root, directory, paths)) {
+    activeAncestors.push(directory);
+    directory = paths.dirname(directory);
+  }
+  activeAncestors.push(root);
+  return { root, activeAncestors };
 }
 
 async function saveDocument(document, destination) {
@@ -66,4 +81,4 @@ async function saveDocument(document, destination) {
   await fs.writeFile(destination, document.bytes);
 }
 
-module.exports = { fileArguments, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, IMAGE_TYPES };
+module.exports = { fileArguments, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES };

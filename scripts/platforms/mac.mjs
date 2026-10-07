@@ -13,6 +13,8 @@ export const packOptions = {
       fileAssociations: [{
         ext: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx'],
         name: 'Markdown document', role: 'Viewer', rank: 'Alternate',
+      }, {
+        ext: ['html', 'htm'], name: 'HTML document', role: 'Viewer', rank: 'Alternate',
       }],
     },
   },

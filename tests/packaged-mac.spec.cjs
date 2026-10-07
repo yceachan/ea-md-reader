@@ -18,12 +18,14 @@ test('macOS 原生包、隔离安装、系统打开、升级与重复卸载', as
   const first = path.join(directory, '只读 示例.md');
   const second = path.join(directory, '系统打开.md');
   const third = path.join(directory, '-终端 参数.md');
+  const html = path.join(directory, '系统 页面.html');
   const bytes = Buffer.from('\ufeff# 只读示例\r\n\r\n原始内容。\r\n');
   let application;
   try {
     await fs.writeFile(first, bytes);
     await fs.writeFile(second, '# 系统打开\n');
     await fs.writeFile(third, '# 终端参数\n');
+    await fs.writeFile(html, '<!doctype html><h1>系统HTML</h1><button id="interactive">0</button><script>document.querySelector("button").onclick=e=>e.target.textContent="1"</script>');
     await install(context);
     await execFile('/usr/bin/codesign', ['--verify', '--deep', '--strict', bundle]);
     const archives = (await fs.readdir('release')).filter((name) => name.endsWith('.dmg'));
@@ -43,6 +45,13 @@ test('macOS 原生包、隔离安装、系统打开、升级与重复卸载', as
     await execFile('/bin/sh', [path.join(context.home, '.local/bin/emd'), `--user-data-dir=${profile}`, '--', third]);
     await expect(page.locator('.document-panel:not([hidden]) h1')).toHaveText('终端参数');
     await expect(page.getByRole('tab')).toHaveCount(3);
+    await execFile('/usr/bin/open', ['-a', bundle, html, '--args', `--user-data-dir=${profile}`]);
+    const frame = page.frameLocator('.document-panel:not([hidden]) .html-page');
+    await expect(frame.locator('h1')).toHaveText('系统HTML');
+    await frame.locator('#interactive').click();
+    await expect(frame.locator('#interactive')).toHaveText('1');
+    expect(await frame.locator('body').evaluate(() => typeof window.emd)).toBe('undefined');
+    await expect(page.getByRole('tab')).toHaveCount(4);
     await page.screenshot({ path: test.info().outputPath('system-open.png') });
     await close(application);
     application = null;

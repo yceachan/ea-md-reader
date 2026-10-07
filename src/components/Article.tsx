@@ -10,7 +10,7 @@ function diagramJob(job: () => Promise<void>) {
 }
 
 export default function Article({ document, active, anchor, onHeadings, onError }: {
-  document: MarkdownDocument; active: boolean; anchor: string | null;
+  document: ReaderDocument; active: boolean; anchor: string | null;
   onHeadings: (id: string, headings: RenderResult['headings']) => void;
   onError: (message: string) => void;
 }) {

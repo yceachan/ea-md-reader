@@ -1,0 +1,20 @@
+{
+  "platform": "linux",
+  "source": "fe826e9",
+  "build": "passed",
+  "node": {
+    "passed": 29,
+    "skipped": 2,
+    "failed": 0,
+    "skipReason": "native macOS tools"
+  },
+  "electronUI": {
+    "passed": 5,
+    "skipped": 1,
+    "failed": 0,
+    "skipReason": "native macOS event test"
+  },
+  "packagedSource": "same production files as f95ed9e; Linux native package checks passed in run 37534770335",
+  "logs": "local only",
+  "futureLocalUI": "Xvfb isolated DISPLAY with Openbox"
+}
