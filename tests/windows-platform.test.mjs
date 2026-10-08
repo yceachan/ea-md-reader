@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -11,7 +11,8 @@ async function missing(file) {
 }
 
 async function fixture(t) {
-  const directory = await mkdtemp(join(tmpdir(), 'emd-windows-'));
+  // Hosted runners expose TEMP through RUNNER~1; Shell links expand 8.3 aliases.
+  const directory = await realpath(await mkdtemp(join(tmpdir(), 'emd-windows-')));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const home = join(directory, 'home');
   const root = resolve('.');
