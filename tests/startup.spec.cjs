@@ -55,7 +55,7 @@ test('KDE 专注启动按 pwd 当前层统一计数，零/单/多文档布局与
   } finally { await fs.rm(root, { recursive: true, force: true }); }
 });
 
-test('默认布局保持尺寸并展开工作树和 TOC，折叠按钮悬浮且不划分内容列', async () => {
+test('默认布局尺寸受屏幕工作区限制并展开工作树和 TOC，折叠按钮悬浮且不划分内容列', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-default-layout-')));
   let application;
   try {
@@ -64,9 +64,16 @@ test('默认布局保持尺寸并展开工作树和 TOC，折叠按钮悬浮且�
     const page = await application.firstWindow();
     await expect(page.locator('.workspace-sidebar')).toBeVisible();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
-    const screenWidth = await application.evaluate(({ screen }, native) => native ? screen.getAllDisplays()[0].workArea.width : screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea.width, native);
-    await expect(page.locator('.outline.panel-overlay')).toHaveCount(1180 <= screenWidth / 2 ? 1 : 0);
-    expect(await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getSize())).toEqual([1180, 850]);
+    const area = await application.evaluate(({ BrowserWindow, screen }, native) => native ? screen.getAllDisplays()[0].workArea : screen.getDisplayMatching(BrowserWindow.getAllWindows()[0].getBounds()).workArea, native);
+    const size = await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getSize());
+    const expectedSize = [Math.floor(Math.min(1180, area.width)), Math.floor(Math.min(850, area.height))];
+    // Openbox 在贴合工作区边界时可能保留 1px。
+    for (let index = 0; index < expectedSize.length; index++) {
+      expect(size[index]).toBeLessThanOrEqual(expectedSize[index]);
+      expect(expectedSize[index] - size[index]).toBeLessThanOrEqual(1);
+    }
+    const viewportWidth = await page.evaluate(() => window.innerWidth);
+    await expect(page.locator('.outline.panel-overlay')).toHaveCount(viewportWidth <= area.width / 2 ? 1 : 0);
     const outline = await page.locator('.outline').boundingBox(), content = await page.locator('.outline-content').boundingBox();
     expect(content.x - outline.x).toBeLessThanOrEqual(1);
     expect(outline.width - content.width).toBeLessThanOrEqual(1);
