@@ -31,6 +31,7 @@ let window;
 let toggleFullscreen;
 let openDeveloperTools;
 let rendererReady = false;
+let rendererInitialized = false;
 let activeDocumentId = null;
 let applicationMenu = null;
 let startupDisplayWidth = null;
@@ -259,13 +260,19 @@ else {
       else throw new Error('无效的窗口操作。');
     });
     checkedHandler('emd:ready', () => {
+      const restore = rendererInitialized;
+      rendererInitialized = true;
       rendererReady = true;
       send('emd:window-state', window.isMaximized());
       sendDisplayWidth();
-      for (const [channel, payload] of pending.splice(0)) window.webContents.send(channel, payload);
       // The new renderer may have missed events sent while its predecessor unloaded.
-      for (const document of documents.values()) send('emd:document', publicDocument(document));
-      if (activeDocumentId) send('emd:activate', activeDocumentId);
+      if (restore) {
+        for (const document of documents.values()) send('emd:document', publicDocument(document));
+        if (activeDocumentId) send('emd:activate', activeDocumentId);
+      }
+      // New file-open events supersede the restored active tab. First startup
+      // consumes only its queue, avoiding a stale activation from an early tab.
+      for (const [channel, payload] of pending.splice(0)) window.webContents.send(channel, payload);
       return commandSet.hints;
     });
     checkedHandler('emd:command', dispatchCommand);

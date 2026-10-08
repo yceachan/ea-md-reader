@@ -24,6 +24,7 @@ test('Vite 开发页面保留 IPC、HTML 隔离与资料加载，CSS 热更新�
     const page = await application.firstWindow();
     page.on('pageerror', error => errors.push(error.message));
     await expect(page.getByRole('tab')).toHaveCount(2, { timeout: 30000 });
+    await expect(page.getByRole('tab', { selected: true })).toHaveText('HTML页面.html');
     expect(page.url()).toBe(url);
     await expect(page.frameLocator('.html-page').getByRole('heading', { name: '开发 HTML' })).toBeVisible();
     expect(await page.frameLocator('.html-page').locator('body').getAttribute('data-bridge')).toBe('undefined');
