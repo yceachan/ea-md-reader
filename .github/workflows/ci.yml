@@ -52,12 +52,8 @@ jobs:
       - run: npm run check
       - run: npm run build
       - name: Package native application and archives
-        if: matrix.platform != 'windows'
         id: package
         run: npm run dist -- --platform=${{ matrix.platform }}
-      - name: Report Windows installation scope
-        if: runner.os == 'Windows'
-        run: Write-Output 'Windows runs shared build, file, command and Electron UI checks. Windows packaging and installation remain unsupported and are checked as explicit failures.'
       - name: Configure Electron sandbox helpers on the Linux runner
         if: runner.os == 'Linux'
         run: |
@@ -97,6 +93,11 @@ jobs:
         env:
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/packaged
         run: npm run test:packaged -- --reporter=line,html
+      - name: Packaged app and user-level installation on Windows
+        if: always() && runner.os == 'Windows' && steps.package.outcome == 'success'
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/packaged
+        run: npm run test:packaged -- --reporter=line,html
       - name: Preserve reports and native artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -109,3 +110,4 @@ jobs:
             release/*.dmg
             release/*.zip
             release/*.tar.gz
+            release/*.exe

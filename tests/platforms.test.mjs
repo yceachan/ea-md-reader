@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { parsePlatformArgs, selectPlatform } from '../scripts/platforms.mjs';
 
-test('平台选择支持 KDE 和 macOS，TODO 平台和错误参数明确失败', async () => {
+test('平台选择支持 KDE、macOS 和 Windows，TODO 平台和错误参数明确失败', async () => {
   assert.equal(selectPlatform(undefined, 'linux', 'KDE').name, 'KDE/Linux');
   assert.equal(selectPlatform(undefined, 'linux', '').name, 'KDE/Linux');
   const mac = selectPlatform(undefined, 'darwin');
@@ -15,9 +15,15 @@ test('平台选择支持 KDE 和 macOS，TODO 平台和错误参数明确失败'
   const adapter = await mac.load();
   assert.equal(typeof adapter.install, 'function');
   assert.equal(typeof adapter.uninstall, 'function');
+  const windows = selectPlatform(undefined, 'win32');
+  assert.equal(windows.name, 'Windows');
+  assert.equal(windows.os, 'win32');
+  const windowsAdapter = await windows.load();
+  assert.equal(typeof windowsAdapter.install, 'function');
+  assert.equal(typeof windowsAdapter.uninstall, 'function');
   assert.deepEqual(parsePlatformArgs(['--platform', 'kde', '带 空格的目录']), { platform: 'kde', rest: ['带 空格的目录'] });
   assert.deepEqual(parsePlatformArgs(['--uninstall', '--platform=kde']), { platform: 'kde', rest: ['--uninstall'] });
-  for (const [host, desktop] of [['linux', 'ubuntu:GNOME'], ['win32', '']]) assert.throws(() => selectPlatform(undefined, host, desktop), /TODO/);
+  assert.throws(() => selectPlatform(undefined, 'linux', 'ubuntu:GNOME'), /TODO/);
   assert.throws(() => selectPlatform('kde', 'darwin'), /linux/);
   assert.throws(() => selectPlatform('mac', 'linux'), /darwin/);
   assert.throws(() => selectPlatform('typo', 'linux'), /未知平台/);
@@ -32,7 +38,7 @@ test('TODO 打包、安装和卸载入口在执行外部命令或写入前退出
     const npmCli = join(directory, 'npm.mjs');
     await writeFile(npmCli, `import { writeFileSync } from 'node:fs'; writeFileSync(${JSON.stringify(marker)}, JSON.stringify(process.argv.slice(2))); process.exit(17);`);
     const env = { ...process.env, npm_execpath: npmCli, XDG_DATA_HOME: join(directory, 'data'), XDG_STATE_HOME: join(directory, 'state') };
-    for (const platform of ['gnome', 'windows']) {
+    for (const platform of ['gnome']) {
       for (const [script, args] of [['scripts/pack.mjs', []], ['scripts/install.mjs', []], ['scripts/install.mjs', ['--uninstall']]]) {
         const result = spawnSync(process.execPath, [script, `--platform=${platform}`, ...args], { cwd: resolve('.'), env, encoding: 'utf8' });
         assert.equal(result.status, 1);

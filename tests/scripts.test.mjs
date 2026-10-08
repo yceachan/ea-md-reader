@@ -24,7 +24,7 @@ test('start 与 pack/dist 缺产物直接失败，不隐式执行 npm 构建', a
   const marker = join(directory, 'implicit-build');
   const npmCli = join(directory, 'npm.mjs');
   await writeFile(npmCli, `import { writeFileSync } from 'node:fs'; writeFileSync(${JSON.stringify(marker)}, 'unexpected build');`);
-  const platform = { linux: 'kde', darwin: 'mac' }[process.platform];
+  const platform = { linux: 'kde', darwin: 'mac', win32: 'windows' }[process.platform];
   const commands = [['start.mjs']];
   if (platform) commands.push(['pack.mjs', `--platform=${platform}`], ['pack.mjs', '--dist', `--platform=${platform}`]);
   for (const [script, ...args] of commands) {

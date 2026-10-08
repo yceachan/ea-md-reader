@@ -23,7 +23,11 @@ export async function requireBuild(groups = ['renderer', 'icons', 'native'], dir
 }
 
 export async function requirePackage() {
-  const executable = { linux: 'release/linux-unpacked/emd', darwin: `release/${process.arch === 'arm64' ? 'mac-arm64' : 'mac'}/emd.app/Contents/MacOS/emd` }[process.platform];
+  const executable = {
+    linux: 'release/linux-unpacked/emd',
+    darwin: `release/${process.arch === 'arm64' ? 'mac-arm64' : 'mac'}/emd.app/Contents/MacOS/emd`,
+    win32: 'release/win-unpacked/emd.exe',
+  }[process.platform];
   if (!executable) throw new Error('当前平台的打包验证为 TODO。');
   try { await access(join(root, executable)); }
   catch (error) {

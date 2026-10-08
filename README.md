@@ -7,9 +7,9 @@
 - KDE
 - Gnome (todo)
 - Mac
-- Windows (todo)
+- Windows
 
-KDE、GNOME 是 Linux 桌面环境；`mac`、`windows` 对应操作系统。脚本的平台标识为 `kde`、`gnome`、`mac`、`windows`，`kde`、`mac` 已接入打包、用户级安装和卸载流程；GNOME 和 Windows 入口返回 TODO。
+KDE、GNOME 是 Linux 桌面环境；`mac`、`windows` 对应操作系统。脚本的平台标识为 `kde`、`gnome`、`mac`、`windows`，`kde`、`mac`、`windows` 已接入打包、用户级安装和卸载流程；GNOME 入口返回 TODO。
 
 ## 使用
 
@@ -51,7 +51,7 @@ F12 或文件菜单“开发者控制台”打开 Reader 界面的独立 DevTool
 
 点击左上角 logo 打开居中的个人资料卡片，支持 Esc、关闭按钮和遮罩关闭。每次打开从同一个 `setting.toml` 读取 `[profile]`；文字按配置显示。项目自带头像 `public/profile-photo.jpg`，构建后随 `dist` 打包，配置中使用相对路径 `profile-photo.jpg`；也可用本地图片绝对路径覆盖，支持没有扩展名的图片。邮箱、GitHub 主页与项目仓库通过系统应用打开；仓库链接仅显示 `owner/repo`。编辑器和启动布局设置的修改保留 profile 分区；未配置或头像、链接无效时给出明确提示。
 
-配置文件位置：开发版默认使用仓库中的 `.dev/profile/setting.toml`，Linux 安装版使用 `${XDG_CONFIG_HOME:-~/.config}/emd/setting.toml`。下面是配置示例，程序没有内置这些个人资料默认值。开发版与安装版的设置相互独立；需要复用安装版配置时，可用 `npm run dev -- --user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/emd"`，此时开发版的设置修改也会写入安装版配置。
+配置文件位置：开发版默认使用仓库中的 `.dev/profile/setting.toml`，Linux 安装版使用 `${XDG_CONFIG_HOME:-~/.config}/emd/setting.toml`，Windows 安装版使用 `%APPDATA%\emd\setting.toml`。下面是配置示例，程序没有内置这些个人资料默认值。开发版与安装版的设置相互独立；需要复用安装版配置时，可给 `dev` 传入对应的 `--user-data-dir`。
 
 ```toml
 [profile]
@@ -109,7 +109,7 @@ npm run uninstall:local -- --platform=kde
 node scripts/install.mjs --platform=kde /路径/到/解压目录
 ```
 
-不指定平台时按当前机器选择：Linux GNOME 会命中 `gnome` 的 TODO 入口，其他 Linux 环境沿用 KDE 配置（包括没有桌面环境的构建机器）；macOS 自动使用 `mac`；Windows 命中 `windows` 的 TODO 入口。显式选择 KDE 时仍要求 Linux 主机，本轮没有实现跨系统构建。TODO 平台在构建、外部命令和安装文件写入前退出。
+不指定平台时按当前机器选择：Linux GNOME 会命中 `gnome` 的 TODO 入口，其他 Linux 环境沿用 KDE 配置（包括没有桌面环境的构建机器）；macOS 自动使用 `mac`；Windows 自动使用 `windows`。显式选择平台时仍要求匹配的主机，本轮没有实现跨系统构建。TODO 平台在构建、外部命令和安装文件写入前退出。
 
 `pack` 生成 `release/linux-unpacked/`；发行压缩包使用 `npm run dist -- --platform=kde`，生成 `release/emd-0.1.0-linux-x64.tar.gz`。两者均使用已有构建。安装脚本将已打包应用复制到 `${XDG_DATA_HOME:-~/.local/share}/emd`，创建 `~/.local/bin/emd` 和用户级 desktop/MIME 入口，无需 root 权限。确认 `~/.local/bin` 在 `PATH` 中即可运行命令。
 
@@ -131,6 +131,28 @@ xdg-mime default io.github.yceachan.emd.desktop text/x-markdown
 ```sh
 npm run uninstall:local
 ```
+
+## 构建与用户级安装（Windows）
+
+需要 Windows 10/11、Node.js 22.12+、npm 和 PowerShell 7+（`pwsh.exe` 在 PATH 中），不需要管理员权限。PowerShell 7 用于注册当前用户的开始菜单快捷方式和文件打开方式。
+
+```powershell
+npm ci
+npm run build
+npm run pack
+npm run install:local
+```
+
+`pack` 生成 `release\win-unpacked\emd.exe`。`npm run dist` 另生成当前架构的 NSIS 安装器和 ZIP，例如 `release\emd-0.1.0-win-x64.exe` 与 `.zip`。本地安装脚本将应用复制到 `%LOCALAPPDATA%\Programs\emd`，创建开始菜单入口，并把 Markdown / HTML 注册为可选打开方式，不更改现有默认应用。
+
+也可传入已解压的 `win-unpacked` 目录。更新前请退出正在运行的 emd；安装脚本拒绝覆盖无关应用或快捷方式，升级失败时恢复旧版本。
+
+```powershell
+node scripts/install.mjs --platform=windows "C:\path\to\win-unpacked"
+npm run uninstall:local
+```
+
+卸载会移除应用、快捷方式和本安装器写入的关联，保留 `%APPDATA%\emd` 中的配置。
 
 ## 构建与用户级安装（macOS）
 
@@ -169,22 +191,23 @@ npm run uninstall:local -- --platform=mac
 
 ## 平台接入与依赖审查
 
-`scripts/platforms.mjs` 是平台登记与选择入口，`scripts/pack.mjs` 和 `scripts/install.mjs` 负责参数解析与分派。KDE 和 macOS 实现分别位于 `scripts/platforms/kde.mjs`、`scripts/platforms/mac.mjs`，平台打包目标和安装集成都由对应模块提供；`package.json` 保留公共构建配置。
+`scripts/platforms.mjs` 是平台登记与选择入口，`scripts/pack.mjs` 和 `scripts/install.mjs` 负责参数解析与分派。KDE、macOS 和 Windows 实现分别位于 `scripts/platforms/kde.mjs`、`scripts/platforms/mac.mjs`、`scripts/platforms/windows.mjs`，平台打包目标和安装集成都由对应模块提供；`package.json` 保留公共构建配置。
 
 未来接入平台时，在登记表添加模块加载函数，并实现三个导出：`packOptions`（传给 electron-builder 的平台构建选项）、`install({ root, home, source })`、`uninstall({ root, home, source })`。`root` 是仓库目录，`home` 是当前用户目录，`source` 是可选的解包产物目录；省略 `source` 时由平台模块确定默认产物位置。平台的依赖检查、安装路径、启动器、文件关联、图标注册与卸载逻辑放在自己的模块中。
 
 | 位置 | 当前平台依赖 | 后续接入范围 |
 | --- | --- | --- |
-| `scripts/platforms/kde.mjs`、`assets/emd.desktop` | Linux 解包目录和可执行文件；XDG 数据/日志目录、`~/.local/bin`、`/bin/sh`、`setsid`、desktop/MIME 与 hicolor 图标；`desktop-file-validate`、`update-desktop-database`、KDE Plasma 6 的 `kbuildsycoca6` | GNOME 集成验证；Windows 安装与卸载模块 |
+| `scripts/platforms/kde.mjs`、`assets/emd.desktop` | Linux 解包目录和可执行文件；XDG 数据/日志目录、`~/.local/bin`、`/bin/sh`、`setsid`、desktop/MIME 与 hicolor 图标；`desktop-file-validate`、`update-desktop-database`、KDE Plasma 6 的 `kbuildsycoca6` | GNOME 集成验证 |
 | `scripts/platforms/mac.mjs` | 当前架构的 `.app` / DMG / ZIP、用户级 Applications、nohup 启动器、Finder 注册和卸载 | Developer ID 签名与公证 |
-| `scripts/render-icons.mjs` | 各平台通过 resvg 生成 PNG；Mac ICNS 由 builder 生成 | Windows ICO；继续以 `assets/emd.svg` 为唯一设计源 |
+| `scripts/platforms/windows.mjs`、`windows-integration.ps1` | Windows 解包目录、NSIS / ZIP、用户级 Programs、开始菜单、App Paths 和可选文件关联 | 分发签名 |
+| `scripts/render-icons.mjs` | 各平台通过 resvg 生成 PNG；Mac ICNS 与 Windows ICO 由 builder 从同一 PNG 源生成 | 继续以 `assets/emd.svg` 为唯一设计源 |
 | `electron/platforms/*.cjs` | Linux 桌面身份、macOS 菜单/Finder/Dock、三平台键位；由 `index.cjs` 集中选择 | 新增有实际差异的平台能力 |
 | `electron/commands.cjs`、`electron/main.cjs` | 语义命令生成键盘匹配、菜单 accelerator 与 UI 提示，主进程统一分派 | 后续命令使用相同定义与分派入口 |
 | `electron/files.cjs`、`src/components/Workspace.tsx` | 主进程用 Node 路径语义返回工作区根目录与活动祖先，渲染层使用路径标识 | 保留 POSIX、Windows 盘符和 UNC 路径契约 |
 | `electron/files.cjs`、本地资源协议 | 使用 Node 的 `path`、`fs`、文件 URL；原始字节保存和 inode 覆盖保护 | 各系统的文件系统语义、符号链接、本地资源 URL 验证 |
-| `tests/reader.spec.cjs`、`tests/mac-platform.test.mjs` | Linux 条件执行 X11 / xprop；macOS 验证菜单、Finder 文件打开、Cmd 快捷键和隔离安装 | GNOME/Wayland、Windows 原生窗口和安装验证 |
+| `tests/reader.spec.cjs`、`tests/mac-platform.test.mjs`、`tests/windows-platform.test.mjs` | Linux 条件执行 X11 / xprop；macOS 验证菜单、Finder 文件打开、Cmd 快捷键和隔离安装；Windows 验证打包、升级回滚、系统集成与隔离安装 | GNOME/Wayland 集成验证 |
 
-GNOME 和 Windows 的打包安装入口仍待接入。GitHub Actions 在 Linux x64、macOS arm64/x64、Windows x64 原生运行机验证共享构建、文件、命令和 Electron UI；Linux/macOS 另验证当前打包安装能力。CI 报告与支持平台的档案保留 7 天。
+GNOME 的打包安装入口仍待接入。GitHub Actions 在 Linux x64、macOS arm64/x64、Windows x64 原生运行机验证共享构建、文件、命令和 Electron UI，并验证各支持系统的打包安装能力。CI 报告与支持平台的档案保留 7 天。
 
 ## 开发与验证
 
@@ -199,10 +222,10 @@ GNOME 和 Windows 的打包安装入口仍待接入。GitHub Actions 在 Linux x
 | `build:icons` | 从 SVG 生成窗口与桌面 PNG | 仅图标 |
 | `test` | Node 与 Electron UI 检查 | 无 |
 | `test:node` | 文件、设置、平台、编辑会话等契约检查 | 无 |
-| `test:ui` | 已有构建的 Electron UI 检查；Linux 自动创建隔离显示 | 无 |
+| `test:ui` | 已有构建的 Electron UI 检查；Linux 创建隔离显示，Windows 创建不切换的独立桌面 | 无 |
 | `test:packaged` | 已有应用包的启动、安装与文件打开检查 | 无 |
 | `pack` | 可运行的应用目录，供安装和打包测试 | 使用已有构建 |
-| `dist` | Linux tar.gz、macOS DMG/ZIP，包含应用目录 | 使用已有构建 |
+| `dist` | Linux tar.gz、macOS DMG/ZIP、Windows NSIS/ZIP，包含应用目录 | 使用已有构建 |
 | `install:local` | 安装已有应用目录，注册用户级命令与桌面入口 | 无 |
 | `uninstall:local` | 移除用户级安装，保留配置与日志 | 无 |
 

@@ -9,7 +9,12 @@ try {
   if (packaged) await requirePackage();
   else await requireBuild();
   const command = [process.execPath, join(root, 'node_modules/@playwright/test/cli.js'), 'test', ...(packaged ? ['--config=playwright.packaged.config.cjs'] : []), ...args];
-  process.exitCode = process.platform === 'linux'
-    ? await run('xvfb-run', ['-a', '-s', '-screen 0 2560x1440x24', '/bin/sh', join(root, 'scripts/test-ui-linux.sh'), ...command], { cwd: root })
-    : await run(command[0], command.slice(1), { cwd: root });
+  if (process.platform === 'linux') {
+    process.exitCode = await run('xvfb-run', ['-a', '-s', '-screen 0 2560x1440x24', '/bin/sh', join(root, 'scripts/test-ui-linux.sh'), ...command], { cwd: root });
+  } else if (process.platform === 'win32') {
+    process.exitCode = await run('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File',
+      join(root, 'scripts/test-ui-windows.ps1'), JSON.stringify(command)], { cwd: root });
+  } else {
+    process.exitCode = await run(command[0], command.slice(1), { cwd: root });
+  }
 } catch (error) { console.error(error.message); process.exitCode = 1; }
