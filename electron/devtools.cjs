@@ -10,7 +10,7 @@ function developerTools(owner) {
   owner.webContents.on('devtools-closed', destroy);
   owner.once('closed', destroy);
   return () => {
-    if (tools) {
+    if (tools && !tools.isDestroyed() && !tools.webContents.isDestroyed()) {
       if (tools.isMinimized()) tools.restore();
       tools.show(); tools.focus();
       return;

@@ -227,6 +227,9 @@ else {
     window.on('focus', () => { void sessions.refresh(); });
     window.on('closed', () => sessions.dispose());
     window.webContents.on('will-navigate', (event, url) => { if (!devUrl || url !== appUrl) event.preventDefault(); });
+    window.webContents.on('did-start-navigation', (_event, _url, inPlace, mainFrame) => {
+      if (mainFrame && !inPlace) rendererReady = false;
+    });
     window.webContents.on('will-frame-navigate', (event) => {
       // Only the app can load an opened HTML snapshot. Block other frame destinations.
       const url = new URL(event.url);
@@ -255,14 +258,13 @@ else {
       else throw new Error('无效的窗口操作。');
     });
     checkedHandler('emd:ready', () => {
-      if (rendererReady) {
-        for (const document of documents.values()) send('emd:document', publicDocument(document));
-        if (activeDocumentId) send('emd:activate', activeDocumentId);
-      }
       rendererReady = true;
       send('emd:window-state', window.isMaximized());
       sendDisplayWidth();
       for (const [channel, payload] of pending.splice(0)) window.webContents.send(channel, payload);
+      // The new renderer may have missed events sent while its predecessor unloaded.
+      for (const document of documents.values()) send('emd:document', publicDocument(document));
+      if (activeDocumentId) send('emd:activate', activeDocumentId);
       return commandSet.hints;
     });
     checkedHandler('emd:command', dispatchCommand);
