@@ -97,7 +97,7 @@ async function dispatchCommand(id, documentId = activeDocumentId) {
   if (id === 'openDocument') await openDialog();
   else if (id === 'quit') app.quit();
   else if (id === 'toggleFullscreen') toggleFullscreen();
-  else if (id === 'openDeveloperTools') openDeveloperTools();
+  else if (id === 'openDeveloperTools') await openDeveloperTools();
   else if (id === 'zoomIn') window.webContents.setZoomLevel(window.webContents.getZoomLevel() + 0.5);
   else if (id === 'zoomOut') window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 0.5);
   else if (id === 'zoomReset') window.webContents.setZoomLevel(0);
