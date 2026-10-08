@@ -47,11 +47,16 @@ test('KDE/Windows 专注启动按 pwd 当前层统一计数，零/单/多文档�
         }
         if (count === 2) {
           await expect(page.locator('.workspace-sidebar')).toBeVisible();
-          await expect(page.locator('.workspace-sidebar.panel-overlay')).toHaveCount(0);
+          if (process.platform === 'linux') await expect(page.locator('.workspace-sidebar.panel-overlay')).toHaveCount(0);
+          const overlay = await page.locator('.workspace-sidebar').evaluate(element => element.classList.contains('panel-overlay'));
+          const panel = await page.locator('.workspace-sidebar').boundingBox();
+          expect(panel.x).toBeGreaterThanOrEqual(0);
+          expect(panel.x + panel.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
           await expect(page.getByRole('treeitem', { name: 'MD 正文.md' })).toBeVisible();
           await page.getByRole('treeitem', { name: 'MD 正文.md' }).click();
           await expect(page.locator('.vp-doc h1')).toHaveText('工作树正文');
-          await expect(page.locator('.workspace-sidebar')).toBeVisible();
+          if (overlay) await expect(page.locator('.workspace-sidebar')).toHaveCount(0);
+          else await expect(page.locator('.workspace-sidebar')).toBeVisible();
         } else await expect(page.locator('.workspace-sidebar')).toHaveCount(0);
         await expect(page.getByRole('navigation', { name: '本文目录' })).toHaveCount(0);
         await expect(page.getByRole('alert')).toHaveCount(0);
