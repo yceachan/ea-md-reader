@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 export const packOptions = {
   win: ['dir', 'nsis', 'zip'],
   config: {
+    extraResources: [{ from: 'native-build/emd-application-chooser.exe', to: 'emd-application-chooser.exe' }],
     win: { icon: 'assets/emd.png' },
     nsis: {
       oneClick: false, perMachine: false, allowToChangeInstallationDirectory: true,

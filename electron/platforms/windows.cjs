@@ -1,4 +1,5 @@
 module.exports = {
+  chooseEditor: require('./windows-editor.cjs').chooseEditor,
   validateEditor: require('./editor.cjs').validateExecutable,
   startEditor: require('./editor.cjs').startExecutable,
   keyboard: require('./control-keyboard.cjs'),

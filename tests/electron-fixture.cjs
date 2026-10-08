@@ -27,9 +27,9 @@ async function close(application) {
 
 async function chooseEditor(application, program) {
   await application.evaluate(({ app, dialog }, program) => {
-    if (process.platform === 'linux') {
+    if (process.platform === 'linux' || process.platform === 'win32') {
       const require = process.getBuiltinModule('module').createRequire(`${app.getAppPath()}/package.json`);
-      const platform = require('./electron/platforms/linux.cjs');
+      const platform = require(process.platform === 'win32' ? './electron/platforms/windows.cjs' : './electron/platforms/linux.cjs');
       platform.chooseEditor = async () => program;
     } else dialog.showOpenDialog = async () => ({ canceled: program === null, filePaths: program === null ? [] : [program] });
   }, program);

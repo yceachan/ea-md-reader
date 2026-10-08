@@ -43,7 +43,7 @@ layout = "default" # 专注阅读使用 "focus"
 
 Reader 保持只读；另存为保存最新成功读取的原始文件字节，包括 BOM、CRLF 和 frontmatter，禁止覆盖源文件及其硬链接。也可使用重新读取命令更新快照。另存为不会复制引用的图片，移动文档时需要同时保留图片及其相对位置。
 
-设置中分别选择 Markdown、HTML 编辑器，配置保存到应用用户数据目录的 `setting.toml`。工作树文件中键、文件或标签右键的“在配置编辑器中打开”使用该编辑器；“打开方式…”只为本次选择，不改变默认配置。标签中键继续关闭标签。KDE/Linux 使用系统“打开方式”应用列表，保存所选应用的 `.desktop` 路径，由系统解释 `Exec` 与文件参数，不要求 `.desktop` 具有执行位，也不修改系统默认关联。Windows 选择 `.exe`，macOS 可选择可执行程序或 `.app`。
+设置中分别选择 Markdown、HTML 编辑器，配置保存到应用用户数据目录的 `setting.toml`。工作树文件中键、文件或标签右键的“在配置编辑器中打开”使用该编辑器；“打开方式…”只为本次选择，不改变默认配置。标签中键继续关闭标签。KDE/Linux 使用系统“打开方式”应用列表，保存所选应用的 `.desktop` 路径，由系统解释 `Exec` 与文件参数，不要求 `.desktop` 具有执行位，也不修改系统默认关联。Windows 使用原生应用选择窗口，通过 Shell 枚举该文件类型已注册且可直接启动的 `.exe` 应用，也可浏览其他程序；取消不修改配置或打开文件。macOS 可通过系统文件选择窗口选择可执行程序或 `.app`。
 
 通过应用请求编辑后，保存会自动更新同一路径的全部已有标签，保留活动标签与 Markdown 阅读位置；HTML 使用新预览快照。VS Code 的 `code` CLI、macOS 标准 VS Code 应用包与 Windows `Code.exe` 使用 `--wait`，文件关闭时再重读。其他编辑器不推断文件关闭，依靠保存监听与 Reader 恢复焦点时重查。读取失败保留最后成功快照并报告错误，Reader 退出不会关闭用户编辑器。[VS Code CLI](https://code.visualstudio.com/docs/configure/command-line#_core-cli-options)定义了文件等待语义。
 

@@ -9,7 +9,7 @@ export async function requireBuild(groups = ['renderer', 'icons', 'native'], dir
   const files = {
     renderer: ['dist/index.html'],
     icons,
-    native: process.platform === 'linux' ? ['native-build/emd-application-chooser', 'native-build/emd-kde-startup'] : [],
+    native: process.platform === 'linux' ? ['native-build/emd-application-chooser', 'native-build/emd-kde-startup'] : process.platform === 'win32' ? ['native-build/emd-application-chooser.exe'] : [],
   };
   for (const group of groups) {
     for (const file of files[group]) {
