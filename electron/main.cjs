@@ -181,7 +181,7 @@ else {
         placement = await platform.startupLayout.prepare({ layout, ...startup, screen });
       }
       catch (error) { startupError = error; }
-    } else if (layout !== 'default') startupError = new Error('启动布局 TODO：当前仅实现 KDE 平台。');
+    } else if (layout !== 'default') startupError = new Error('当前平台尚未实现专注启动布局。');
     const initialRoot = startup.workspace ? startup.root : null;
     console.info('[emd] 启动布局', JSON.stringify({ layout, cwd: process.cwd(), count: startup.count, panels: startup.panels, geometry: placement?.geometry }));
     startupDisplayWidth = placement?.displayWidth ?? null;
@@ -189,6 +189,7 @@ else {
     window = new BrowserWindow({
       width: 1180, height: 850, ...placement?.geometry, minWidth: 620, minHeight: 440, show: false, frame: false, transparent: true,
       title: 'Ea.Md.Reader', backgroundColor: '#00000000', icon: nativeImage.createFromPath(path.join(__dirname, '..', 'assets', 'emd.png')).resize({ width: 128, height: 128 }),
+      ...platform.windowOptions,
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
     toggleFullscreen = platform.createFullscreenToggle(window);
@@ -271,7 +272,7 @@ else {
     checkedHandler('emd:settings', publicSettings);
     checkedHandler('emd:startup-state', () => ({ workspace: !!initialRoot, root: initialRoot, panels: startup.panels }));
     checkedHandler('emd:startup-choice', async (value) => {
-      if (!startupSupported) throw new Error('启动布局 TODO：当前仅实现 KDE 平台。');
+      if (!startupSupported) throw new Error('当前平台尚未实现专注启动布局。');
       await settings.setStartup(value);
       return publicSettings();
     });
@@ -397,6 +398,7 @@ else {
       else window.webContents.stopFindInPage('clearSelection');
     });
     window.once('ready-to-show', () => {
+      if (process.platform === 'win32' && placement?.geometry) window.setBounds(placement.geometry);
       window.show();
     });
     await window.loadURL(appUrl);

@@ -14,7 +14,7 @@
     "build:native": "node scripts/build-native.mjs",
     "build:icons": "node scripts/render-icons.mjs",
     "test": "npm run test:node && npm run test:ui",
-    "test:node": "node --test tests/files.test.cjs tests/platforms.test.mjs tests/mac-platform.test.mjs tests/windows-platform.test.mjs tests/windows-editor.test.cjs tests/commands.test.cjs tests/runtime-platforms.test.cjs tests/settings.test.cjs tests/editor-sessions.test.cjs tests/startup.test.cjs tests/scripts.test.mjs",
+    "test:node": "node --test tests/files.test.cjs tests/platforms.test.mjs tests/mac-platform.test.mjs tests/windows-platform.test.mjs tests/windows-editor.test.cjs tests/windows-startup.test.cjs tests/commands.test.cjs tests/runtime-platforms.test.cjs tests/settings.test.cjs tests/editor-sessions.test.cjs tests/startup.test.cjs tests/scripts.test.mjs",
     "test:ui": "node scripts/test-ui.mjs",
     "test:packaged": "node scripts/test-ui.mjs --packaged",
     "pack": "node scripts/pack.mjs",
