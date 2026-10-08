@@ -29,7 +29,7 @@ export default function Profile({ onClose, error }: { onClose: () => void; error
           <a href={profile.github} onClick={link('github')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4 1-4-2-6-2m6 5v-3c0-1 .2-2 .8-2.5-3.2-.4-6.5-1.6-6.5-7.1 0-1.5.5-2.7 1.4-3.6-.1-.4-.6-1.8.1-3.5 0 0 1.2-.4 3.7 1.4a12 12 0 0 1 6.8 0c2.5-1.8 3.7-1.4 3.7-1.4.7 1.7.2 3.1.1 3.5.9.9 1.4 2.1 1.4 3.6 0 5.5-3.3 6.7-6.5 7.1.6.5 1 1.5 1 2.5v3" /></svg><span>{profile.github.replace(/^https?:\/\//, '')}</span></a>
           <a href={profile.repository} onClick={link('repository')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg><span>{new URL(profile.repository).pathname.replace(/^\/|\/$/g, '')}</span></a>
         </nav>
-        <footer className="profile-footer"><p>{profile.copyright}</p><p className="profile-license"><span>许可</span><span>{profile.license}</span></p></footer>
+        <footer className="profile-footer"><p>{profile.copyright}</p><p className="profile-license"><span>{profile.license}</span></p></footer>
       </>}
     </section>
   </dialog>;

@@ -8,3 +8,4 @@ playwright-report/
 *.log
 assets/emd.png
 assets/icons/
+/build/

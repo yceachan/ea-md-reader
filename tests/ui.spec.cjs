@@ -26,7 +26,7 @@ test('logo 打开居中 profile，头像与三行导航读取 TOML，链接交�
     await expect(card.getByRole('link')).toHaveCount(3);
     await expect(card.getByRole('link').nth(2)).toHaveText('yceachan/ea-md-reader');
     await expect(card.locator('.profile-footer')).toContainText('copyright (c) 2026 yceachan');
-    await expect(card.locator('.profile-license')).toHaveText('许可MIT LICENSE');
+    await expect(card.locator('.profile-license')).toHaveText('MIT LICENSE');
     const box = await card.boundingBox(), viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
     expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(1);
     expect(Math.abs(box.y + box.height / 2 - viewport.height / 2)).toBeLessThanOrEqual(1);

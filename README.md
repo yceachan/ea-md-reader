@@ -51,6 +51,8 @@ F12 或文件菜单“开发者控制台”打开 Reader 界面的独立 DevTool
 
 点击左上角 logo 打开居中的个人资料卡片，支持 Esc、关闭按钮和遮罩关闭。每次打开从同一个 `setting.toml` 读取 `[profile]`；文字按配置显示。项目自带头像 `public/profile-photo.jpg`，构建后随 `dist` 打包，配置中使用相对路径 `profile-photo.jpg`；也可用本地图片绝对路径覆盖，支持没有扩展名的图片。邮箱、GitHub 主页与项目仓库通过系统应用打开；仓库链接仅显示 `owner/repo`。编辑器和启动布局设置的修改保留 profile 分区；未配置或头像、链接无效时给出明确提示。
 
+配置文件位置：开发版默认使用仓库中的 `.dev/profile/setting.toml`，Linux 安装版使用 `${XDG_CONFIG_HOME:-~/.config}/emd/setting.toml`。下面是配置示例，程序没有内置这些个人资料默认值。开发版与安装版的设置相互独立；需要复用安装版配置时，可用 `npm run dev -- --user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/emd"`，此时开发版的设置修改也会写入安装版配置。
+
 ```toml
 [profile]
 name = "yceachan"
@@ -204,7 +206,9 @@ GNOME 和 Windows 的打包安装入口仍待接入。GitHub Actions 在 Linux x
 | `install:local` | 安装已有应用目录，注册用户级命令与桌面入口 | 无 |
 | `uninstall:local` | 移除用户级安装，保留配置与日志 | 无 |
 
-`dev` 使用 `.dev/profile/` 独立配置，退出时清理 Electron 与 Vite 进程。原生 C++ 修改后运行 `build:native` 并重启开发进程。`start` 不监听源码变化，也不更新已有渲染产物；缺少产物时，运行、测试和打包入口会报告对应准备命令。`pack`、`dist`、安装与卸载保留 `--platform` 参数。
+`dev` 使用 `.dev/profile/` 独立配置，退出时清理 Electron 与 Vite 进程。npm 与 VS Code CMake 扩展统一使用 `native-build/`，旧的 `build/` 不再使用。原生 C++ 修改后运行 `build:native` 并重启开发进程。`start` 不监听源码变化，也不更新已有渲染产物；缺少产物时，运行、测试和打包入口会报告对应准备命令。`pack`、`dist`、安装与卸载保留 `--platform` 参数。
+
+更新源码后按 `build → pack → install:local` 顺序执行。`build` 读取当前工作树，包含已经保存到文件的暂存与未暂存改动；不需要先提交。`pack` 和 `install:local` 只使用已有产物，因此只运行安装命令不会带上新的源码改动。发行压缩包需要重新运行 `dist` 才会更新。
 
 ```sh
 npm run dev                              # 日常开发
