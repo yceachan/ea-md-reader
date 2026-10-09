@@ -314,7 +314,7 @@ test('工作区切换、右键菜单、面板拖拽与容器自适应', async ()
     const overlay = await page.getByRole('button', { name: '折叠目录面板', exact: true }).boundingBox();
     const outlineBox = await page.locator('.outline').boundingBox();
     expect(Math.abs(overlay.y + overlay.height / 2 - outlineBox.y - outlineBox.height / 2)).toBeLessThan(1);
-    expect(Math.abs(overlay.x + overlay.width - outlineBox.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(overlay.x - outlineBox.x)).toBeLessThanOrEqual(1);
 
     await application.evaluate(({ BrowserWindow }) => {
       const window = BrowserWindow.getAllWindows()[0];

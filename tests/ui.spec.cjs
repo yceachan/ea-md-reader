@@ -98,7 +98,7 @@ test('默认展开双面板，窄屏覆盖层互斥且不改变正文，空白�
     await expect(page.getByRole('navigation', { name: '本文目录' })).toBeVisible();
     const dock = page.getByRole('button', { name: '折叠目录面板', exact: true });
     const dockBox = await dock.boundingBox(), panelBox = await page.locator('.outline').boundingBox();
-    expect(Math.abs(dockBox.x + dockBox.width - panelBox.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(dockBox.x - panelBox.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(dockBox.y + dockBox.height / 2 - panelBox.y - panelBox.height / 2)).toBeLessThanOrEqual(1);
     await page.screenshot({ path: test.info().outputPath('toc-dock-expanded.png') });
     await page.getByRole('button', { name: '显示工作区', exact: true }).click();
@@ -174,7 +174,7 @@ test('默认展开双面板，窄屏覆盖层互斥且不改变正文，空白�
     expect(outlineContent.x - outline.x).toBeLessThanOrEqual(1);
     expect(outline.width - outlineContent.width).toBeLessThanOrEqual(1);
     expect(collapse.x).toBeGreaterThanOrEqual(0);
-    expect(Math.abs(collapse.x + collapse.width - outline.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(collapse.x - outline.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(collapse.y + collapse.height / 2 - outline.y - outline.height / 2)).toBeLessThanOrEqual(1);
     await capture('narrow-toc-overlay.png');
     await page.getByRole('button', { name: '折叠目录面板', exact: true }).click();
