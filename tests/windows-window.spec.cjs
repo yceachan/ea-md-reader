@@ -1,8 +1,8 @@
-const { test, expect } = require('@playwright/test');
+const { expect } = require('@playwright/test');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
-const { launch, close } = require('./electron-fixture.cjs');
+const { test, launch, close } = require('./electron-fixture.cjs');
 const { nativeDriver, hwnd } = require('./windows-native.cjs');
 
 test('Windows 原生标题栏按钮命中、拖动区域、最大化还原与分屏尺寸', async () => {

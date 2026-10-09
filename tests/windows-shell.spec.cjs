@@ -1,8 +1,8 @@
-const { test, expect } = require('@playwright/test');
+const { expect } = require('@playwright/test');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
-const { launch, close } = require('./electron-fixture.cjs');
+const { test, launch, close } = require('./electron-fixture.cjs');
 const { nativeDriver, hwnd } = require('./windows-native.cjs');
 
 test('Windows 11 Shell：最大化按钮悬停显示分屏菜单，拖至右边缘真实吸附', async () => {

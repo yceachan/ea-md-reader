@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { launch, close } = require('./electron-fixture.cjs');
+const { expect } = require('@playwright/test');
+const { test, launch, close, stopTracing } = require('./electron-fixture.cjs');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -106,7 +106,7 @@ test('F12 与文件菜单打开独立控制台，复用、关闭重开且不改�
       expect(await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
       expect(await page.locator('.reading-area').boundingBox()).toEqual(before);
     }
-    await application.context().tracing.stop({ path: test.info().outputPath('electron-context-trace.zip') });
+    await stopTracing(application);
     const readerClosed = application.waitForEvent('close');
     await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(item => item.webContents.getURL() === 'emd://app/index.html').close());
     await readerClosed; application = null;
