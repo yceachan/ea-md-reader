@@ -7,9 +7,9 @@
 - KDE
 - Gnome (todo)
 - Mac
-- Windows (todo)
+- Windows
 
-KDE、GNOME 是 Linux 桌面环境；`mac`、`windows` 对应操作系统。脚本的平台标识为 `kde`、`gnome`、`mac`、`windows`，`kde`、`mac` 已接入打包、用户级安装和卸载流程；GNOME 和 Windows 入口返回 TODO。
+KDE、GNOME 是 Linux 桌面环境；`mac`、`windows` 对应操作系统。脚本的平台标识为 `kde`、`gnome`、`mac`、`windows`，`kde`、`mac`、`windows` 已接入打包、用户级安装和卸载流程；GNOME 入口返回 TODO。
 
 ## 使用
 
@@ -28,7 +28,7 @@ emd
 
 顶栏依次提供应用标识、工作区开关、名称、文件菜单、设置、打开和另存为，右侧保留查找、目录及窗口控制。工作区开关使用深底白线，其余按钮使用白底红砖色线条。左侧工作区以打开文件的所在目录为根，递归显示 Markdown、HTML 文件及其所在文件夹，不遍历符号链接目录。普通点击在当前标签页打开，`Alt` 点击新开标签页；空白处右键可重新载入工作树，节点菜单提供对应文件操作。进入子目录文件时保留工作区根目录，切换到工作区外的文件时以它的所在目录建立新工作区。
 
-默认布局的工作区与目录初始展开，宽窗口中可作为侧栏展开并拖拽调整宽度。窗口不超过所在屏幕工作区半宽时，目录使用右侧覆盖层；超过半宽但剩余空间不足时也使用覆盖层。工作区达到窄宽度范围时为左侧覆盖层。覆盖层不改变正文排版，同一时刻只打开一个，支持遮罩、关闭按钮和 Esc；选择目录锚点或成功打开工作树文件后收起。窗口尺寸变化保留用户的面板开关状态。TOC 开关作为独立组件吸附在目录面板左边缘并垂直居中，带目录图标、TOC 标识、渐变高光和立体阴影；折叠后保留入口，不占目录内容列。KDE 设置提供默认布局与专注阅读模式，保存后下次新窗口启动生效。默认布局使用 1180×850；专注模式统一统计启动 pwd 当前层的 Markdown/HTML 普通文件，零份保持默认尺寸，一份使用最小宽度 620 并隐藏双面板，多份使用工作区半宽并展开工作树、隐藏目录。默认布局与零文档使用最高 850 的高度并居中；专注模式有文档时使用工作区全高度，在鼠标所在屏幕右侧停靠。无文件参数仍显示欢迎页，多文档时可从工作树打开文件。其他平台启动布局 TODO。
+默认布局的工作区与目录初始展开，宽窗口中可作为侧栏展开并拖拽调整宽度。窗口不超过所在屏幕工作区半宽时，目录使用右侧覆盖层；超过半宽但剩余空间不足时也使用覆盖层。工作区达到窄宽度范围时为左侧覆盖层。覆盖层不改变正文排版，同一时刻只打开一个，支持遮罩、关闭按钮和 Esc；选择目录锚点或成功打开工作树文件后收起。窗口尺寸变化保留用户的面板开关状态。TOC 开关作为独立组件吸附在目录面板左边缘并垂直居中，带目录图标、TOC 标识、渐变高光和立体阴影；折叠后保留入口，不占目录内容列。KDE 与 Windows 设置提供默认布局与专注阅读模式，保存后下次新窗口启动生效。默认布局使用最高 1180×850；专注模式统一统计启动 pwd 当前层的 Markdown/HTML 普通文件，零份保持默认尺寸，一份优先使用宽度 620 并隐藏双面板，多份使用工作区半宽并展开工作树、隐藏目录。默认布局与零文档使用最高 850 的高度并居中；专注模式有文档时使用工作区全高度，在鼠标所在屏幕右侧停靠。Windows 支持更窄的工作区，单文档宽度受工作区限制。无文件参数仍显示欢迎页，多文档时可从工作树打开文件。macOS 专注启动布局尚未实现。
 
 启动偏好与编辑器、profile 共用 `setting.toml`；未配置默认使用 `default`。KDE Wayland 由一次性 KWin 脚本确认窗口几何，完成后卸载；启动失败明确显示错误。用户随后移动、缩放窗口或第二次打开文件不重新强制布局。
 
@@ -43,7 +43,7 @@ layout = "default" # 专注阅读使用 "focus"
 
 Reader 保持只读；另存为保存最新成功读取的原始文件字节，包括 BOM、CRLF 和 frontmatter，禁止覆盖源文件及其硬链接。也可使用重新读取命令更新快照。另存为不会复制引用的图片，移动文档时需要同时保留图片及其相对位置。
 
-设置中分别选择 Markdown、HTML 编辑器，配置保存到应用用户数据目录的 `setting.toml`。工作树文件中键、文件或标签右键的“在配置编辑器中打开”使用该编辑器；“打开方式…”只为本次选择，不改变默认配置。标签中键继续关闭标签。KDE/Linux 使用系统“打开方式”应用列表，保存所选应用的 `.desktop` 路径，由系统解释 `Exec` 与文件参数，不要求 `.desktop` 具有执行位，也不修改系统默认关联。Windows 选择 `.exe`，macOS 可选择可执行程序或 `.app`。
+设置中分别选择 Markdown、HTML 编辑器，配置保存到应用用户数据目录的 `setting.toml`。工作树文件中键、文件或标签右键的“在配置编辑器中打开”使用该编辑器；“打开方式…”只为本次选择，不改变默认配置。标签中键继续关闭标签。KDE/Linux 使用系统“打开方式”应用列表，保存所选应用的 `.desktop` 路径，由系统解释 `Exec` 与文件参数，不要求 `.desktop` 具有执行位，也不修改系统默认关联。Windows 使用原生应用选择窗口，通过 Shell 枚举该文件类型已注册且可直接启动的 `.exe` 应用，也可浏览其他程序；取消不修改配置或打开文件。macOS 可通过系统文件选择窗口选择可执行程序或 `.app`。
 
 通过应用请求编辑后，保存会自动更新同一路径的全部已有标签，保留活动标签与 Markdown 阅读位置；HTML 使用新预览快照。VS Code 的 `code` CLI、macOS 标准 VS Code 应用包与 Windows `Code.exe` 使用 `--wait`，文件关闭时再重读。其他编辑器不推断文件关闭，依靠保存监听与 Reader 恢复焦点时重查。读取失败保留最后成功快照并报告错误，Reader 退出不会关闭用户编辑器。[VS Code CLI](https://code.visualstudio.com/docs/configure/command-line#_core-cli-options)定义了文件等待语义。
 
@@ -51,7 +51,7 @@ F12 或文件菜单“开发者控制台”打开 Reader 界面的独立 DevTool
 
 点击左上角 logo 打开居中的个人资料卡片，支持 Esc、关闭按钮和遮罩关闭。每次打开从同一个 `setting.toml` 读取 `[profile]`；文字按配置显示。项目自带头像 `public/profile-photo.jpg`，构建后随 `dist` 打包，配置中使用相对路径 `profile-photo.jpg`；也可用本地图片绝对路径覆盖，支持没有扩展名的图片。邮箱、GitHub 主页与项目仓库通过系统应用打开；仓库链接仅显示 `owner/repo`。编辑器和启动布局设置的修改保留 profile 分区；未配置或头像、链接无效时给出明确提示。
 
-配置文件位置：开发版默认使用仓库中的 `.dev/profile/setting.toml`，Linux 安装版使用 `${XDG_CONFIG_HOME:-~/.config}/emd/setting.toml`。下面是配置示例，程序没有内置这些个人资料默认值。开发版与安装版的设置相互独立；需要复用安装版配置时，可用 `npm run dev -- --user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/emd"`，此时开发版的设置修改也会写入安装版配置。
+配置文件位置：开发版默认使用仓库中的 `.dev/profile/setting.toml`，Linux 安装版使用 `${XDG_CONFIG_HOME:-~/.config}/emd/setting.toml`，Windows 安装版使用 `%APPDATA%\emd\setting.toml`。下面是配置示例，程序没有内置这些个人资料默认值。开发版与安装版的设置相互独立；需要复用安装版配置时，可给 `dev` 传入对应的 `--user-data-dir`。
 
 ```toml
 [profile]
@@ -109,7 +109,7 @@ npm run uninstall:local -- --platform=kde
 node scripts/install.mjs --platform=kde /路径/到/解压目录
 ```
 
-不指定平台时按当前机器选择：Linux GNOME 会命中 `gnome` 的 TODO 入口，其他 Linux 环境沿用 KDE 配置（包括没有桌面环境的构建机器）；macOS 自动使用 `mac`；Windows 命中 `windows` 的 TODO 入口。显式选择 KDE 时仍要求 Linux 主机，本轮没有实现跨系统构建。TODO 平台在构建、外部命令和安装文件写入前退出。
+不指定平台时按当前机器选择：Linux GNOME 会命中 `gnome` 的 TODO 入口，其他 Linux 环境沿用 KDE 配置（包括没有桌面环境的构建机器）；macOS 自动使用 `mac`；Windows 自动使用 `windows`。显式选择平台时仍要求匹配的主机，本轮没有实现跨系统构建。TODO 平台在构建、外部命令和安装文件写入前退出。
 
 `pack` 生成 `release/linux-unpacked/`；发行压缩包使用 `npm run dist -- --platform=kde`，生成 `release/emd-0.1.0-linux-x64.tar.gz`。两者均使用已有构建。安装脚本将已打包应用复制到 `${XDG_DATA_HOME:-~/.local/share}/emd`，创建 `~/.local/bin/emd` 和用户级 desktop/MIME 入口，无需 root 权限。确认 `~/.local/bin` 在 `PATH` 中即可运行命令。
 
@@ -131,6 +131,30 @@ xdg-mime default io.github.yceachan.emd.desktop text/x-markdown
 ```sh
 npm run uninstall:local
 ```
+
+## 构建与用户级安装（Windows）
+
+需要 Windows 10/11、Node.js 22.12+、npm 和 PowerShell 7+（`pwsh.exe` 在 PATH 中），不需要管理员权限。PowerShell 7 用于注册当前用户的开始菜单快捷方式和文件打开方式。
+
+```powershell
+npm ci
+npm run build
+npm run pack
+npm run install:local
+```
+
+`pack` 生成 `release\win-unpacked\emd.exe`。`npm run dist` 另生成当前架构的 NSIS 安装器和 ZIP，例如 `release\emd-0.1.0-win-x64.exe` 与 `.zip`。本地安装脚本将应用复制到 `%LOCALAPPDATA%\Programs\emd`，创建开始菜单入口，并把 Markdown / HTML 注册为可选打开方式，不更改现有默认应用。
+
+Windows 使用不透明原生窗口框架与 Electron `titleBarOverlay`，由系统处理最小化、最大化、关闭和 Windows 11 最大化按钮悬停分屏菜单。工具栏保留原生拖动区，窗口最小尺寸为 330×240 DIP；较窄的分屏区域使用面板覆盖层。参见 [Electron 原生标题栏按钮](https://www.electronjs.org/docs/latest/tutorial/custom-title-bar) 与 [Microsoft 分屏命中及最小尺寸要求](https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/ui/apply-snap-layout-menu)。Windows 10 支持拖边吸附，悬停分屏布局菜单需要 Windows 11 开启对应系统设置。
+
+也可传入已解压的 `win-unpacked` 目录。更新前请退出正在运行的 emd；安装脚本拒绝覆盖无关应用或快捷方式，升级失败时恢复旧版本。
+
+```powershell
+node scripts/install.mjs --platform=windows "C:\path\to\win-unpacked"
+npm run uninstall:local
+```
+
+卸载会移除应用、快捷方式和本安装器写入的关联，保留 `%APPDATA%\emd` 中的配置。
 
 ## 构建与用户级安装（macOS）
 
@@ -169,22 +193,23 @@ npm run uninstall:local -- --platform=mac
 
 ## 平台接入与依赖审查
 
-`scripts/platforms.mjs` 是平台登记与选择入口，`scripts/pack.mjs` 和 `scripts/install.mjs` 负责参数解析与分派。KDE 和 macOS 实现分别位于 `scripts/platforms/kde.mjs`、`scripts/platforms/mac.mjs`，平台打包目标和安装集成都由对应模块提供；`package.json` 保留公共构建配置。
+`scripts/platforms.mjs` 是平台登记与选择入口，`scripts/pack.mjs` 和 `scripts/install.mjs` 负责参数解析与分派。KDE、macOS 和 Windows 实现分别位于 `scripts/platforms/kde.mjs`、`scripts/platforms/mac.mjs`、`scripts/platforms/windows.mjs`，平台打包目标和安装集成都由对应模块提供；`package.json` 保留公共构建配置。
 
 未来接入平台时，在登记表添加模块加载函数，并实现三个导出：`packOptions`（传给 electron-builder 的平台构建选项）、`install({ root, home, source })`、`uninstall({ root, home, source })`。`root` 是仓库目录，`home` 是当前用户目录，`source` 是可选的解包产物目录；省略 `source` 时由平台模块确定默认产物位置。平台的依赖检查、安装路径、启动器、文件关联、图标注册与卸载逻辑放在自己的模块中。
 
 | 位置 | 当前平台依赖 | 后续接入范围 |
 | --- | --- | --- |
-| `scripts/platforms/kde.mjs`、`assets/emd.desktop` | Linux 解包目录和可执行文件；XDG 数据/日志目录、`~/.local/bin`、`/bin/sh`、`setsid`、desktop/MIME 与 hicolor 图标；`desktop-file-validate`、`update-desktop-database`、KDE Plasma 6 的 `kbuildsycoca6` | GNOME 集成验证；Windows 安装与卸载模块 |
+| `scripts/platforms/kde.mjs`、`assets/emd.desktop` | Linux 解包目录和可执行文件；XDG 数据/日志目录、`~/.local/bin`、`/bin/sh`、`setsid`、desktop/MIME 与 hicolor 图标；`desktop-file-validate`、`update-desktop-database`、KDE Plasma 6 的 `kbuildsycoca6` | GNOME 集成验证 |
 | `scripts/platforms/mac.mjs` | 当前架构的 `.app` / DMG / ZIP、用户级 Applications、nohup 启动器、Finder 注册和卸载 | Developer ID 签名与公证 |
-| `scripts/render-icons.mjs` | 各平台通过 resvg 生成 PNG；Mac ICNS 由 builder 生成 | Windows ICO；继续以 `assets/emd.svg` 为唯一设计源 |
+| `scripts/platforms/windows.mjs`、`windows-integration.ps1` | Windows 解包目录、NSIS / ZIP、用户级 Programs、开始菜单、App Paths 和可选文件关联 | 分发签名 |
+| `scripts/render-icons.mjs` | 各平台通过 resvg 生成 PNG；Mac ICNS 与 Windows ICO 由 builder 从同一 PNG 源生成 | 继续以 `assets/emd.svg` 为唯一设计源 |
 | `electron/platforms/*.cjs` | Linux 桌面身份、macOS 菜单/Finder/Dock、三平台键位；由 `index.cjs` 集中选择 | 新增有实际差异的平台能力 |
 | `electron/commands.cjs`、`electron/main.cjs` | 语义命令生成键盘匹配、菜单 accelerator 与 UI 提示，主进程统一分派 | 后续命令使用相同定义与分派入口 |
 | `electron/files.cjs`、`src/components/Workspace.tsx` | 主进程用 Node 路径语义返回工作区根目录与活动祖先，渲染层使用路径标识 | 保留 POSIX、Windows 盘符和 UNC 路径契约 |
 | `electron/files.cjs`、本地资源协议 | 使用 Node 的 `path`、`fs`、文件 URL；原始字节保存和 inode 覆盖保护 | 各系统的文件系统语义、符号链接、本地资源 URL 验证 |
-| `tests/reader.spec.cjs`、`tests/mac-platform.test.mjs` | Linux 条件执行 X11 / xprop；macOS 验证菜单、Finder 文件打开、Cmd 快捷键和隔离安装 | GNOME/Wayland、Windows 原生窗口和安装验证 |
+| `tests/reader.spec.cjs`、`tests/mac-platform.test.mjs`、`tests/windows-platform.test.mjs` | Linux 条件执行 X11 / xprop；macOS 验证菜单、Finder 文件打开、Cmd 快捷键和隔离安装；Windows 验证打包、升级回滚、系统集成与隔离安装 | GNOME/Wayland 集成验证 |
 
-GNOME 和 Windows 的打包安装入口仍待接入。GitHub Actions 在 Linux x64、macOS arm64/x64、Windows x64 原生运行机验证共享构建、文件、命令和 Electron UI；Linux/macOS 另验证当前打包安装能力。CI 报告与支持平台的档案保留 7 天。
+GNOME 的打包安装入口仍待接入。GitHub Actions 在 Linux x64、macOS arm64、Windows x64 原生运行机验证共享构建、文件、命令和 Electron UI，并验证各支持系统的打包安装能力。CI 报告与支持平台的档案保留 7 天。
 
 ## 开发与验证
 
@@ -199,12 +224,16 @@ GNOME 和 Windows 的打包安装入口仍待接入。GitHub Actions 在 Linux x
 | `build:icons` | 从 SVG 生成窗口与桌面 PNG | 仅图标 |
 | `test` | Node 与 Electron UI 检查 | 无 |
 | `test:node` | 文件、设置、平台、编辑会话等契约检查 | 无 |
-| `test:ui` | 已有构建的 Electron UI 检查；Linux 自动创建隔离显示 | 无 |
+| `test:ui` | 已有构建的 Electron UI 检查；Linux 创建隔离显示，Windows 创建不切换的独立桌面 | 无 |
 | `test:packaged` | 已有应用包的启动、安装与文件打开检查 | 无 |
 | `pack` | 可运行的应用目录，供安装和打包测试 | 使用已有构建 |
-| `dist` | Linux tar.gz、macOS DMG/ZIP，包含应用目录 | 使用已有构建 |
+| `dist` | Linux tar.gz、macOS DMG/ZIP、Windows NSIS/ZIP，包含应用目录 | 使用已有构建 |
 | `install:local` | 安装已有应用目录，注册用户级命令与桌面入口 | 无 |
 | `uninstall:local` | 移除用户级安装，保留配置与日志 | 无 |
+
+Windows 常规 UI 检查覆盖原生应用选择 GUI、最大化按钮 `HTMAXBUTTON` 命中、工具栏 `HTCAPTION` 拖动命中、最大化还原、330/400/500 DIP 窗口和零/单/多文档启动布局。测试桌面不激活，因此这组检查不证明 Explorer 的分屏浮层或真实拖边吸附。
+
+真实 Windows 11 Shell 检查使用单独的 `Windows 11 Shell validation` 手动 CI 工作流，要求已登录、运行 Explorer 且开启分屏与悬停菜单的专用 Windows 11 虚拟机，runner 标签为 `emd-windows11-shell`。它验证悬停出现包含布局按钮的系统浮层、拖至右边缘后 `isSnapped()` 为真及分屏区域尺寸。`--windows-shell` 入口只允许声明为专用桌面的自托管 GitHub Actions runner；本机普通测试始终使用不切换的隔离桌面。没有这类 runner 时，Shell 检查仍待执行。
 
 `dev` 使用 `.dev/profile/` 独立配置，退出时清理 Electron 与 Vite 进程。npm 与 VS Code CMake 扩展统一使用 `native-build/`，旧的 `build/` 不再使用。原生 C++ 修改后运行 `build:native` 并重启开发进程。`start` 不监听源码变化，也不更新已有渲染产物；缺少产物时，运行、测试和打包入口会报告对应准备命令。`pack`、`dist`、安装与卸载保留 `--platform` 参数。
 

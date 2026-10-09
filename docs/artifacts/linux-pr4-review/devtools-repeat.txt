@@ -1,0 +1,90 @@
+
+> emd@0.1.0 test:ui
+> node scripts/test-ui.mjs commands.spec.cjs --grep F12 与文件菜单 --repeat-each=3 --reporter=line
+
+
+Running 3 tests using 1 worker
+
+(node:924757) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+
+
+[1/3] tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸
+  1) tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸 ───────────────────────────────
+
+    Error: Timeout 5000ms exceeded while waiting on the predicate
+
+       98 |         BrowserWindow.getAllWindows().find(item => !item.isDestroyed() && !item.webContents.isDestroyed() && item.webContents.getURL().startsWith('devtools://')).close();
+       99 |       });
+    > 100 |       await expect.poll(opened).toBe(false);
+          |                                 ^
+      101 |       await application.evaluate(({ BrowserWindow }) => {
+      102 |         const contents = BrowserWindow.getAllWindows().find(item => item.webContents.getURL() === 'emd://app/index.html').webContents;
+      103 |         contents.sendInputEvent({ type: 'keyDown', keyCode: 'F12' }); contents.sendInputEvent({ type: 'keyUp', keyCode: 'F12' });
+        at /home/pi/worktrees/ea-md-reader/codex/linux-pr4-review/tests/commands.spec.cjs:100:33
+
+    Error Context: test-results/reader/commands-F12-与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/reader/commands-F12-与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/reader/commands-F12-与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+(node:925053) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+
+
+[2/3] tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸
+  2) tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸 ───────────────────────────────
+
+    Error: electronApplication.evaluate: Target page, context or browser has been closed
+    Browser logs:
+
+    <launching> /home/pi/work/ea-md-reader/node_modules/electron/dist/electron -r /home/pi/work/ea-md-reader/node_modules/playwright-core/lib/server/electron/loader.js --inspect=0 --remote-debugging-port=0 /home/pi/worktrees/ea-md-reader/codex/linux-pr4-review --ozone-platform=x11 --user-data-dir=/tmp/emd-devtools-d8oh12/profile
+    <launched> pid=925096
+    [pid=925096][err] Debugger listening on ws://127.0.0.1:41963/766fd10a-66cb-4f65-af6e-d3b514912ac6
+    [pid=925096][err] For help, see: https://nodejs.org/learn/getting-started/debugging
+    [pid=925096][err] Debugger attached.
+    [pid=925096][err] 
+    [pid=925096][err] DevTools listening on ws://127.0.0.1:36495/devtools/browser/2222de10-8fce-444e-a922-82de87649355
+    [pid=925096][out] [emd] 启动布局 {"layout":"default","cwd":"/home/pi/worktrees/ea-md-reader/codex/linux-pr4-review","count":0,"panels":{"left":true,"right":true},"geometry":{"x":690,"y":295,"width":1180,"height":850}}
+    [pid=925096][err] (node:925096) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+    [pid=925096][err] (Use `electron --trace-warnings ...` to show where the warning was created)
+    [pid=925096][err] [electron-diagnostics] {"time":"2026-10-09T13:30:22.048Z","event":"main-process","pid":925096,"electron":"44.5.1"}
+    [pid=925096][err] [925131:1009/213024.080865:ERROR:gpu/command_buffer/service/context_group.cc:140] ContextResult::kFatalFailure: WebGL1 blocklisted
+    [pid=925096][err] [925131:1009/213025.393995:ERROR:gpu/command_buffer/service/context_group.cc:140] ContextResult::kFatalFailure: WebGL1 blocklisted
+
+      69 |     await expect(page.getByRole('button', { name: '打开 Markdown / HTML' })).toBeVisible();
+      70 |     const before = await page.locator('.reading-area').boundingBox();
+    > 71 |     const opened = () => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().some(item => !item.isDestroyed() && !item.webContents.isDestroyed() && item.webContents.getURL().startsWith('devtools://') && item.isVisible()));
+         |                                      ^
+      72 |     await application.evaluate(({ BrowserWindow }) => {
+      73 |       const contents = BrowserWindow.getAllWindows()[0].webContents;
+      74 |       contents.sendInputEvent({ type: 'keyDown', keyCode: 'F12' });
+        at opened (/home/pi/worktrees/ea-md-reader/codex/linux-pr4-review/tests/commands.spec.cjs:71:38)
+        at /home/pi/worktrees/ea-md-reader/codex/linux-pr4-review/tests/commands.spec.cjs:100:7
+
+    Error Context: test-results/reader/commands-F12-与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸-repeat1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/reader/commands-F12-与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸-repeat1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/reader/commands-F12-与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸-repeat1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+(node:925391) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+
+
+[3/3] tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸
+  2 failed
+    tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸 ────────────────────────────────
+    tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸 ────────────────────────────────
+  1 passed (27.6s)

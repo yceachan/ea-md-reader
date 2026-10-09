@@ -1,18 +1,18 @@
-const { test, expect } = require('@playwright/test');
-const { launch, close } = require('./electron-fixture.cjs');
+const { expect } = require('@playwright/test');
+const { test, launch, close } = require('./electron-fixture.cjs');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const { windowGeometry } = require('./kde-fixture.cjs');
 const native = process.env.EMD_NATIVE_KDE === '1';
 const packaged = process.env.EMD_PACKAGED === '1';
-const executablePath = packaged ? path.resolve('release/linux-unpacked/emd') : undefined;
+const executablePath = packaged ? path.resolve(process.platform === 'win32' ? 'release/win-unpacked/emd.exe' : 'release/linux-unpacked/emd') : undefined;
 const applicationArgs = packaged ? [] : [path.resolve('.')];
-const args = native ? ['--ozone-platform=wayland'] : ['--ozone-platform=x11'];
+const args = process.platform === 'linux' ? native ? ['--ozone-platform=wayland'] : ['--ozone-platform=x11'] : [];
 const env = { ...process.env, XDG_CURRENT_DESKTOP: 'KDE', XDG_SESSION_TYPE: native ? 'wayland' : 'x11', WAYLAND_DISPLAY: native ? process.env.WAYLAND_DISPLAY : '' };
 
-test('KDE 专注启动按 pwd 当前层统一计数，零/单/多文档布局与欢迎页工作树正确', async () => {
-  test.skip(process.platform !== 'linux', '其他平台启动布局 TODO');
+test('KDE/Windows 专注启动按 pwd 当前层统一计数，零/单/多文档布局与欢迎页工作树正确', async () => {
+  test.skip(!['linux', 'win32'].includes(process.platform), '当前平台未实现专注启动布局');
   const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-startup-ui-')));
   try {
     for (const count of [0, 1, 2]) {
@@ -30,9 +30,14 @@ test('KDE 专注启动按 pwd 当前层统一计数，零/单/多文档布局与
         if (count === 1) await expect(page.getByRole('tab')).toHaveCount(1);
         else await expect(page.getByRole('button', { name: '打开 Markdown / HTML' })).toBeVisible();
         const area = await application.evaluate(({ screen }, native) => native ? screen.getAllDisplays()[0].workArea : screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea, native);
-        const wanted = count === 0 ? 1180 : count === 1 ? 620 : Math.floor(area.width / 2);
-        await expect.poll(() => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getSize()[0])).toBe(wanted);
-        await expect.poll(() => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getSize()[1])).toBe(count === 0 ? 850 : area.height);
+        const wanted = count === 0 ? Math.min(1180, area.width) : count === 1 ? Math.min(620, area.width) : Math.floor(area.width / 2);
+        await expect.poll(async () => Math.abs((await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getSize()[0])) - wanted)).toBeLessThanOrEqual(1);
+        await expect.poll(async () => Math.abs((await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getSize()[1])) - (count === 0 ? Math.min(850, area.height) : area.height))).toBeLessThanOrEqual(1);
+        if (process.platform === 'win32') {
+          const bounds = await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getBounds());
+          expect(Math.abs(bounds.x - (count === 0 ? Math.round(area.x + (area.width - wanted) / 2) : area.x + area.width - wanted))).toBeLessThanOrEqual(1);
+          expect(Math.abs(bounds.y - (count === 0 ? Math.round(area.y + (area.height - Math.min(850, area.height)) / 2) : area.y))).toBeLessThanOrEqual(1);
+        }
         if (native) {
           const actual = await windowGeometry(application);
           expect(actual.output).toBe(actual.pointerOutput);
@@ -42,11 +47,16 @@ test('KDE 专注启动按 pwd 当前层统一计数，零/单/多文档布局与
         }
         if (count === 2) {
           await expect(page.locator('.workspace-sidebar')).toBeVisible();
-          await expect(page.locator('.workspace-sidebar.panel-overlay')).toHaveCount(0);
+          if (process.platform === 'linux') await expect(page.locator('.workspace-sidebar.panel-overlay')).toHaveCount(0);
+          const overlay = await page.locator('.workspace-sidebar').evaluate(element => element.classList.contains('panel-overlay'));
+          const panel = await page.locator('.workspace-sidebar').boundingBox();
+          expect(panel.x).toBeGreaterThanOrEqual(0);
+          expect(panel.x + panel.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
           await expect(page.getByRole('treeitem', { name: 'MD 正文.md' })).toBeVisible();
           await page.getByRole('treeitem', { name: 'MD 正文.md' }).click();
           await expect(page.locator('.vp-doc h1')).toHaveText('工作树正文');
-          await expect(page.locator('.workspace-sidebar')).toBeVisible();
+          if (overlay) await expect(page.locator('.workspace-sidebar')).toHaveCount(0);
+          else await expect(page.locator('.workspace-sidebar')).toBeVisible();
         } else await expect(page.locator('.workspace-sidebar')).toHaveCount(0);
         await expect(page.getByRole('navigation', { name: '本文目录' })).toHaveCount(0);
         await expect(page.getByRole('alert')).toHaveCount(0);
@@ -69,8 +79,9 @@ test('默认布局尺寸受屏幕工作区限制并展开工作树和 TOC，折�
     const expectedSize = [Math.floor(Math.min(1180, area.width)), Math.floor(Math.min(850, area.height))];
     // Openbox 在贴合工作区边界时可能保留 1px。
     for (let index = 0; index < expectedSize.length; index++) {
-      expect(size[index]).toBeLessThanOrEqual(expectedSize[index]);
-      expect(expectedSize[index] - size[index]).toBeLessThanOrEqual(1);
+      if (process.platform !== 'win32') expect(size[index]).toBeLessThanOrEqual(expectedSize[index]);
+      // Windows native frame sizes round to physical pixels at fractional DPI.
+      expect(Math.abs(expectedSize[index] - size[index])).toBeLessThanOrEqual(1);
     }
     const viewportWidth = await page.evaluate(() => window.innerWidth);
     await expect(page.locator('.outline.panel-overlay')).toHaveCount(viewportWidth <= area.width / 2 ? 1 : 0);
@@ -82,8 +93,8 @@ test('默认布局尺寸受屏幕工作区限制并展开工作树和 TOC，折�
   } finally { if (application) await close(application); await fs.rm(directory, { recursive: true, force: true }); }
 });
 
-test('KDE 设置保存默认/专注偏好，下次启动生效且保留编辑器配置', async () => {
-  test.skip(process.platform !== 'linux', '其他平台启动布局 TODO');
+test('KDE/Windows 设置保存默认/专注偏好，下次启动生效且保留编辑器配置', async () => {
+  test.skip(!['linux', 'win32'].includes(process.platform), '当前平台未实现专注启动布局');
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-startup-preference-')));
   let application;
   try {

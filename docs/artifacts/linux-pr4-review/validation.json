@@ -1,0 +1,43 @@
+{
+  "source": "f25a90670305e4f152d805db9336e11557b7cd0f",
+  "date": "2026-10-09",
+  "environment": "Fedora 44 KDE, x64; Node 22.23.1; Electron 44.5.1; isolated Xvfb/Openbox",
+  "check": "passed",
+  "node": {
+    "passed": 53,
+    "skipped": 4
+  },
+  "ui": {
+    "passed": 16,
+    "skipped": 4
+  },
+  "packaged": {
+    "passed": 1,
+    "skipped": 2
+  },
+  "installation": "isolated installation, upgrade, repeated uninstall and configuration preservation passed",
+  "devtools_repeat": {
+    "passed": 1,
+    "failed": 2,
+    "failure_signals": [
+      "SIGSEGV",
+      "SIGSEGV"
+    ]
+  },
+  "limits": "No interaction with the user desktop. macOS ARM scroll failure observed in CI only. DevTools root cause is not established.",
+  "distribution": "tar.gz created and archive listing verified",
+  "local_installation": "/home/pi/.local/bin/emd; installation completed successfully, including KDE desktop cache refresh",
+  "readiness_followup": {
+    "production_changes": false,
+    "test_change": "Require devtools-opened for the visible frontend ID before lifecycle operations; no fixed delay.",
+    "development": {
+      "passed": 3,
+      "failed": 0
+    },
+    "packaged": {
+      "passed": 3,
+      "failed": 0
+    },
+    "limits": "Linux Xvfb/Openbox only; Windows and macOS CI have not been rerun. Rapid closure before frontend readiness remains unverified."
+  }
+}

@@ -5,6 +5,7 @@ function subscribe(channel, listener) {
   return () => ipcRenderer.removeListener(channel, handler);
 }
 contextBridge.exposeInMainWorld('emd', {
+  nativeWindowControls: process.platform === 'win32',
   window: (action) => ipcRenderer.invoke('emd:window', action),
   onWindowState: (listener) => subscribe('emd:window-state', listener),
   onDisplayWidth: (listener) => subscribe('emd:display-width', listener),

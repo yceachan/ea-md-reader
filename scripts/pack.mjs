@@ -10,7 +10,7 @@ async function main() {
   await requireBuild();
   console.log(`${distribution ? '发行档案' : '应用目录'}平台：${platform.name}（使用已有构建）`);
   const options = { ...adapter.packOptions };
-  if (!distribution) options[platform.os === 'linux' ? 'linux' : 'mac'] = ['dir'];
+  if (!distribution) options[{ linux: 'linux', darwin: 'mac', win32: 'win' }[platform.os]] = ['dir'];
   const { build } = await import('electron-builder');
   await build({ projectDir: root, ...options, publish: 'never' });
 }

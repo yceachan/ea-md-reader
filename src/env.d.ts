@@ -18,6 +18,7 @@ interface CommandAction { id: ReaderCommand; documentId: string | null; }
 interface WorkspaceAction { action: 'open' | 'new-tab' | 'refresh'; path?: string; }
 interface Window {
   emd: {
+    nativeWindowControls: boolean;
     window(action: 'minimize' | 'maximize' | 'close'): Promise<void>;
     onWindowState(listener: (maximized: boolean) => void): () => void;
     onDisplayWidth(listener: (width: number) => void): () => void;

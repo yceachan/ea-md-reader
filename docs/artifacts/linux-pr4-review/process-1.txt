@@ -1,0 +1,8 @@
+{"time":"2026-10-09T13:30:10.989Z","event":"launch","launcherPid":924769,"exitCode":null,"signalCode":null}
+(node:924769) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `electron --trace-warnings ...` to show where the warning was created)
+[electron-diagnostics] {"time":"2026-10-09T13:30:11.005Z","event":"main-process","pid":924769,"electron":"44.5.1"}
+[924804:1009/213012.248440:ERROR:gpu/command_buffer/service/context_group.cc:140] ContextResult::kFatalFailure: WebGL1 blocklisted
+[924804:1009/213013.302250:ERROR:gpu/command_buffer/service/context_group.cc:140] ContextResult::kFatalFailure: WebGL1 blocklisted
+{"time":"2026-10-09T13:30:20.754Z","event":"exit","code":null,"signal":"SIGSEGV"}
+{"time":"2026-10-09T13:30:20.768Z","event":"close","code":null,"signal":"SIGSEGV"}

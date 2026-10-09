@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { launch, close } = require('./electron-fixture.cjs');
+const { expect } = require('@playwright/test');
+const { test, launch, close } = require('./electron-fixture.cjs');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -131,7 +131,8 @@ test('渲染、只读、多标签、另存为、重读、第二次启动及相�
     await page.getByRole('button', { name: '关闭目录面板', exact: true }).click();
     await expect(page.getByRole('navigation', { name: '本文目录' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: '显示目录', exact: true })).toHaveAttribute('aria-pressed', 'false');
-    expect(await page.locator('.app').evaluate((element) => getComputedStyle(element).borderRadius)).toBe('10px');
+    // Windows delegates rounded outer corners to DWM; other platforms clip the transparent surface.
+    expect(await page.locator('.app').evaluate((element) => getComputedStyle(element).borderRadius)).toBe(process.platform === 'win32' ? '0px' : '10px');
     await application.evaluate(({ BrowserWindow, screen }) => {
       const window = BrowserWindow.getAllWindows()[0];
       const { width, height } = screen.getDisplayMatching(window.getBounds()).workAreaSize;
@@ -144,11 +145,19 @@ test('渲染、只读、多标签、另存为、重读、第二次启动及相�
     }));
     await expect.poll(() => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized())).toBe(false);
     await page.screenshot({ path: test.info().outputPath('emd-light.png') });
-    await expect(page.getByRole('button', { name: '最大化窗口' })).toBeVisible();
-    await page.getByRole('button', { name: '最大化窗口' }).click();
-    await expect(page.getByRole('button', { name: '还原窗口' })).toBeVisible();
-    await page.getByRole('button', { name: '还原窗口' }).click();
-    await expect(page.getByRole('button', { name: '最大化窗口' })).toBeVisible();
+    if (process.platform === 'win32') {
+      await expect(page.locator('.window-controls')).toHaveCount(0);
+      await page.evaluate(() => window.emd.window('maximize'));
+      await expect.poll(() => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized())).toBe(true);
+      await page.evaluate(() => window.emd.window('maximize'));
+      await expect.poll(() => application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized())).toBe(false);
+    } else {
+      await expect(page.getByRole('button', { name: '最大化窗口' })).toBeVisible();
+      await page.getByRole('button', { name: '最大化窗口' }).click();
+      await expect(page.getByRole('button', { name: '还原窗口' })).toBeVisible();
+      await page.getByRole('button', { name: '还原窗口' }).click();
+      await expect(page.getByRole('button', { name: '最大化窗口' })).toBeVisible();
+    }
     if (process.platform === 'darwin') {
       expect(await application.evaluate(({ Menu }) => Menu.getApplicationMenu().items.filter((item) => item.role).map((item) => item.role.toLowerCase()))).toEqual(['appmenu', 'editmenu', 'windowmenu']);
     } else expect(await application.evaluate(({ Menu }) => Menu.getApplicationMenu())).toBe(null);

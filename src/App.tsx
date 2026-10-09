@@ -218,7 +218,7 @@ export default function App() {
   }, [fileMenu]);
 
   const sections = activeId ? headings[activeId] ?? [] : [];
-  return <div className="app" onKeyDown={(event) => {
+  return <div className={`app${window.emd.nativeWindowControls ? ' native-window-controls' : ''}`} onKeyDown={(event) => {
     if (!settingsOpen && !profileOpen && event.key === 'Escape') { closeOverlay(); setFileMenu(false); setFinding(false); setMessage(null); }
   }}>
     <header className="toolbar" onDoubleClick={(event) => { if (!(event.target as Element).closest('button, .file-menu')) void window.emd.window('maximize'); }}>
@@ -249,11 +249,11 @@ export default function App() {
         <button className="icon-button" title={`查找 · ${hints?.findInDocument ?? ''}`} aria-label="查找" disabled={!commandAvailability?.findInDocument} onClick={() => { void window.emd.command('findInDocument'); }}><Icon name="search" /></button>
         <button ref={outlineTrigger} className={`icon-button ${panels.right && active?.kind === 'markdown' ? 'selected' : ''}`} title="显示目录" aria-label="显示目录" aria-pressed={panels.right && active?.kind === 'markdown'} disabled={active?.kind !== 'markdown'} onClick={() => togglePanel('right')}><Icon name="outline" /></button>
       </div>
-      <div className="window-controls">
+      {!window.emd.nativeWindowControls && <div className="window-controls">
         <button aria-label="最小化窗口" title="最小化" onClick={() => { void window.emd.window('minimize'); }}><Icon name="minimize" /></button>
         <button aria-label={maximized ? '还原窗口' : '最大化窗口'} title={maximized ? '还原' : '最大化'} onClick={() => { void window.emd.window('maximize'); }}><Icon name={maximized ? 'restore' : 'maximize'} /></button>
         <button className="window-close" aria-label="关闭窗口" title="关闭" onClick={() => { void window.emd.window('close'); }}><Icon name="close" /></button>
-      </div>
+      </div>}
     </header>
     {tabs.length > 0 && <nav ref={tabbar} className="tabbar" role="tablist" aria-label="已打开的文件">
       {tabs.map((tab) => <div className={`tab ${tab.id === activeId ? 'active' : ''}`} key={tab.id}

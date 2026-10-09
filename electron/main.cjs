@@ -31,6 +31,7 @@ let window;
 let toggleFullscreen;
 let openDeveloperTools;
 let rendererReady = false;
+let rendererInitialized = false;
 let activeDocumentId = null;
 let applicationMenu = null;
 let startupDisplayWidth = null;
@@ -96,7 +97,7 @@ async function dispatchCommand(id, documentId = activeDocumentId) {
   if (id === 'openDocument') await openDialog();
   else if (id === 'quit') app.quit();
   else if (id === 'toggleFullscreen') toggleFullscreen();
-  else if (id === 'openDeveloperTools') openDeveloperTools();
+  else if (id === 'openDeveloperTools') await openDeveloperTools();
   else if (id === 'zoomIn') window.webContents.setZoomLevel(window.webContents.getZoomLevel() + 0.5);
   else if (id === 'zoomOut') window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 0.5);
   else if (id === 'zoomReset') window.webContents.setZoomLevel(0);
@@ -181,7 +182,7 @@ else {
         placement = await platform.startupLayout.prepare({ layout, ...startup, screen });
       }
       catch (error) { startupError = error; }
-    } else if (layout !== 'default') startupError = new Error('启动布局 TODO：当前仅实现 KDE 平台。');
+    } else if (layout !== 'default') startupError = new Error('当前平台尚未实现专注启动布局。');
     const initialRoot = startup.workspace ? startup.root : null;
     console.info('[emd] 启动布局', JSON.stringify({ layout, cwd: process.cwd(), count: startup.count, panels: startup.panels, geometry: placement?.geometry }));
     startupDisplayWidth = placement?.displayWidth ?? null;
@@ -189,6 +190,7 @@ else {
     window = new BrowserWindow({
       width: 1180, height: 850, ...placement?.geometry, minWidth: 620, minHeight: 440, show: false, frame: false, transparent: true,
       title: 'Ea.Md.Reader', backgroundColor: '#00000000', icon: nativeImage.createFromPath(path.join(__dirname, '..', 'assets', 'emd.png')).resize({ width: 128, height: 128 }),
+      ...platform.windowOptions,
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
     toggleFullscreen = platform.createFullscreenToggle(window);
@@ -227,6 +229,9 @@ else {
     window.on('focus', () => { void sessions.refresh(); });
     window.on('closed', () => sessions.dispose());
     window.webContents.on('will-navigate', (event, url) => { if (!devUrl || url !== appUrl) event.preventDefault(); });
+    window.webContents.on('did-start-navigation', (_event, _url, inPlace, mainFrame) => {
+      if (mainFrame && !inPlace) rendererReady = false;
+    });
     window.webContents.on('will-frame-navigate', (event) => {
       // Only the app can load an opened HTML snapshot. Block other frame destinations.
       const url = new URL(event.url);
@@ -255,13 +260,18 @@ else {
       else throw new Error('无效的窗口操作。');
     });
     checkedHandler('emd:ready', () => {
-      if (rendererReady) {
-        for (const document of documents.values()) send('emd:document', publicDocument(document));
-        if (activeDocumentId) send('emd:activate', activeDocumentId);
-      }
+      const restore = rendererInitialized;
+      rendererInitialized = true;
       rendererReady = true;
       send('emd:window-state', window.isMaximized());
       sendDisplayWidth();
+      // The new renderer may have missed events sent while its predecessor unloaded.
+      if (restore) {
+        for (const document of documents.values()) send('emd:document', publicDocument(document));
+        if (activeDocumentId) send('emd:activate', activeDocumentId);
+      }
+      // New file-open events supersede the restored active tab. First startup
+      // consumes only its queue, avoiding a stale activation from an early tab.
       for (const [channel, payload] of pending.splice(0)) window.webContents.send(channel, payload);
       return commandSet.hints;
     });
@@ -269,7 +279,7 @@ else {
     checkedHandler('emd:settings', publicSettings);
     checkedHandler('emd:startup-state', () => ({ workspace: !!initialRoot, root: initialRoot, panels: startup.panels }));
     checkedHandler('emd:startup-choice', async (value) => {
-      if (!startupSupported) throw new Error('启动布局 TODO：当前仅实现 KDE 平台。');
+      if (!startupSupported) throw new Error('当前平台尚未实现专注启动布局。');
       await settings.setStartup(value);
       return publicSettings();
     });
@@ -395,6 +405,7 @@ else {
       else window.webContents.stopFindInPage('clearSelection');
     });
     window.once('ready-to-show', () => {
+      if (process.platform === 'win32' && placement?.geometry) window.setBounds(placement.geometry);
       window.show();
     });
     await window.loadURL(appUrl);

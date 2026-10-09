@@ -34,7 +34,7 @@ export default function Settings({ onClose, onChanged, error }: { onClose: () =>
         <legend>启动布局</legend>
         <label><input type="radio" name="startup-layout" checked={settings.startup.layout === 'default'} onChange={() => { void changeStartup('default'); }} />默认布局</label>
         <label><input type="radio" name="startup-layout" checked={settings.startup.layout === 'focus'} onChange={() => { void changeStartup('focus'); }} />专注阅读模式</label>
-        <p>{settings.startupSupported ? '下次启动生效。默认布局展开双面板；专注模式按当前目录的 Markdown / HTML 数量调整宽度与工作树，在鼠标屏幕右侧全高度停靠。' : 'TODO：当前仅实现 KDE 平台。'}</p>
+        <p>{settings.startupSupported ? '下次启动生效。默认布局展开双面板；专注模式按当前目录的 Markdown / HTML 数量调整宽度与工作树，在鼠标屏幕右侧全高度停靠。' : '当前平台尚未实现专注启动布局。'}</p>
       </fieldset>}
       {settings && (['markdown', 'html'] as const).map((kind) => <div className="editor-setting" key={kind}>
         <label>{kind === 'markdown' ? 'Markdown 编辑器' : 'HTML 编辑器'}</label>

@@ -1,0 +1,23 @@
+
+> emd@0.1.0 test:ui
+> node scripts/test-ui.mjs commands.spec.cjs --grep F12 与文件菜单 --repeat-each=3 --reporter=line
+
+
+Running 3 tests using 1 worker
+
+(node:935778) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+
+
+[1/3] tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸
+(node:936518) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+
+
+[2/3] tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸
+(node:936811) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+
+
+[3/3] tests/commands.spec.cjs:62:1 › F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸
+  3 passed (29.2s)

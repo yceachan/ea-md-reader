@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { launch, close, chooseEditor } = require('./electron-fixture.cjs');
+const { expect } = require('@playwright/test');
+const { test, launch, close, chooseEditor } = require('./electron-fixture.cjs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');

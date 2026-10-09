@@ -1,0 +1,39 @@
+name: Windows 11 Shell validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shell:
+    # Dedicated VM only: never use a developer's working desktop for this label.
+    runs-on: [self-hosted, Windows, X64, emd-windows11-shell]
+    timeout-minutes: 15
+    env:
+      EMD_DEDICATED_WINDOWS_DESKTOP: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Require Windows 11 desktop and Explorer
+        shell: pwsh
+        run: |
+          $os = Get-CimInstance Win32_OperatingSystem
+          if ($os.Caption -notlike '*Windows 11*') { throw 'This suite requires a dedicated Windows 11 VM.' }
+          if (-not (Get-Process explorer -ErrorAction SilentlyContinue)) { throw 'Explorer must run in the CI desktop session.' }
+          Write-Output $os.Caption
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:ui -- --windows-shell tests/windows-shell.spec.cjs --reporter=line,html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows11-shell-validation
+          retention-days: 7
+          path: |
+            playwright-report/
+            test-results/
