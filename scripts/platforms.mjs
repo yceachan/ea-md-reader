@@ -26,5 +26,5 @@ export function selectPlatform(requested, host = process.platform, desktop = pro
   if (!platform) throw new Error(`未知平台：${id ?? host}。可选：kde、gnome、mac、windows。`);
   if (!platform.load) throw new Error(`${platform.name} 接入点为 TODO，尚未实现打包和安装。`);
   if (platform.os !== host) throw new Error(`${platform.name} 目前要求在 ${platform.os} 机器上执行。`);
-  return platform;
+  return { id, ...platform };
 }

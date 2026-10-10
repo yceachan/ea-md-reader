@@ -1,9 +1,9 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { join, relative } from 'node:path';
 import { constants } from 'node:os';
 import electron from 'electron';
 import { createServer } from 'vite';
-import { root } from './artifacts.mjs';
+import { root, ensureBuild } from './artifacts.mjs';
 
 let server, child, closed, timer;
 let stopping = false, restarting = false, restartPending = false;
@@ -44,8 +44,7 @@ function fail(error) {
 }
 
 try {
-  execFileSync(process.execPath, [join(root, 'scripts/render-icons.mjs')], { stdio: 'inherit' });
-  execFileSync(process.execPath, [join(root, 'scripts/build-native.mjs')], { stdio: 'inherit' });
+  await ensureBuild(['icons', 'native']);
   server = await createServer({ root, server: { host: '127.0.0.1', port: 0 } });
   await server.listen();
   const url = new URL('index.html', server.resolvedUrls.local[0]).href;

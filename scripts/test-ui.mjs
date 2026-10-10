@@ -1,5 +1,6 @@
 import { join } from 'node:path';
-import { root, requireBuild, requirePackage } from './artifacts.mjs';
+import { root, ensureBuild, ensurePackage } from './artifacts.mjs';
+import { selectPlatform } from './platforms.mjs';
 import { run } from './process.mjs';
 
 try {
@@ -12,8 +13,8 @@ try {
   }
   const packaged = args[0] === '--packaged';
   if (packaged) args.shift();
-  if (packaged) await requirePackage();
-  else await requireBuild();
+  if (packaged) await ensurePackage(selectPlatform().id);
+  else await ensureBuild();
   const command = [process.execPath, join(root, 'node_modules/@playwright/test/cli.js'), 'test', ...(packaged ? ['--config=playwright.packaged.config.cjs'] : []), ...args];
   if (process.platform === 'linux') {
     process.exitCode = await run('xvfb-run', ['-a', '-s', '-screen 0 2560x1440x24', '/bin/sh', join(root, 'scripts/test-ui-linux.sh'), ...command], { cwd: root });

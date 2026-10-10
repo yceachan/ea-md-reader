@@ -16,8 +16,6 @@ Linux 构建依赖：Ubuntu 24.04 使用 `g++ cmake extra-cmake-modules libkf5ki
 
 ```sh
 npm ci
-npm run build
-npm run pack
 npm run install:local
 ```
 
@@ -27,7 +25,7 @@ npm run install:local
 emd "文档.md" "页面.html"
 ```
 
-也可从系统应用菜单或文件的“打开方式”启动。卸载使用 `npm run uninstall:local`，用户偏好会保留。更新源码后重新执行构建、打包、安装；`npm run dist` 可生成当前平台的发行档案。macOS 构建使用本地 ad-hoc 签名，尚未配置 Developer ID 签名与公证。
+也可从系统应用菜单或文件的“打开方式”启动。卸载使用 `npm run uninstall:local`，用户偏好会保留。`start`、`pack`、`dist`、测试和默认安装会按内容检查产物，缺失或过期时自动重建，最新时直接复用；默认安装还会按需重新打包。显式传入产物目录时安装该目录。macOS 构建使用本地 ad-hoc 签名，尚未配置 Developer ID 签名与公证。
 
 ## 支持范围
 
@@ -46,7 +44,7 @@ npm run build      # 准备发布构建
 npm test           # Node 与 Electron UI 测试
 ```
 
-项目资料卡片由仓库根目录的 `setting.toml` 构建，头像来自 `public/`；修改后需要重新构建。编辑器和启动布局偏好由应用设置保存。
+项目资料卡片由仓库根目录的 `setting.toml` 构建，头像来自 `public/`；修改后下次运行或打包会自动更新。编辑器和启动布局偏好由应用设置保存。
 
 Linux UI 测试需要 Xvfb、Openbox 与 xprop。测试使用虚拟显示或隔离桌面；Windows Shell 场景需要专用 Windows 11 CI 桌面。
 
