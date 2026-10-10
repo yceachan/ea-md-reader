@@ -7,7 +7,7 @@ const icons = ['assets/emd.png', ...[16, 24, 32, 48, 64, 128, 256, 512].map(size
 
 export async function requireBuild(groups = ['renderer', 'icons', 'native'], directory = root) {
   const files = {
-    renderer: ['dist/index.html'],
+    renderer: ['dist/index.html', 'dist/profile.json'],
     icons,
     native: process.platform === 'linux' ? ['native-build/emd-application-chooser', 'native-build/emd-kde-startup'] : process.platform === 'win32' ? ['native-build/emd-application-chooser.exe'] : [],
   };

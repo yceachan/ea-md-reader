@@ -102,16 +102,12 @@ test('源码保存失败保留编辑模式，未保存草稿阻止未经确认�
   } finally { if (application) await close(application); await fs.rm(directory, { recursive: true, force: true }); }
 });
 
-test('logo 打开居中 profile，头像与三行导航读取 TOML，链接交给系统且重开读取更新', async () => {
+test('logo 打开固定构建资料，链接文字居中，用户配置无法更改卡片或链接', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-profile-ui-')));
   let application;
   try {
-    const avatar = path.join(directory, '无扩展名头像');
-    await fs.writeFile(avatar, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=', 'base64'));
-    const photo = 'profile-photo.jpg';
     const config = path.join(directory, 'setting.toml');
-    const text = `[editors.html]\nprogram=${JSON.stringify(process.execPath)}\n[profile]\nname="yceachan"\ntagline="As Eachan's Views"\nemail="yceachan@foxmail.com"\ngithub="https://github.com/yceachan"\nrepository="https://github.com/yceachan/ea-md-reader"\ncopyright="copyright (c) 2026 yceachan"\nlicense="MIT LICENSE"\nprofile-photo=${JSON.stringify(photo)}\n`;
-    await fs.writeFile(config, text);
+    await fs.writeFile(config, `[editors.html]\nprogram=${JSON.stringify(process.execPath)}\n[profile]\nname="其他用户"\ntagline="用户自定义简介"\nemail="other@example.com"\ngithub="https://example.com"\nrepository="https://example.com/other/repo"\nprofile-photo="missing-photo.jpg"\n`);
     const packaged = process.env.EMD_PACKAGED === '1';
     application = await launch({ executablePath: packaged ? path.resolve('release/linux-unpacked/emd') : undefined, args: [...(packaged ? [] : [path.resolve('.')]), ...platformArgs, `--user-data-dir=${directory}`] });
     const page = await application.firstWindow();
@@ -119,14 +115,20 @@ test('logo 打开居中 profile，头像与三行导航读取 TOML，链接交�
     await trigger.click();
     const card = page.getByRole('dialog', { name: '个人资料', exact: true });
     await expect(card.getByRole('heading', { name: 'yceachan' })).toBeVisible();
+    await expect(card).toContainText("As Eachan's Views");
     await expect.poll(() => card.getByRole('img').evaluate((image) => image.naturalWidth)).toBe(512);
     await expect(card.getByRole('link')).toHaveCount(3);
     await expect(card.getByRole('link').nth(2)).toHaveText('yceachan/ea-md-reader');
     await expect(card.locator('.profile-footer')).toContainText('copyright (c) 2026 yceachan');
     await expect(card.locator('.profile-license')).toHaveText('MIT LICENSE');
     const box = await card.boundingBox(), viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
-    expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(1);
-    expect(Math.abs(box.y + box.height / 2 - viewport.height / 2)).toBeLessThanOrEqual(1);
+    expect.soft(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(1);
+    expect.soft(Math.abs(box.y + box.height / 2 - viewport.height / 2)).toBeLessThanOrEqual(1);
+    for (const span of await card.locator('.profile-links span').all()) {
+      const textBox = await span.boundingBox();
+      expect.soft(Math.abs(textBox.x + textBox.width / 2 - box.x - box.width / 2)).toBeLessThanOrEqual(1);
+      await expect.soft(span).toHaveCSS('text-align', 'center');
+    }
     await card.screenshot({ path: test.info().outputPath('profile-card.png') });
     await application.evaluate(({ shell }) => { global.profileLinks = []; shell.openExternal = async (url) => { global.profileLinks.push(url); }; });
     for (const link of await card.getByRole('link').all()) await link.click();
@@ -137,13 +139,13 @@ test('logo 打开居中 profile，头像与三行导航读取 TOML，链接交�
     await page.keyboard.press('Escape');
     await expect(card).toHaveCount(0); await expect(trigger).toBeFocused();
     await page.evaluate(() => window.emd.clearEditor('html'));
-    expect(await fs.readFile(config, 'utf8')).toContain('As Eachan');
-    await fs.writeFile(config, text.replace("As Eachan's Views", '更新后的简介').replace(JSON.stringify(photo), JSON.stringify(avatar)));
-    await trigger.click(); await expect(card).toContainText('更新后的简介');
-    await expect.poll(() => card.getByRole('img').evaluate((image) => image.naturalWidth)).toBe(1);
-    await card.getByRole('button', { name: '关闭个人资料' }).click();
-    await fs.writeFile(config, text.replace(JSON.stringify(photo), JSON.stringify(path.join(directory, 'missing-photo'))));
-    await trigger.click(); await expect(card.getByRole('alert')).toContainText('ENOENT');
+    expect((await page.evaluate(() => window.emd.settings())).editors.html).toBeNull();
+    await fs.writeFile(config, '[profile]\nname="更新后的用户"\ngithub="javascript:alert(1)"\n');
+    await trigger.click();
+    await expect(card.getByRole('heading', { name: 'yceachan' })).toBeVisible();
+    await expect(card).toContainText("As Eachan's Views");
+    await expect(card.getByRole('alert')).toHaveCount(0);
+    await expect.poll(() => card.getByRole('img').evaluate((image) => image.naturalWidth)).toBe(512);
   } finally { if (application) await close(application); await fs.rm(directory, { recursive: true, force: true }); }
 });
 

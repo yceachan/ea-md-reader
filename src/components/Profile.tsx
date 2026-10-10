@@ -20,7 +20,6 @@ export default function Profile({ onClose, error }: { onClose: () => void; error
       <button className="profile-close" aria-label="关闭个人资料" onClick={close}>×</button>
       {error && <p className="settings-error" role="alert">{error}</p>}
       {loading && <p role="status">正在读取资料…</p>}
-      {!loading && !profile && !error && <p className="profile-empty">请在 setting.toml 的 [profile] 中配置个人资料。</p>}
       {profile && <>
         <img className="profile-photo" src={profile.photoUrl} alt={`${profile.name} 的头像`} />
         <h2>{profile.name}</h2><p className="profile-tagline">{profile.tagline}</p>

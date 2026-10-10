@@ -6,21 +6,33 @@ const os = require('node:os');
 const { parse } = require('smol-toml');
 const { settingsStore } = require('../electron/settings.cjs');
 
-test('profile 资料独立读取，编辑器更新保留资料，拒绝非法链接与头像路径', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-profile-settings-'));
+test('源码 profile 校验与头像内嵌，用户偏好不改变构建资料', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-profile-build-'));
+  const { readProfile } = require('../electron/profile.cjs');
   try {
-    const file = path.join(root, 'setting.toml'), store = settingsStore(file);
-    assert.equal(await store.profile(), null);
-    const profile = `[profile]\nname="yceachan"\ntagline="As Eachan's Views"\nemail="yceachan@foxmail.com"\ngithub="https://github.com/yceachan"\nrepository="https://github.com/yceachan/ea-md-reader"\ncopyright="copyright (c) 2026 yceachan"\nlicense="MIT LICENSE"\nprofile-photo=${JSON.stringify(path.join(root, '无扩展名头像'))}\n`;
-    await fs.writeFile(file, profile);
-    assert.equal((await store.profile()).name, 'yceachan');
-    await store.setEditor('html', path.join(root, 'editor'));
-    assert.equal((await store.profile())['profile-photo'], path.join(root, '无扩展名头像'));
-    await fs.writeFile(file, profile.replace(JSON.stringify(path.join(root, '无扩展名头像')), '"profile-photo.jpg"'));
-    assert.equal((await store.profile())['profile-photo'], 'profile-photo.jpg');
-    for (const invalid of [profile.replace('https://github.com/yceachan"', 'javascript:alert(1)"'), profile.replace(JSON.stringify(path.join(root, '无扩展名头像')), '""'), profile.replace('yceachan@foxmail.com', 'invalid')]) {
-      await fs.writeFile(file, invalid); await assert.rejects(store.profile());
+    const file = path.join(root, 'setting.toml');
+    await assert.rejects(readProfile(root), /ENOENT/);
+    await fs.mkdir(path.join(root, 'public'));
+    await fs.copyFile(path.resolve('public/profile-photo.jpg'), path.join(root, 'public/profile-photo.jpg'));
+    const source = await fs.readFile(path.resolve('setting.toml'), 'utf8');
+    await fs.writeFile(file, source);
+    const built = await readProfile(root);
+    assert.equal(built.name, 'yceachan');
+    assert.match(built.photoUrl, /^data:image\/jpeg;base64,/);
+    assert.equal(built.photoUrl.split(',')[1], (await fs.readFile(path.join(root, 'public/profile-photo.jpg'))).toString('base64'));
+    const userFile = path.join(root, 'preferences.toml');
+    await fs.writeFile(userFile, '[profile]\nname="其他用户"\n');
+    await settingsStore(userFile).setEditor('html', path.join(root, 'editor'));
+    assert.deepEqual(await readProfile(root), built);
+    for (const invalid of [source.replace('https://github.com/yceachan"', 'javascript:alert(1)"'), source.replace('yceachan@foxmail.com', 'invalid'), source.replace('"profile-photo.jpg"', JSON.stringify(path.join(root, 'public/profile-photo.jpg')))]) {
+      await fs.writeFile(file, invalid);
+      await assert.rejects(readProfile(root));
     }
+    await fs.writeFile(file, source);
+    await fs.writeFile(path.join(root, 'public/profile-photo.jpg'), 'invalid image');
+    await assert.rejects(readProfile(root), /JPEG 或 PNG/);
+    await fs.rm(path.join(root, 'public/profile-photo.jpg'));
+    await assert.rejects(readProfile(root), /ENOENT/);
   } finally { await fs.rm(root, { recursive: true, force: true }); }
 });
 

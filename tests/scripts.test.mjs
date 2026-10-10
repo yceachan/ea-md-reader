@@ -12,6 +12,8 @@ test('缺失构建按组件报告准备命令，已有产物可直接复用', as
   await assert.rejects(requireBuild(['renderer'], directory), /dist\/index.html.*npm run build:renderer/);
   await mkdir(join(directory, 'dist'));
   await writeFile(join(directory, 'dist/index.html'), '<h1>已有构建</h1>');
+  await assert.rejects(requireBuild(['renderer'], directory), /dist\/profile.json.*npm run build:renderer/);
+  await writeFile(join(directory, 'dist/profile.json'), '{}');
   await requireBuild(['renderer'], directory);
   await assert.rejects(requireBuild(['icons'], directory), /assets\/emd.png.*npm run build:icons/);
 });

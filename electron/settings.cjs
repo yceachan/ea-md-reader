@@ -49,20 +49,6 @@ function settingsStore(file) {
       value.startup.layout = layout;
       return write(value);
     },
-    async profile() {
-      const value = (await read()).profile;
-      if (value === undefined) return null;
-      const fields = ['name', 'tagline', 'email', 'github', 'repository', 'copyright', 'license', 'profile-photo'];
-      if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('setting.toml 的 profile 必须是表。');
-      for (const field of fields) if (typeof value[field] !== 'string' || !value[field].trim()) throw new Error(`setting.toml 的 profile.${field} 必须是非空文本。`);
-      if (!/^[^\s@?]+@[^\s@?]+$/.test(value.email)) throw new Error('profile.email 必须是有效的邮箱地址。');
-      for (const field of ['github', 'repository']) {
-        let url;
-        try { url = new URL(value[field]); } catch { throw new Error(`profile.${field} 必须是 HTTP / HTTPS 地址。`); }
-        if (!['http:', 'https:'].includes(url.protocol)) throw new Error(`profile.${field} 必须是 HTTP / HTTPS 地址。`);
-      }
-      return Object.fromEntries(fields.map((field) => [field, value[field]]));
-    },
     async setEditor(kind, program) {
       editorKind(kind);
       const value = await read();

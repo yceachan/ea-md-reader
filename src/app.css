@@ -106,8 +106,8 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .profile-photo { display: block; width: 132px; height: 132px; margin: 0 auto; border: 3px solid white; border-radius: 28px; object-fit: cover; box-shadow: 0 12px 24px #2c292614; }
 .profile-card h2 { margin: 24px 0 8px; font-size: 22px; font-weight: 650; }
 .profile-tagline { margin: 0; font-size: 14px; color: var(--kb-text-subtle); }
-.profile-links { display: grid; gap: 8px; margin: 28px 0; text-align: left; }
-.profile-links a { display: flex; align-items: center; gap: 16px; min-width: 0; padding: 10px 8px; border-radius: 7px; color: var(--kb-text-muted); text-decoration: none; font-size: 13px; }
+.profile-links { display: grid; gap: 8px; margin: 28px 0; text-align: center; }
+.profile-links a { display: grid; grid-template-columns: 20px minmax(0, 1fr) 20px; align-items: center; gap: 8px; min-width: 0; padding: 10px 8px; border-radius: 7px; color: var(--kb-text-muted); text-decoration: none; font-size: 13px; }
 .profile-links a:hover { background: var(--kb-accent-faint); color: var(--kb-accent); }
 .profile-links a:focus-visible { outline: 2px solid var(--kb-accent); outline-offset: -2px; }
 .profile-links svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -116,7 +116,6 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .profile-footer p { margin: 0; }
 .profile-license{ padding-top: 14px; color: var(--kb-text-subtle); font-size: 11px; }
 .profile-license  p { margin: 0; }
-.profile-empty { margin: 16px 0; font-size: 13px; line-height: 1.8; }
 .sidebar-header { display: flex; align-items: center; justify-content: space-between; height: 54px; flex-shrink: 0; padding: 0 18px; border-bottom: 1px solid var(--kb-line); }
 .sidebar-title { margin: 0; font-size: 10px; font-weight: 500; color: var(--kb-text-subtle); letter-spacing: .09em; }
 .sidebar-header .icon-button { width: 26px; height: 26px; }

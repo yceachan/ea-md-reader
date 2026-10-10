@@ -174,6 +174,13 @@ else {
       }
     });
     const settings = settingsStore(path.join(app.getPath('userData'), 'setting.toml'));
+    let profileText;
+    if (devUrl) {
+      const response = await net.fetch(new URL('profile.json', devUrl).href);
+      if (!response.ok) throw new Error(`无法载入构建的项目资料：HTTP ${response.status}`);
+      profileText = await response.text();
+    } else profileText = await fs.readFile(path.join(__dirname, '..', 'dist', 'profile.json'), 'utf8');
+    const profile = JSON.parse(profileText);
     const startupSupported = platform.startupLayout?.supported() === true;
     const publicSettings = async () => ({ ...await settings.get(), startupSupported });
     const layout = (await settings.get()).startup.layout;
@@ -294,19 +301,9 @@ else {
       await settings.setStartup(value);
       return publicSettings();
     });
-    checkedHandler('emd:profile', async () => {
-      const value = await settings.profile();
-      if (!value) return null;
-      const { ['profile-photo']: photo, ...profile } = value;
-      const photoPath = path.isAbsolute(photo) ? photo : path.join(__dirname, '..', devUrl ? 'public' : 'dist', photo);
-      const image = nativeImage.createFromBuffer(await fs.readFile(photoPath));
-      if (image.isEmpty()) throw new Error(`头像图片无法读取：${photo}`);
-      return { ...profile, photoUrl: image.toDataURL() };
-    });
+    checkedHandler('emd:profile', () => profile);
     checkedHandler('emd:profile-link', async (target) => {
       if (!['email', 'github', 'repository'].includes(target)) throw new Error('无效的资料链接。');
-      const profile = await settings.profile();
-      if (!profile) throw new Error('尚未配置个人资料。');
       await shell.openExternal(target === 'email' ? `mailto:${profile.email}` : profile[target]);
     });
     checkedHandler('emd:editor-choice', async (kind) => {
