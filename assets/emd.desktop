@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Ea.Md.Reader
+Name=emd
 GenericName=Markdown and HTML Reader
 GenericName[zh_CN]=Markdown 与 HTML 阅读器
 Comment=Read Markdown and self-contained HTML pages
@@ -10,6 +10,8 @@ TryExec=emd
 Icon=io.github.yceachan.emd
 Terminal=false
 Categories=Office;Viewer;
+Keywords=emd;Ea.Md.Reader;Markdown;HTML;Reader;
+Keywords[zh_CN]=emd;Ea.Md.Reader;Markdown;HTML;阅读器;
 MimeType=text/markdown;text/x-markdown;text/html;
 StartupNotify=true
 StartupWMClass=io.github.yceachan.emd

@@ -84,6 +84,8 @@ test('KDE 模块保留安装产物、启动器、desktop 校验与卸载行为',
     const desktop = await readFile(join(data, 'applications/io.github.yceachan.emd.desktop'), 'utf8');
     assert.ok(desktop.includes('%%'));
     assert.match(desktop, /MimeType=text\/markdown;text\/x-markdown;text\/html;/);
+    assert.match(desktop, /^Name=emd$/m);
+    assert.match(desktop, /^Keywords=emd;Ea\.Md\.Reader;Markdown;HTML;Reader;$/m);
     assert.ok((await stat(join(data, 'icons/hicolor/256x256/apps/io.github.yceachan.emd.png'))).size > 0);
     await writeFile(join(state, 'emd/emd.log'), '日志保留');
     execFileSync(process.execPath, ['--input-type=module', '-e', "import { uninstall } from './scripts/platforms/kde.mjs'; await uninstall(JSON.parse(process.argv[1]));", context], { env });

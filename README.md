@@ -126,6 +126,15 @@ xdg-mime default io.github.yceachan.emd.desktop text/markdown
 xdg-mime default io.github.yceachan.emd.desktop text/x-markdown
 ```
 
+Dolphin 中键使用文件类型候选列表中的第二个应用。若希望 Markdown 默认用现有编辑器、中键固定用 emd，在 `${XDG_CONFIG_HOME:-~/.config}/kde-mimeapps.list` 的 `[Default Applications]` 中设置有序候选。例如默认编辑器为 Typora：
+
+```ini
+[Default Applications]
+text/markdown=typora.desktop;io.github.yceachan.emd.desktop;
+```
+
+将 `typora.desktop` 换成所需默认应用的 desktop ID；已有配置只合并这条关联。KDE 专用配置优先于通用 `mimeapps.list`，避免 `text/plain` 的默认编辑器通过继承插到 emd 前面；`text/x-markdown` 是 `text/markdown` 的别名。保存后运行 `kbuildsycoca6 --noincremental` 刷新候选。安装和升级不修改这份配置；以后更换 Markdown 默认应用时也需要更新这里的第一项。
+
 日志在 `${XDG_STATE_HOME:-~/.local/state}/emd/emd.log`。卸载：
 
 ```sh
