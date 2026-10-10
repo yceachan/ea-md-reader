@@ -7,6 +7,25 @@ const { spawn, execFileSync } = require('node:child_process');
 const platformArgs = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
 const { pathToFileURL } = require('node:url');
 
+test('Markdown 与 Mermaid 数学标签共用修补后的 KaTeX', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-math-ui-'));
+  let application;
+  try {
+    const fixture = path.join(directory, '数学.md');
+    await fs.writeFile(fixture, '# 数学\n\n公式 $E=mc^2$。\n\n```mermaid\nflowchart LR\n A["$$E=mc^2$$"] --> B["公式"]\n```\n');
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, fixture],
+      env: { ...process.env, XDG_CONFIG_HOME: path.join(directory, 'config'), XDG_CACHE_HOME: path.join(directory, 'cache') } });
+    const page = await application.firstWindow();
+    await expect(page.locator('.vp-doc h1')).toHaveText('数学');
+    await expect(page.locator('.vp-doc > p .katex')).toBeVisible();
+    await expect(page.locator('.mermaid svg .katex')).toBeVisible({ timeout: 60000 });
+    await expect(page.locator('.mermaid-error')).toHaveCount(0);
+  } finally {
+    if (application) await close(application);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和原始字节另存为', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-html-ui-')));
   let application;
