@@ -2,7 +2,7 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, shell, nativeT
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { fileArguments, documentKind, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES } = require('./files.cjs');
+const { fileArguments, documentKind, readDocument, publicDocument, saveDocument, saveSource, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES } = require('./files.cjs');
 
 const { selectPlatform } = require('./platforms/index.cjs');
 const { createCommandSet, consumeInput } = require('./commands.cjs');
@@ -83,6 +83,7 @@ function checkedHandler(channel, handler) {
   });
 }
 function commandEnabled(id, documentId = activeDocumentId) {
+  if (id === 'saveSource' || id === 'toggleEdit') return documents.get(documentId)?.kind === 'markdown';
   return !commandSet.get(id).requiresDocument || documents.has(documentId);
 }
 function updateCommandMenu() {
@@ -232,6 +233,13 @@ else {
     window.on('focus', () => { void sessions.refresh(); });
     window.on('closed', () => sessions.dispose());
     window.webContents.on('will-navigate', (event, url) => { if (!devUrl || url !== appUrl) event.preventDefault(); });
+    window.webContents.on('will-prevent-unload', (event) => {
+      const choice = dialog.showMessageBoxSync(window, {
+        type: 'warning', buttons: ['继续编辑', '放弃修改并退出'], defaultId: 0, cancelId: 0,
+        title: '尚有未保存的 Markdown', message: '草稿尚未保存。退出会丢失这些修改。',
+      });
+      if (choice === 1) event.preventDefault();
+    });
     window.webContents.on('did-start-navigation', (_event, _url, inPlace, mainFrame) => {
       if (mainFrame && !inPlace) rendererReady = false;
     });
@@ -380,6 +388,14 @@ else {
       if (result.canceled) return null;
       await saveDocument(document, result.filePath);
       return result.filePath;
+    });
+    checkedHandler('emd:save-source', async (id, text, revision) => {
+      const old = getDocument(id);
+      const document = await saveSource(old, text, revision);
+      if (getDocument(id).path !== old.path) throw new Error('文件已切换。');
+      documents.set(id, document);
+      send('emd:document-update', publicDocument(document));
+      return publicDocument(document);
     });
     checkedHandler('emd:close', (id) => {
       getDocument(id);

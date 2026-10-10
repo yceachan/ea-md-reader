@@ -18,7 +18,8 @@ for (const host of ['linux', 'win32', 'darwin']) {
       assert.equal(commands.match(input(key, { [primary]: true, alt: true })), null);
     }
     assert.equal(commands.match(input('s', { [primary]: true, shift: true })), 'saveAs');
-    assert.equal(commands.match(input('s', { [primary]: true })), null);
+    assert.equal(commands.match(input('s', { [primary]: true })), 'saveSource');
+    assert.equal(commands.match(input('/', { control: true })), 'toggleEdit');
     assert.equal(commands.match(input('tab', { control: true })), 'nextTab');
     assert.equal(commands.match(input('tab', { control: true, shift: true })), 'previousTab');
     assert.equal(commands.match(input('tab', { meta: true })), null);

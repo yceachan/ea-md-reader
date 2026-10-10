@@ -50,10 +50,20 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .html-panel { overflow: hidden; }
 .html-page { display: block; width: 100%; height: 100%; border: 0; background: white; }
 .article { width: 100%; padding: 32px clamp(24px, 5cqw, 120px) 50px; }
-.document-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 30px; color: var(--kb-text-subtle); font-size: 10px; letter-spacing: .045em; }
+.document-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 30px; color: var(--kb-text-subtle); font-size: 10px; letter-spacing: .045em; }
+.document-meta > span { white-space: nowrap; }
 .document-meta > :first-child { font-size: 9px; letter-spacing: .1em; }
 .meta-dot { color: var(--kb-line-strong); }
-.readonly-badge { margin-left: auto; font-size: 10px; border: 1px solid var(--kb-line); padding: 2px 6px; border-radius: 4px; letter-spacing: 0; }
+.source-mode { display: flex; flex-shrink: 0; margin-left: auto; gap: 2px; padding: 3px; border: 1px solid var(--kb-line); border-radius: 999px; background: var(--kb-surface-alt); letter-spacing: 0; }
+.source-mode-option { min-width: 44px; padding: 4px 10px; border: 0; border-radius: 999px; background: transparent; color: var(--kb-text-muted); font-size: 11px; line-height: 1.4; }
+.source-mode-option[aria-pressed="true"] { background: var(--kb-text); color: var(--kb-surface); box-shadow: 0 1px 3px #0002; }
+.source-mode-option:disabled { opacity: .6; cursor: wait; }
+.source-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 12px; color: var(--kb-text-muted); }
+.source-actions > span { margin-right: auto; }
+.source-actions button { padding: 5px 10px; border: 1px solid var(--kb-line); border-radius: 6px; background: var(--kb-surface); color: var(--kb-text); }
+.source-actions button:disabled { opacity: .5; cursor: default; }
+.source-conflict { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--kb-accent); border-radius: 6px; color: var(--kb-accent); font-size: 12px; line-height: 1.6; }
+.source-input { display: block; width: 100%; min-height: max(320px, calc(100dvh - 260px)); resize: vertical; padding: 16px; border: 1px solid var(--kb-line); border-radius: 8px; background: var(--kb-surface); color: var(--kb-text); font-family: var(--kb-font-mono); font-size: 13px; line-height: 1.8; tab-size: 2; }
 .frontmatter-block { margin: 0 0 24px; color: var(--kb-text-subtle); }
 .frontmatter-block summary { cursor: pointer; font-size: 11px; margin-bottom: 8px; }
 .vp-doc table { min-width: 0; }

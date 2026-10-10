@@ -1,13 +1,13 @@
 /// <reference types="vite/client" />
 
-type ReaderDocument = { id: string; path: string; name: string; text: string; } & (
+type ReaderDocument = { id: string; path: string; name: string; text: string; revision: string; } & (
   { kind: 'markdown' } | { kind: 'html'; pageUrl: string }
 );
 interface WorkspaceNode { name: string; path: string; children?: WorkspaceNode[]; }
 type ReaderWorkspace = { root: string; name: string; activeAncestors: string[]; } & (
   { nodes: WorkspaceNode[]; error?: never } | { nodes: null; error: string }
 );
-type ReaderCommand = 'openDocument' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu' | 'openDeveloperTools' | 'openSettings';
+type ReaderCommand = 'openDocument' | 'saveSource' | 'toggleEdit' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu' | 'openDeveloperTools' | 'openSettings';
 type EditorKind = 'markdown' | 'html';
 type StartupLayout = 'default' | 'focus';
 interface ReaderSettings { editors: Record<EditorKind, { program: string } | null>; startup: { layout: StartupLayout }; startupSupported: boolean; }
@@ -41,6 +41,7 @@ interface Window {
     workspaceMenu(root: string, path: string | null, activeId: string | null): Promise<void>;
     onWorkspaceAction(listener: (action: WorkspaceAction) => void): () => void;
     save(id: string): Promise<string | null>;
+    saveSource(id: string, text: string, revision: string): Promise<ReaderDocument | null>;
     close(id: string): Promise<void>;
     reload(id: string): Promise<ReaderDocument | null>;
     link(id: string, href: string): Promise<void>;

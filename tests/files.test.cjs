@@ -3,7 +3,34 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
-const { readDocument, publicDocument, saveDocument, fileArguments, scanWorkspace, isWithin } = require('../electron/files.cjs');
+const { readDocument, publicDocument, saveDocument, saveSource, fileArguments, scanWorkspace, isWithin } = require('../electron/files.cjs');
+
+test('源码保存保留 BOM / 换行 / 文件权限，缩短后截断，外部修改与旧版本均拒绝覆盖', async () => {
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-source-save-')));
+  try {
+    const file = path.join(directory, '源码.md');
+    for (const [bom, newline] of [['\ufeff', '\r\n'], ['', '\n']]) {
+      await fs.writeFile(file, `${bom}# 原始文档${newline}${newline}较长的原文。${newline}`, { mode: 0o640 });
+      const original = await readDocument(file), revision = publicDocument(original).revision;
+      const saved = await saveSource(original, '# 新\n', revision);
+      assert.deepEqual(await fs.readFile(file), Buffer.from(`${bom}# 新${newline}`));
+      assert.deepEqual(saved.bytes, await fs.readFile(file));
+      assert.equal(saved.id, original.id);
+      if (process.platform !== 'win32') assert.equal((await fs.stat(file)).mode & 0o777, 0o640);
+      assert.notEqual(publicDocument(saved).revision, revision);
+      await assert.rejects(saveSource(saved, '# 旧草稿', revision), /保存冲突/);
+      await fs.writeFile(file, '# 外部更新\n');
+      await assert.rejects(saveSource(saved, '# 本地草稿', publicDocument(saved).revision), /保存冲突/);
+      assert.equal(await fs.readFile(file, 'utf8'), '# 外部更新\n');
+      await fs.rm(file);
+      await assert.rejects(saveSource(saved, '# 草稿', publicDocument(saved).revision), /ENOENT/);
+    }
+    const html = path.join(directory, '页面.html'); await fs.writeFile(html, '<h1>原始</h1>');
+    const document = await readDocument(html);
+    await assert.rejects(saveSource(document, '改动', publicDocument(document).revision), /无效/);
+    assert.equal(await fs.readFile(html, 'utf8'), '<h1>原始</h1>');
+  } finally { await fs.rm(directory, { recursive: true, force: true }); }
+});
 
 test('UTF-8 原始字节另存为，禁止覆盖源文件及其硬链接', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-files-')));

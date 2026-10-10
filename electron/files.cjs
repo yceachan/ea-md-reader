@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('node:fs/promises');
-const { randomUUID } = require('node:crypto');
+const { randomUUID, createHash } = require('node:crypto');
 const { fileURLToPath } = require('node:url');
 
 const MARKDOWN_EXTENSIONS = new Set(['.md', '.markdown', '.mdown', '.mkd', '.mkdn', '.mdx']);
@@ -34,7 +34,8 @@ async function readDocument(filePath) {
 }
 
 function publicDocument(document) {
-  const { bytes, ...result } = document;
+  const { bytes, ...fields } = document;
+  const result = { ...fields, revision: createHash('sha256').update(bytes).digest('hex') };
   return document.kind === 'html' ? { ...result, pageUrl: `emd-page://${document.id}/index.html?revision=${randomUUID()}` } : result;
 }
 
@@ -86,4 +87,27 @@ async function saveDocument(document, destination) {
   await fs.writeFile(destination, document.bytes);
 }
 
-module.exports = { fileArguments, documentKind, readDocument, publicDocument, saveDocument, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES, MARKDOWN_EXTENSIONS, HTML_EXTENSIONS };
+async function saveSource(document, text, revision) {
+  if (document.kind !== 'markdown' || typeof text !== 'string' || typeof revision !== 'string') throw new Error('无效的 Markdown 保存请求。');
+  const conflict = () => new Error('文件已被外部修改，保存冲突：草稿已保留，未覆盖文件。请复制草稿后重新读取，再合并修改。');
+  if (revision !== publicDocument(document).revision) throw conflict();
+  // The textarea normalizes line endings. Keep the source's BOM and newline style.
+  const newline = document.text.includes('\r\n') ? '\r\n' : '\n';
+  const normalized = text.replace(/\r\n?/g, '\n').replace(/\n/g, newline);
+  const bom = document.bytes.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])) ? '\ufeff' : '';
+  const bytes = Buffer.from(bom + normalized, 'utf8');
+  const temporary = path.join(path.dirname(document.path), `.${document.name}.${randomUUID()}.tmp`);
+  const original = await fs.stat(document.path);
+  try {
+    const file = await fs.open(temporary, 'wx', original.mode & 0o777);
+    try { await file.chmod(original.mode & 0o777); await file.writeFile(bytes); await file.sync(); }
+    finally { await file.close(); }
+    // Check immediately before replacement, including changes the watcher missed.
+    const current = await readDocument(document.path);
+    if (current.path !== document.path || !current.bytes.equals(document.bytes)) throw conflict();
+    await fs.rename(temporary, document.path);
+  } finally { await fs.rm(temporary, { force: true }); }
+  return { ...document, text: normalized, bytes };
+}
+
+module.exports = { fileArguments, documentKind, readDocument, publicDocument, saveDocument, saveSource, scanWorkspace, isWithin, workspaceContext, IMAGE_TYPES, MARKDOWN_EXTENSIONS, HTML_EXTENSIONS };

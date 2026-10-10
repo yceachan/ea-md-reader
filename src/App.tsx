@@ -6,12 +6,16 @@ import Workspace from './components/Workspace';
 import PanelResize from './components/PanelResize';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
+import SourceMode from './components/SourceMode';
 import logo from '../assets/emd.svg';
 import type { RenderResult } from './lib/markdown';
 
 const MIN_READING_WIDTH = 360;
 const AUTO_READING_WIDTH = 520;
 const PANEL_GUTTER = 5;
+type SourceDraft = { text: string; base: string; revision: string };
+const sourceText = (text: string) => text.replace(/\r\n?/g, '\n');
+const draftFor = (document: ReaderDocument): SourceDraft => ({ text: sourceText(document.text), base: sourceText(document.text), revision: document.revision });
 
 function Icon({ name }: { name: 'workspace' | 'menu' | 'settings' | 'open' | 'save' | 'close' | 'refresh' | 'outline' | 'search' | 'minimize' | 'maximize' | 'restore' }) {
   const paths = {
@@ -34,6 +38,9 @@ function Icon({ name }: { name: 'workspace' | 'menu' | 'settings' | 'open' | 'sa
 export default function App() {
   const [tabs, setTabs] = useState<ReaderDocument[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, SourceDraft>>({});
+  const [savingIds, setSavingIds] = useState<string[]>([]);
+  const pendingSaves = useRef(new Set<string>());
   const [headings, setHeadings] = useState<Record<string, RenderResult['headings']>>({});
   const [maximized, setMaximized] = useState(false);
   const [panels, setPanels] = useState({ left: false, right: false });
@@ -86,6 +93,7 @@ export default function App() {
   }
   async function openWorkspaceFile(path: string, newTab: boolean) {
     if (workspace) {
+      if (!newTab && activeId && !await saveDraft(activeId)) return;
       const opened = await window.emd.workspaceOpen(workspace.root, path, newTab || activeId === null, activeId);
       if (opened && leftOverlay) closeOverlay('left');
     }
@@ -95,23 +103,72 @@ export default function App() {
     else if (path) openWorkspaceFile(path, action === 'new-tab');
   };
 
+  async function saveDraft(id = activeId) {
+    if (!id) return true;
+    if (pendingSaves.current.has(id)) return false;
+    const draft = drafts[id];
+    if (!draft || draft.text === draft.base) return true;
+    pendingSaves.current.add(id);
+    setSavingIds((current) => [...current, id]);
+    try {
+      const document = await window.emd.saveSource(id, draft.text, draft.revision);
+      if (!document) return false;
+      setTabs((current) => current.map((tab) => tab.id === id ? document : tab));
+      setDrafts((current) => ({ ...current, [id]: draftFor(document) }));
+      setMessage({ text: '已保存 Markdown 源码', error: false });
+      return true;
+    } finally {
+      pendingSaves.current.delete(id);
+      setSavingIds((current) => current.filter((value) => value !== id));
+    }
+  }
+  async function changeMode(id: string, editing: boolean) {
+    const tab = tabs.find((tab) => tab.id === id);
+    if (tab?.kind !== 'markdown' || pendingSaves.current.has(id)) return false;
+    if (editing) setDrafts((current) => ({ ...current, [id]: draftFor(tab) }));
+    else {
+      if (!await saveDraft(id)) return false;
+      setDrafts((current) => { const next = { ...current }; delete next[id]; return next; });
+    }
+    return true;
+  }
+  async function discardDraft(id: string) {
+    if (pendingSaves.current.has(id)) return;
+    const document = await window.emd.reload(id);
+    if (!document) return;
+    setTabs((current) => current.map((tab) => tab.id === id ? document : tab));
+    setDrafts((current) => ({ ...current, [id]: draftFor(document) }));
+    setMessage(null);
+  }
+
   async function save(id = activeId) {
     if (!id) return;
+    if (!await saveDraft(id)) return;
     const destination = await window.emd.save(id);
     if (destination) setMessage({ text: `已另存为 ${destination}`, error: false });
   }
   async function close(id = activeId) {
     if (!id) return;
+    if (!await saveDraft(id)) return;
     const index = tabs.findIndex((tab) => tab.id === id);
     await window.emd.close(id);
     setTabs((current) => current.filter((tab) => tab.id !== id));
     setHeadings((current) => { const next = { ...current }; delete next[id]; return next; });
+    setDrafts((current) => { const next = { ...current }; delete next[id]; return next; });
     if (id === activeId) setActiveId(tabs[index + 1]?.id ?? tabs[index - 1]?.id ?? null);
   }
   async function reload(id = activeId) {
     if (!id) return;
+    if (drafts[id] && drafts[id].text !== drafts[id].base) {
+      setMessage({ text: '有未保存的草稿。请先保存，或使用编辑区的“放弃草稿并重新读取”。', error: true });
+      return;
+    }
     const document = await window.emd.reload(id);
-    if (document) { setTabs((current) => current.map((tab) => tab.id === document.id ? document : tab)); setMessage({ text: '已重新读取文件', error: false }); }
+    if (document) {
+      setTabs((current) => current.map((tab) => tab.id === document.id ? document : tab));
+      setDrafts((current) => current[id] ? { ...current, [id]: draftFor(document) } : current);
+      setMessage({ text: '已重新读取文件', error: false });
+    }
   }
   function nextTab(delta: number) {
     if (!tabs.length) return;
@@ -127,6 +184,8 @@ export default function App() {
   }
   commands.current = ({ id, documentId }) => {
     const actions: Partial<Record<ReaderCommand, () => void>> = {
+      saveSource: () => { void saveDraft(documentId); },
+      toggleEdit: () => { if (documentId) void changeMode(documentId, !drafts[documentId]); },
       saveAs: () => { void save(documentId); }, closeTab: () => { void close(documentId); }, reloadDocument: () => { void reload(documentId); },
       toggleFileMenu: () => setFileMenu((value) => !value), findInDocument: () => { setFinding(true); findInput.current?.focus(); },
       nextTab: () => nextTab(1), previousTab: () => nextTab(-1),
@@ -139,10 +198,17 @@ export default function App() {
     const cleanups = [
       window.emd.onWindowState(setMaximized),
       window.emd.onDisplayWidth(setDisplayWidth),
-      window.emd.onDocumentUpdate((document) => setTabs((current) => current.map((tab) => tab.id === document.id ? document : tab))),
+      window.emd.onDocumentUpdate((document) => {
+        setTabs((current) => current.map((tab) => tab.id === document.id ? document : tab));
+        setDrafts((current) => {
+          const draft = current[document.id];
+          return draft && draft.text === draft.base ? { ...current, [document.id]: draftFor(document) } : current;
+        });
+      }),
       window.emd.onDocument((document) => {
         setTabs((current) => current.some((tab) => tab.id === document.id) ? current.map((tab) => tab.id === document.id ? document : tab) : [...current, document]);
         setActiveId(document.id); setAnchor(null);
+        setDrafts((current) => { const next = { ...current }; delete next[document.id]; return next; });
       }),
       window.emd.onWorkspaceAction((action) => workspaceActions.current(action)),
       window.emd.onActivate((id) => { setActiveId(id); setAnchor(null); }),
@@ -159,6 +225,15 @@ export default function App() {
     void window.emd.ready().then(setHints);
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
+  useEffect(() => {
+    const prevent = (event: BeforeUnloadEvent) => {
+      if (savingIds.length || Object.values(drafts).some((draft) => draft.text !== draft.base)) {
+        event.preventDefault(); event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', prevent);
+    return () => window.removeEventListener('beforeunload', prevent);
+  }, [drafts, savingIds]);
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => setAvailableWidth(entry.contentRect.width));
     observer.observe(workspaceElement.current!);
@@ -285,13 +360,24 @@ export default function App() {
         <p className="welcome-description">阅读 Markdown 与自包含 HTML。<br />公式、代码、图表，以及页面中的交互。</p>
         <button className="open-button" onClick={() => { void window.emd.command('openDocument'); }}><Icon name="open" />打开 Markdown / HTML<span>{hints?.openDocument}</span></button>
         <p className="welcome-hint">也可以在终端运行 <code>emd 文件.md 页面.html</code></p>
-        <div className="welcome-footer"><span>ea-kb 的纸色与排版</span><span>只读阅读 · 多标签页</span></div>
+        <div className="welcome-footer"><span>ea-kb 的纸色与排版</span><span>预览与编辑 · 多标签页</span></div>
       </section>}
       {tabs.map((tab) => <section className={`document-panel ${tab.kind === 'html' ? 'html-panel' : ''}`} hidden={tab.id !== activeId} role="tabpanel" aria-labelledby={`tab-${tab.id}`} id={`panel-${tab.id}`} key={`${tab.id}-${tab.path}`} onScroll={() => updateProgress(tab.id)}>
         {tab.kind === 'html' ? <iframe className="html-page" title={tab.name} src={tab.pageUrl} sandbox="allow-scripts" onLoad={() => { if (tab.id === activeId && query) void window.emd.find(query, true); }} /> : <article className="article">
-          <div className="document-meta"><span>MARKDOWN</span><span className="meta-dot">·</span><span>{Math.max(1, Math.ceil(tab.text.length / 600))} 分钟阅读</span><span className="readonly-badge">只读</span></div>
-          <Article document={tab} active={tab.id === activeId} anchor={tab.id === activeId ? anchor : null} onHeadings={(id, values) => setHeadings((current) => ({ ...current, [id]: values }))} onRendered={() => updateProgress(tab.id)} onAnchorConsumed={() => setAnchor(null)} onError={(text) => setMessage({ text, error: true })} />
-          <div className="document-end"><span />文档结束<span /></div>
+          <div className="document-meta"><span>MARKDOWN</span><span className="meta-dot">·</span><span>{Math.max(1, Math.ceil(tab.text.length / 600))} 分钟阅读</span><SourceMode editing={!!drafts[tab.id]} disabled={savingIds.includes(tab.id)} onChange={(editing) => { void changeMode(tab.id, editing); }} /></div>
+          {drafts[tab.id] ? <div className="source-editor">
+            <div className="source-actions"><span>{savingIds.includes(tab.id) ? '保存中…' : drafts[tab.id].text !== drafts[tab.id].base ? '未保存' : '已保存'}</span><button disabled={savingIds.includes(tab.id) || drafts[tab.id].text === drafts[tab.id].base} onClick={() => { void saveDraft(tab.id); }}>保存 <kbd>{hints?.saveSource}</kbd></button>
+              {drafts[tab.id].text !== drafts[tab.id].base && <button disabled={savingIds.includes(tab.id)} onClick={() => { void discardDraft(tab.id); }}>放弃草稿并重新读取</button>}
+            </div>
+            {drafts[tab.id].text !== drafts[tab.id].base && drafts[tab.id].revision !== tab.revision && <p className="source-conflict" role="alert">文件已被外部修改，草稿已保留。请复制草稿后重新读取，再合并修改；保存不会覆盖外部版本。</p>}
+            <textarea className="source-input" aria-label="Markdown 源码" autoFocus={tab.id === activeId} spellCheck={false} readOnly={savingIds.includes(tab.id)} value={drafts[tab.id].text} onChange={(event) => {
+              const text = event.target.value;
+              setDrafts((current) => ({ ...current, [tab.id]: { ...current[tab.id], text } }));
+            }} />
+          </div> : <>
+            <Article document={tab} active={tab.id === activeId} anchor={tab.id === activeId ? anchor : null} onHeadings={(id, values) => setHeadings((current) => ({ ...current, [id]: values }))} onRendered={() => updateProgress(tab.id)} onAnchorConsumed={() => setAnchor(null)} onError={(text) => setMessage({ text, error: true })} />
+            <div className="document-end"><span />文档结束<span /></div>
+          </>}
         </article>}
       </section>)}
       </div>
@@ -299,8 +385,9 @@ export default function App() {
         {panels.right && !rightOverlay && <PanelResize side="right" width={rightWidth} maxWidth={Math.min(420, availableWidth - (panels.left && !leftOverlay ? leftWidth : 0) - MIN_READING_WIDTH - PANEL_GUTTER)} onResize={(right) => setPanelWidths((current) => ({ ...current, right }))} />}
         {panels.right && rightOverlay && <button className="panel-close" aria-label="关闭目录面板" onClick={() => closeOverlay('right')}><Icon name="close" /></button>}
         <TocDock expanded={panels.right} onToggle={() => togglePanel('right')} />
-        <div className="outline-content" hidden={!panels.right}><Outline key={active.path} headings={sections} onSelect={(id) => {
-        document.getElementById(`panel-${activeId}`)?.querySelectorAll<HTMLElement>('[id]').forEach((element) => { if (element.id === id) element.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        <div className="outline-content" hidden={!panels.right}><Outline key={active.path} headings={sections} onSelect={async (id) => {
+        if (drafts[active.id] && !await changeMode(active.id, false)) return;
+        setAnchor(id);
         if (rightOverlay) closeOverlay('right');
         }} /></div>
       </aside></div>}
@@ -308,6 +395,6 @@ export default function App() {
     {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} onChanged={() => setMessage(null)} error={message?.error ? message.text : undefined} />}
     {profileOpen && <Profile onClose={() => setProfileOpen(false)} error={message?.error ? message.text : undefined} />}
     {message && <div className={`notification ${message.error ? 'error' : ''}`} role={message.error ? 'alert' : 'status'}><span>{message.text}</span><button className="icon-button" aria-label="关闭提示" onClick={() => setMessage(null)}><Icon name="close" /></button></div>}
-    <footer className="statusbar"><span><span className="status-dot" />{active ? '只读' : '就绪'}</span><span>{tabs.length ? `${tabs.length} 个标签页` : 'emd 0.1.0'}</span><span className="status-spacer" />{active && <><span>UTF-8</span><button className="status-reload" title={`重新读取文件 · ${hints?.reloadDocument ?? ''}`} aria-label="重新读取文件" onClick={() => { void window.emd.command('reloadDocument'); }}><Icon name="refresh" /></button>{active.kind === 'markdown' && <span className="progress">{progress}%</span>}</>}</footer>
+    <footer className="statusbar"><span><span className="status-dot" />{active ? drafts[active.id] ? '编辑' : '预览' : '就绪'}</span><span>{tabs.length ? `${tabs.length} 个标签页` : 'emd 0.1.0'}</span><span className="status-spacer" />{active && <><span>UTF-8</span><button className="status-reload" title={`重新读取文件 · ${hints?.reloadDocument ?? ''}`} aria-label="重新读取文件" onClick={() => { void window.emd.command('reloadDocument'); }}><Icon name="refresh" /></button>{active.kind === 'markdown' && !drafts[active.id] && <span className="progress">{progress}%</span>}</>}</footer>
   </div>;
 }

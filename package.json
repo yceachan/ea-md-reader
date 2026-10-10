@@ -1,7 +1,7 @@
 {
   "name": "emd",
   "version": "0.1.0",
-  "description": "Read-only Markdown and self-contained HTML reader with the ea-kb reading style",
+  "description": "Markdown reader and source editor with self-contained HTML preview and the ea-kb reading style",
   "author": "yceachan",
   "license": "MIT",
   "main": "electron/main.cjs",
@@ -23,6 +23,7 @@
     "uninstall:local": "node scripts/install.mjs --uninstall"
   },
   "devDependencies": {
+    "@appica/ui-react": "1.2.0",
     "@playwright/test": "^1.63.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^22.0.0",

@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('emd', {
   workspaceMenu: (root, filePath, activeId) => ipcRenderer.invoke('emd:workspace-menu', root, filePath, activeId),
   onWorkspaceAction: (listener) => subscribe('emd:workspace-action', listener),
   save: (id) => ipcRenderer.invoke('emd:save', id),
+  saveSource: (id, text, revision) => ipcRenderer.invoke('emd:save-source', id, text, revision),
   close: (id) => ipcRenderer.invoke('emd:close', id),
   reload: (id) => ipcRenderer.invoke('emd:reload', id),
   link: (id, href) => ipcRenderer.invoke('emd:link', id, href),

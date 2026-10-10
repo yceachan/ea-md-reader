@@ -16,7 +16,7 @@ module.exports = {
         { role: 'about' }, { type: 'separator' }, { role: 'services' }, { type: 'separator' },
         { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, commandItem('quit'),
       ] },
-      { label: '文件', submenu: [...['openDocument', 'saveAs', 'closeTab', 'reloadDocument', 'toggleFileMenu'].map(commandItem), { type: 'separator' }, commandItem('openSettings')] },
+      { label: '文件', submenu: [...['openDocument', 'saveSource', 'saveAs', 'closeTab', 'reloadDocument', 'toggleEdit', 'toggleFileMenu'].map(commandItem), { type: 'separator' }, commandItem('openSettings')] },
       { role: 'editMenu', submenu: [
         { role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' },
         { role: 'paste' }, { role: 'pasteAndMatchStyle' }, { role: 'delete' }, { role: 'selectAll' },

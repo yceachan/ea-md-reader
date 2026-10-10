@@ -4,6 +4,103 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
 const platformArgs = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
+async function sourceKey(application, keyCode, modifiers) {
+  await application.evaluate(({ BrowserWindow }, { keyCode, modifiers }) => {
+    const contents = BrowserWindow.getAllWindows()[0].webContents;
+    contents.sendInputEvent({ type: 'keyDown', keyCode, modifiers });
+    contents.sendInputEvent({ type: 'keyUp', keyCode, modifiers });
+  }, { keyCode, modifiers });
+}
+
+test('Appica 预览编辑开关、快捷键保存、切换自动保存与外部冲突保留草稿', async () => {
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-source-ui-')));
+  let application;
+  try {
+    const file = path.join(directory, '源码.md'), other = path.join(directory, '其他.md');
+    await fs.writeFile(file, '\ufeff# 初始\r\n\r\n原文。\r\n');
+    await fs.writeFile(other, '# 其他\n');
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, other, file] });
+    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1600, 850));
+    const page = await application.firstWindow();
+    const panel = page.locator('.document-panel:not([hidden])');
+    const source = panel.getByRole('textbox', { name: 'Markdown 源码' });
+    const preview = panel.getByRole('button', { name: '预览', exact: true });
+    const edit = panel.getByRole('button', { name: '编辑', exact: true });
+    await expect(preview).toHaveAttribute('aria-pressed', 'true');
+    expect(await preview.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgb(44, 41, 38)');
+    await sourceKey(application, '/', ['control']);
+    await expect(edit).toHaveAttribute('aria-pressed', 'true');
+    await expect(source).toHaveValue('# 初始\n\n原文。\n');
+    await source.fill('# 手动保存\n\n## 目录更新\n');
+    await sourceKey(application, 'S', [process.platform === 'darwin' ? 'meta' : 'control']);
+    await expect(panel.locator('.source-actions')).toContainText('已保存');
+    expect(await fs.readFile(file, 'utf8')).toBe('\ufeff# 手动保存\r\n\r\n## 目录更新\r\n');
+    await source.fill('# 自动保存\n\n## 新目录\n');
+    await sourceKey(application, '/', ['control']);
+    await expect(preview).toHaveAttribute('aria-pressed', 'true');
+    await expect(panel.locator('h1')).toHaveText('自动保存');
+    await expect(page.getByRole('navigation', { name: '本文目录' })).toContainText('新目录');
+    expect(await fs.readFile(file, 'utf8')).toBe('\ufeff# 自动保存\r\n\r\n## 新目录\r\n');
+    await edit.click();
+    await source.fill('# 本地草稿\n');
+    await page.getByRole('tab', { name: 'MD 其他.md' }).click();
+    await page.getByRole('tab', { name: 'MD 源码.md' }).click();
+    await expect(source).toHaveValue('# 本地草稿\n');
+    await fs.writeFile(file, '# 外部保存\n');
+    await expect(panel.getByRole('alert')).toContainText('文件已被外部修改');
+    await sourceKey(application, '/', ['control']);
+    await expect(page.locator('.notification')).toContainText('保存冲突');
+    await expect(edit).toHaveAttribute('aria-pressed', 'true');
+    await expect(source).toHaveValue('# 本地草稿\n');
+    expect(await fs.readFile(file, 'utf8')).toBe('# 外部保存\n');
+    await source.focus();
+    await sourceKey(application, 'S', [process.platform === 'darwin' ? 'meta' : 'control']);
+    await expect(page.locator('.notification')).toContainText('保存冲突');
+    expect(await fs.readFile(file, 'utf8')).toBe('# 外部保存\n');
+    await page.getByRole('button', { name: '重新读取文件', exact: true }).click();
+    await expect(page.locator('.notification')).toContainText('有未保存的草稿');
+    await expect(source).toHaveValue('# 本地草稿\n');
+    await panel.getByRole('button', { name: '放弃草稿并重新读取', exact: true }).click();
+    await expect(source).toHaveValue('# 外部保存\n');
+    await fs.writeFile(file, '# 未修改草稿时的更新\n');
+    await expect(source).toHaveValue('# 未修改草稿时的更新\n');
+    await source.fill('# 点击保存并切换\n');
+    await preview.click();
+    await expect(panel.locator('h1')).toHaveText('点击保存并切换');
+    expect(await fs.readFile(file, 'utf8')).toBe('# 点击保存并切换\n');
+    await panel.screenshot({ path: test.info().outputPath('source-preview.png') });
+    await edit.click();
+    await panel.screenshot({ path: test.info().outputPath('source-editor.png') });
+  } finally { if (application) await close(application); await fs.rm(directory, { recursive: true, force: true }); }
+});
+
+test('源码保存失败保留编辑模式，未保存草稿阻止未经确认的窗口关闭', async () => {
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-source-error-ui-')));
+  let application;
+  try {
+    const file = path.join(directory, '正文.md'); await fs.writeFile(file, '# 初始\n');
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, file] });
+    const page = await application.firstWindow();
+    await page.getByRole('button', { name: '显示目录', exact: true }).click();
+    await page.getByRole('button', { name: '编辑', exact: true }).click();
+    const source = page.getByRole('textbox', { name: 'Markdown 源码' });
+    await source.fill('# 未保存\n');
+    await fs.rm(file);
+    await sourceKey(application, '/', ['control']);
+    await expect(page.locator('.notification')).toContainText('ENOENT');
+    await expect(source).toHaveValue('# 未保存\n');
+    await expect(page.getByRole('button', { name: '编辑', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    // Electron handles beforeunload with its own native confirmation below.
+    page.on('dialog', () => {});
+    await application.evaluate(({ dialog }) => { global.discardCalls = 0; dialog.showMessageBoxSync = () => { global.discardCalls++; return 0; }; });
+    await page.evaluate(() => window.emd.window('close'));
+    await expect.poll(() => application.evaluate(() => global.discardCalls)).toBe(1);
+    await expect(source).toHaveValue('# 未保存\n');
+    await fs.writeFile(file, '# 恢复\n');
+    await page.getByRole('button', { name: '放弃草稿并重新读取', exact: true }).click();
+    await expect(source).toHaveValue('# 恢复\n');
+  } finally { if (application) await close(application); await fs.rm(directory, { recursive: true, force: true }); }
+});
 
 test('logo 打开居中 profile，头像与三行导航读取 TOML，链接交给系统且重开读取更新', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-profile-ui-')));

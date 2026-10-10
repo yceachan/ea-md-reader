@@ -1,6 +1,8 @@
 // Application commands use semantic modifiers. Ports supply the real keyboard mapping.
 const definitions = [
   { id: 'openDocument', label: '打开…', key: 'O', modifiers: ['Primary'] },
+  { id: 'saveSource', label: '保存源码', key: 'S', modifiers: ['Primary'], requiresDocument: true },
+  { id: 'toggleEdit', label: '切换预览 / 编辑', key: '/', modifiers: ['Control'], requiresDocument: true },
   { id: 'saveAs', label: '另存为…', key: 'S', modifiers: ['Primary', 'Shift'], requiresDocument: true },
   { id: 'closeTab', label: '关闭标签页', key: 'W', modifiers: ['Primary'], requiresDocument: true },
   { id: 'reloadDocument', label: '重新读取文件', key: 'R', modifiers: ['Primary'], requiresDocument: true },
