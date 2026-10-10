@@ -56,7 +56,8 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .meta-dot { color: var(--kb-line-strong); }
 .source-mode { display: flex; flex-shrink: 0; margin-left: auto; gap: 2px; padding: 3px; border: 1px solid var(--kb-line); border-radius: 999px; background: var(--kb-surface-alt); letter-spacing: 0; }
 .source-mode-option { min-width: 44px; padding: 4px 10px; border: 0; border-radius: 999px; background: transparent; color: var(--kb-text-muted); font-size: 11px; line-height: 1.4; }
-.source-mode-option[aria-pressed="true"] { background: var(--kb-text); color: var(--kb-surface); box-shadow: 0 1px 3px #0002; }
+.source-mode-option[aria-pressed="true"] { background: var(--kb-accent); color: var(--kb-surface); box-shadow: var(--kb-shadow); }
+.source-mode-option:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--kb-accent-faint); color: var(--kb-accent); }
 .source-mode-option:disabled { opacity: .6; cursor: wait; }
 .source-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 12px; color: var(--kb-text-muted); }
 .source-actions > span { margin-right: auto; }

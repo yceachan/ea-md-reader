@@ -27,7 +27,7 @@ test('Appica 预览编辑开关、快捷键保存、切换自动保存与外部�
     const preview = panel.getByRole('button', { name: '预览', exact: true });
     const edit = panel.getByRole('button', { name: '编辑', exact: true });
     await expect(preview).toHaveAttribute('aria-pressed', 'true');
-    expect(await preview.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgb(44, 41, 38)');
+    expect(await preview.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgb(164, 93, 71)');
     await sourceKey(application, '/', ['control']);
     await expect(edit).toHaveAttribute('aria-pressed', 'true');
     await expect(source).toHaveValue('# 初始\n\n原文。\n');
