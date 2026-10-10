@@ -21,11 +21,12 @@ async function validateMacEditor(program) {
 
 function startProcess(program, args, waitForFile, env = process.env) {
   return new Promise((resolve, reject) => {
-    const child = spawn(program, args, { shell: false, detached: true, windowsHide: true, stdio: 'ignore', env });
+    // Keep the launched process attached and referenced until its exit is observed.
+    const child = spawn(program, args, { shell: false, detached: false, windowsHide: true, stdio: 'ignore', env });
     let started = false, finish, fail;
     const completion = new Promise((resolve, reject) => { finish = resolve; fail = reject; });
     child.once('error', (error) => { if (started) fail(error); else reject(error); });
-    child.once('spawn', () => { started = true; child.unref(); resolve({ completion, waitForFile }); });
+    child.once('spawn', () => { started = true; resolve({ completion, waitForFile }); });
     child.once('exit', (code, signal) => {
       if (code === 0) finish();
       else fail(new Error(`编辑器进程失败：${signal ?? code}（${program}）`));

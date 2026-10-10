@@ -8,6 +8,9 @@ const { editorSessions } = require('../electron/editor-sessions.cjs');
 const { readDocument, publicDocument } = require('../electron/files.cjs');
 const { startExecutable } = require('../electron/platforms/editor.cjs');
 const { existsSync } = require('node:fs');
+const { execFile } = require('node:child_process');
+const { promisify } = require('node:util');
+const execute = promisify(execFile);
 
 test('Linux desktop 应用无需执行位，系统启动保留 Exec 参数与完整文件路径', { skip: process.platform !== 'linux' }, async () => {
   const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-desktop-editor-')));
@@ -112,7 +115,6 @@ test('无等待能力不把启动器退出当作关闭；读取失败保留最�
 
 test('原生可执行编辑器获得完整文件参数，退出失败和无法启动均可观察', async () => {
   const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-editor-process-')));
-  const keepAlive = setInterval(() => {}, 1000); // The Reader normally keeps the event loop alive; detached editors do not.
   try {
     const name = process.platform === 'win32' ? "中文 空格 '$()&;`%.md" : "中文 空格 ' \" $()&;`%.md";
     const file = path.join(root, name), output = path.join(root, 'argv.json');
@@ -142,5 +144,31 @@ test('原生可执行编辑器获得完整文件参数，退出失败和无法�
     if (process.platform === 'win32') assert.equal(argumentsReceived.runAsNode, '1');
     assert.equal(waiting.waitForFile, true); assert.equal(finished, false);
     await fs.writeFile(release, 'closed'); await waiting.completion;
-  } finally { clearInterval(keepAlive); await fs.rm(root, { recursive: true, force: true }); }
+  } finally { await fs.rm(root, { recursive: true, force: true }); }
+});
+
+test('外部编辑器仍运行时保持父进程引用，结束后父进程自然退出', { timeout: 10000 }, async () => {
+  const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-editor-reference-')));
+  const ready = path.join(root, 'ready'), release = path.join(root, 'release'), finished = path.join(root, 'finished');
+  let parent;
+  try {
+    const editor = path.join(root, 'editor.cjs');
+    await fs.writeFile(editor, `const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(ready)},'ready');const timer=setInterval(()=>{if(fs.existsSync(${JSON.stringify(release)})){clearInterval(timer);fs.writeFileSync(${JSON.stringify(finished)},'finished')}},20);`);
+    const modulePath = require.resolve('../electron/platforms/editor.cjs');
+    const script = `require(${JSON.stringify(modulePath)}).startProcess(process.execPath,[${JSON.stringify(editor)}],false).then(session=>session.completion).catch(error=>{console.error(error);process.exitCode=1});`;
+    parent = execute(process.execPath, ['-e', script], { windowsHide: true, timeout: 5000 });
+    // Attach the rejection handler immediately; cleanup still awaits the original result.
+    parent.catch(() => {});
+    await until(() => existsSync(ready));
+    assert.equal(parent.child.exitCode, null, '父进程不应在编辑器仍运行时自然退出');
+    await fs.writeFile(release, 'release');
+    await parent;
+    assert.equal(await fs.readFile(finished, 'utf8'), 'finished');
+    assert.equal(parent.child.exitCode, 0);
+  } finally {
+    await fs.writeFile(release, 'release');
+    if (existsSync(ready)) await until(() => existsSync(finished));
+    if (parent) await parent.catch(() => {});
+    await fs.rm(root, { recursive: true, force: true });
+  }
 });

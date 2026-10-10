@@ -1,0 +1,210 @@
+{
+  "date": "2026-10-10",
+  "ciRun": 38041403692,
+  "baselineCommit": "0c34b07e6ff42ab94678b1999872e6f88a75ec2b",
+  "environment": {
+    "os": "Windows 11 10.0.22631.4169",
+    "externalNode": "24.20.0",
+    "electron": "44.5.1",
+    "electronNode": "24.21.0",
+    "desktop": "never-activated desktop in SSH service window station",
+    "displayBoundsDIP": {
+      "width": 1024,
+      "height": 768
+    },
+    "displayWorkAreaDIP": {
+      "width": 1024,
+      "height": 768
+    },
+    "displayScaleFactor": 1,
+    "notUserInteractiveDisplay": true
+  },
+  "baseline": {
+    "command": "npm run test:ui -- tests/ui.spec.cjs tests/reader.spec.cjs --grep 'Appica|工作区切换' --reporter=line,json",
+    "stats": {
+      "startTime": "2026-10-10T09:59:36.731Z",
+      "duration": 196650.377,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    },
+    "readerFailure": {
+      "file": "tests/reader.spec.cjs",
+      "line": 336,
+      "expectedMaxCSSpx": 1,
+      "actualCSSpx": 1.95361328125
+    },
+    "appicaTraceEvents": [
+      {
+        "type": "before",
+        "callId": "pw:api@38",
+        "title": "Evaluate",
+        "startTime": 17573.345,
+        "stack": [
+          {
+            "file": "C:\\Eachan\\Workspace\\work\\ea-md-reader\\tests\\ui.spec.cjs",
+            "line": 23,
+            "column": 23
+          }
+        ]
+      },
+      {
+        "type": "after",
+        "callId": "pw:api@38",
+        "endTime": 17578.137,
+        "error": {
+          "name": "",
+          "message": "Error: electronApplication.evaluate: TypeError: Cannot read properties of undefined (reading 'setSize')\n    at eval (eval at evaluate (:311:30), <anonymous>:3:43)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Object.join (node:path:506:7)\n    at C:\\Eachan\\Workspace\\work\\ea-md-reader\\electron\\main.cjs:204:39",
+          "stack": "Error: electronApplication.evaluate: TypeError: Cannot read properties of undefined (reading 'setSize')\n    at eval (eval at evaluate (:311:30), <anonymous>:3:43)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Object.join (node:path:506:7)\n    at C:\\Eachan\\Workspace\\work\\ea-md-reader\\electron\\main.cjs:204:39\n    at eval (eval at evaluate (:311:30), <anonymous>:3:43)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at C:\\Eachan\\Workspace\\work\\ea-md-reader\\electron\\main.cjs:204:39\n    at C:\\Eachan\\Workspace\\work\\ea-md-reader\\tests\\ui.spec.cjs:23:23"
+        }
+      },
+      {
+        "type": "before",
+        "callId": "pw:api@39",
+        "title": "Stop tracing",
+        "startTime": 17579.917,
+        "stack": [
+          {
+            "file": "C:\\Eachan\\Workspace\\work\\ea-md-reader\\tests\\electron-fixture.cjs",
+            "line": 79,
+            "column": 39,
+            "function": "stopTracing"
+          }
+        ]
+      },
+      {
+        "type": "after",
+        "callId": "pw:api@39",
+        "endTime": 17604.707
+      },
+      {
+        "type": "before",
+        "callId": "pw:api@40",
+        "title": "Close context",
+        "startTime": 17609.403,
+        "stack": [
+          {
+            "file": "C:\\Eachan\\Workspace\\work\\ea-md-reader\\tests\\electron-fixture.cjs",
+            "line": 70,
+            "column": 11,
+            "function": "close"
+          }
+        ]
+      }
+    ],
+    "workerTeardownTimeoutMs": 90000
+  },
+  "probe": {
+    "scope": "Temporary Appica copy waited for firstWindow before setSize; geometry probe sampled existing CSS. Permanent UI specs unchanged.",
+    "passed": 2,
+    "durationSeconds": 3.8,
+    "windowDIP": {
+      "width": 819,
+      "height": 668
+    },
+    "measurements": [
+      {
+        "pageZoom": 1,
+        "viewportCSS": {
+          "width": 819,
+          "height": 668
+        },
+        "devicePixelRatio": 1,
+        "borderLeftCSS": "1px",
+        "dockMinusOutlineX": 1,
+        "centerYDifference": 0,
+        "panelOverlay": true
+      },
+      {
+        "pageZoom": 0.511875,
+        "viewportCSS": {
+          "width": 1600,
+          "height": 1305
+        },
+        "devicePixelRatio": 0.5118749737739563,
+        "borderLeftCSS": "1.9536px",
+        "dockMinusOutlineX": 1.95361328125,
+        "centerYDifference": -0.0152587890625,
+        "panelOverlay": false
+      },
+      {
+        "pageZoom": 1.25,
+        "viewportCSS": {
+          "width": 655,
+          "height": 534
+        },
+        "devicePixelRatio": 1.25,
+        "borderLeftCSS": "0px",
+        "dockMinusOutlineX": 0,
+        "panelOverlay": false
+      },
+      {
+        "pageZoom": 1.5,
+        "viewportCSS": {
+          "width": 546,
+          "height": 445
+        },
+        "devicePixelRatio": 1.5,
+        "borderLeftCSS": "0px",
+        "dockMinusOutlineX": 0,
+        "panelOverlay": false
+      },
+      {
+        "pageZoom": 2,
+        "viewportCSS": {
+          "width": 409,
+          "height": 334
+        },
+        "devicePixelRatio": 2,
+        "borderLeftCSS": "0px",
+        "dockMinusOutlineX": 0,
+        "panelOverlay": false
+      }
+    ],
+    "sourceWindowDIP": {
+      "width": 1600,
+      "height": 850
+    },
+    "sourcePageZoom": 1,
+    "systemDpiWasNotChanged": true
+  },
+  "editorChange": {
+    "detached": false,
+    "unrefRemoved": true,
+    "cwdChanged": false,
+    "automaticProcessTreeTerminationImplemented": false,
+    "lifecycleRegression": {
+      "oldLinux": "failed: parent exitCode 0 before editor released",
+      "oldWindows": "failed: parent exitCode 0 before editor released",
+      "newLinux": "passed",
+      "newWindows": "passed"
+    },
+    "linuxNode": {
+      "passed": 8,
+      "failed": 0
+    },
+    "windowsNode": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 1
+    },
+    "windowsEditorUI": {
+      "stats": {
+        "startTime": "2026-10-10T10:06:36.092Z",
+        "duration": 4832.718000000001,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    }
+  },
+  "limitations": [
+    "No macOS hardware verification",
+    "No Windows system DPI 125/150/200% or multiple-monitor verification",
+    "No Windows Shell snapping verification",
+    "No interactive Typora launch or forced application-exit process-tree verification"
+  ],
+  "provenance": "Baseline stats and Appica events extracted from native Playwright results.json and trace.zip; geometry samples transcribed from captured native probe stdout."
+}
