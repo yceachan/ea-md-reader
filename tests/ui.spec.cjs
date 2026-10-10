@@ -102,7 +102,7 @@ test('源码保存失败保留编辑模式，未保存草稿阻止未经确认�
   } finally { if (application) await close(application); await fs.rm(directory, { recursive: true, force: true }); }
 });
 
-test('logo 打开固定构建资料，链接文字居中，用户配置无法更改卡片或链接', async () => {
+test('logo 打开固定构建资料，图标紧邻链接且整组居中，用户配置无法更改卡片或链接', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-profile-ui-')));
   let application;
   try {
@@ -124,9 +124,12 @@ test('logo 打开固定构建资料，链接文字居中，用户配置无法更
     const box = await card.boundingBox(), viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
     expect.soft(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(1);
     expect.soft(Math.abs(box.y + box.height / 2 - viewport.height / 2)).toBeLessThanOrEqual(1);
-    for (const span of await card.locator('.profile-links span').all()) {
+    for (const link of await card.getByRole('link').all()) {
+      const span = link.locator('span');
       const textBox = await span.boundingBox();
-      expect.soft(Math.abs(textBox.x + textBox.width / 2 - box.x - box.width / 2)).toBeLessThanOrEqual(1);
+      const iconBox = await link.locator('svg').boundingBox();
+      expect.soft(Math.abs(textBox.x - iconBox.x - iconBox.width - 10)).toBeLessThanOrEqual(1);
+      expect.soft(Math.abs((iconBox.x + textBox.x + textBox.width) / 2 - box.x - box.width / 2)).toBeLessThanOrEqual(1);
       await expect.soft(span).toHaveCSS('text-align', 'center');
     }
     await card.screenshot({ path: test.info().outputPath('profile-card.png') });
