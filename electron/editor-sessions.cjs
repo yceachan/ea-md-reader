@@ -59,6 +59,10 @@ function editorSessions({ documents, changed, onError }) {
     return target;
   }
   return {
+    watch(filePath) {
+      try { ensure(filePath); }
+      catch (error) { onError(new Error(`无法监听 ${filePath}\n${error.message}`)); }
+    },
     async open(filePath, start) {
       const target = ensure(filePath);
       target.sessions++;
@@ -72,7 +76,10 @@ function editorSessions({ documents, changed, onError }) {
       } else { target.sessions--; releaseUnused(); }
       return true;
     },
-    refresh() { return Promise.all([...targets.values()].map(refresh)); },
+    refresh() {
+      for (const document of documents.values()) this.watch(document.path);
+      return Promise.all([...targets.values()].map(refresh));
+    },
     releaseUnused,
     dispose() { for (const target of targets.values()) dispose(target); },
   };

@@ -35,6 +35,7 @@ let rendererInitialized = false;
 let activeDocumentId = null;
 let applicationMenu = null;
 let startupDisplayWidth = null;
+let sessions;
 const documents = new Map();
 const workspaceRoots = new Set();
 const pending = [];
@@ -55,6 +56,7 @@ async function openPaths(paths) {
       if (existing) send('emd:activate', existing.id);
       else {
         documents.set(document.id, document);
+        sessions?.watch(document.path);
         send('emd:document', publicDocument(document));
       }
     } catch (error) {
@@ -198,7 +200,8 @@ else {
     if (placement?.dispose) window.once('closed', placement.dispose);
     if (placement?.applied) placement.applied.then((result) => console.info('[emd] KWin 启动布局已确认', JSON.stringify(result.geometry))).catch((error) => { console.error('[emd] 启动布局失败', error); if (!window.isDestroyed()) showError(new Error(`启动布局失败：${error.message}`)); });
     if (startupError) { console.error('[emd] 启动布局失败', startupError); showError(new Error(`启动布局失败：${startupError.message}`)); }
-    const sessions = editorSessions({ documents, changed: (document) => send('emd:document-update', publicDocument(document)), onError: showError });
+    sessions = editorSessions({ documents, changed: (document) => send('emd:document-update', publicDocument(document)), onError: showError });
+    for (const document of documents.values()) sessions.watch(document.path);
     async function editFile(filePath, choose) {
       if (typeof choose !== 'boolean') throw new Error('无效的编辑器请求。');
       if (!(await fs.stat(filePath)).isFile()) throw new Error('请选择要编辑的文件。');
@@ -342,6 +345,8 @@ else {
       const document = await readDocument(canonicalPath);
       if (!newTab) { getDocument(activeId); document.id = activeId; }
       documents.set(document.id, document);
+      sessions.watch(document.path);
+      sessions.releaseUnused();
       send('emd:document', publicDocument(document));
       return true;
     });

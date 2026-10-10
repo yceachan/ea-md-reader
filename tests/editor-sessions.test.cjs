@@ -36,7 +36,7 @@ async function until(predicate) {
   while (!predicate()) { if (Date.now() > deadline) throw new Error('未收到预期编辑更新'); await delay(15); }
 }
 
-test('目录监听覆盖原子替换和后续保存，同路径标签共同更新而其他文件不变', async () => {
+test('直接打开的文件监听覆盖原子替换和后续保存，同路径标签共同更新而其他文件不变', async () => {
   const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-editor-watch-')));
   let sessions;
   try {
@@ -46,7 +46,7 @@ test('目录监听覆盖原子替换和后续保存，同路径标签共同更�
     const documents = new Map([[original.id, original], ['copy', { ...original, id: 'copy' }], [unrelated.id, unrelated]]);
     const changes = [], errors = [];
     sessions = editorSessions({ documents, changed: (document) => changes.push(document), onError: (error) => errors.push(error) });
-    await sessions.open(file, async () => ({ completion: null, waitForFile: false }));
+    sessions.watch(file);
     await fs.writeFile(`${file}.tmp`, '\ufeff# 原子保存\r\n'); await fs.rename(`${file}.tmp`, file);
     await until(() => documents.get(original.id).text.includes('原子保存') && documents.get('copy').text.includes('原子保存'));
     await fs.writeFile(file, '# 第二次保存');

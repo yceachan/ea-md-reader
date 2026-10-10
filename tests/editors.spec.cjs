@@ -5,6 +5,32 @@ const path = require('node:path');
 const os = require('node:os');
 const platformArgs = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
 
+test('打开后直接监听 Markdown 和 HTML 的外部保存，原子替换后仍持续更新', async () => {
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-file-watch-ui-')));
+  let application;
+  try {
+    const markdown = path.join(directory, '正文.md'), html = path.join(directory, '页面.html');
+    await fs.writeFile(markdown, '# 初始正文\n');
+    await fs.writeFile(html, '<h1>初始页面</h1>');
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, markdown, html] });
+    const page = await application.firstWindow();
+    await expect(page.frameLocator('.html-page').locator('h1')).toHaveText('初始页面');
+    await fs.writeFile(html, '<h1>外部更新页面</h1>');
+    await expect(page.frameLocator('.html-page').locator('h1')).toHaveText('外部更新页面');
+    await fs.writeFile(`${markdown}.tmp`, '# 原子替换正文\n');
+    await fs.rename(`${markdown}.tmp`, markdown);
+    await expect(page.locator('.vp-doc h1')).toHaveText('原子替换正文');
+    await fs.writeFile(markdown, '# 后续更新正文\n');
+    await expect(page.locator('.vp-doc h1')).toHaveText('后续更新正文');
+    await expect(page.getByRole('tab', { selected: true })).toHaveText('HTML页面.html');
+    await fs.writeFile(markdown, Buffer.from([0xff]));
+    await expect(page.getByRole('alert')).toContainText('encoded data');
+    await expect(page.locator('.vp-doc h1')).toHaveText('后续更新正文');
+    await fs.writeFile(markdown, '# 恢复正文\n');
+    await expect(page.locator('.vp-doc h1')).toHaveText('恢复正文');
+  } finally { if (application) await close(application); await fs.rm(directory, { recursive: true, force: true }); }
+});
+
 test('文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-editors-ui-')));
   let application;
