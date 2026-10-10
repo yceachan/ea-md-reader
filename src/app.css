@@ -137,6 +137,7 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .toc-dock { position: absolute; top: 50%; left: 0; transform: translateY(-50%); z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 32px; height: 78px; padding: 9px 4px; border: 1px solid color-mix(in srgb, var(--kb-accent) 30%, var(--kb-line)); border-radius: 0 12px 12px 0; background: linear-gradient(110deg, #fffefb, #f3e9dc); color: var(--kb-accent); box-shadow: inset 1px 1px 0 #ffffffeb, inset 0 -2px 2px #73503b12, 3px 3px 7px #483a2f1a, 8px 8px 20px #483a2f0d; transition: background .16s ease, box-shadow .16s ease, color .16s ease; }
 .toc-dock:hover { background: linear-gradient(110deg, #fffdf6, #eddbc7); color: var(--kb-accent-hover); box-shadow: inset 1px 1px 0 #fff, inset 0 -2px 2px #73503b12, 4px 4px 10px #483a2f26, 9px 9px 22px #483a2f14; }
 .toc-dock:active { background: linear-gradient(110deg, #efdfce, #f6ebdf); box-shadow: inset 2px 2px 4px #73503b26, 1px 1px 3px #483a2f14; }
+.toc-dock[aria-expanded="false"] { border-radius: 12px 0 0 12px; }
 .toc-dock:focus-visible { outline-offset: -2px; }
 .toc-dock .toc-dock-icon { width: 20px; height: 20px; }
 .toc-dock-page { fill: var(--kb-accent-soft); stroke: currentColor; stroke-width: 1.2; }
