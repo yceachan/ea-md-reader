@@ -48,6 +48,11 @@ test('macOS 原生包、隔离安装、系统打开、升级与重复卸载', as
     await execFile('/usr/bin/open', ['-a', bundle, html, '--args', `--user-data-dir=${profile}`]);
     const frame = page.frameLocator('.document-panel:not([hidden]) .html-page');
     await expect(frame.locator('h1')).toHaveText('系统HTML');
+    await expect.poll(() => application.evaluate(({ BrowserWindow }) => {
+      const window = BrowserWindow.getAllWindows()[0];
+      return window.isVisible() && window.isFocused() && window.webContents.isFocused();
+    })).toBe(true);
+    await expect.poll(() => frame.locator('#interactive').evaluate(button => typeof button.onclick)).toBe('function');
     await frame.locator('#interactive').click();
     await expect(frame.locator('#interactive')).toHaveText('1');
     expect(await frame.locator('body').evaluate(() => typeof window.emd)).toBe('undefined');
