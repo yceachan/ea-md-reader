@@ -59,6 +59,52 @@ test('工作树文件/目录与后台标签复制绝对和相对路径，空白�
   }
 });
 
+test('Reader 的元素选择快捷键在首次打开和连续选择后均可重新启用', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-inspect-'));
+  let application;
+  try {
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${directory}`] });
+    const page = await application.firstWindow();
+    await page.getByRole('button', { name: '个人资料', exact: true }).click();
+    await expect(page.locator('.profile-card h2')).toHaveText('yceachan');
+    const primary = process.platform === 'darwin' ? 'meta' : 'control';
+    async function inspect() {
+      await application.evaluate(({ BrowserWindow }, primary) => {
+        const reader = BrowserWindow.getAllWindows().find(window => window.webContents.getURL() === 'emd://app/index.html');
+        reader.focus();
+        reader.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'C', modifiers: [primary, 'shift'] });
+        reader.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'C', modifiers: [primary, 'shift'] });
+      }, primary);
+    }
+    const toolsOpened = application.waitForEvent('window');
+    await inspect();
+    const frontend = await toolsOpened;
+    const selector = frontend.getByRole('button', { name: /Select an element in the page to inspect it/ });
+    for (let index = 0; index < 3; index++) {
+      if (index) await inspect();
+      await expect(selector).toHaveAttribute('aria-pressed', 'true');
+      const targetSelector = index % 2 ? '.profile-tagline' : '.profile-card h2';
+      const target = await page.locator(targetSelector).boundingBox();
+      await application.evaluate(({ BrowserWindow }) => {
+        BrowserWindow.getAllWindows().find(window => window.webContents.getURL() === 'emd://app/index.html').focus();
+      });
+      await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2);
+      await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
+      await expect(selector).toHaveAttribute('aria-pressed', 'false');
+      await expect(frontend.locator('.elements-tree-outline .selected').first()).toContainText(index % 2 ? "As Eachan's Views" : 'yceachan');
+    }
+    await frontend.keyboard.press(process.platform === 'darwin' ? 'Meta+Shift+C' : 'Control+Shift+C');
+    await expect(selector).toHaveAttribute('aria-pressed', 'true');
+    await frontend.keyboard.press(process.platform === 'darwin' ? 'Meta+Shift+C' : 'Control+Shift+C');
+    await expect(selector).toHaveAttribute('aria-pressed', 'false');
+    expect(application.windows()).toHaveLength(2);
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  } finally {
+    if (application) await close(application);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test.skip('TODO: F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-devtools-'));
   let application;

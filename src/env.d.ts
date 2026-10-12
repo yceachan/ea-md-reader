@@ -7,7 +7,7 @@ interface WorkspaceNode { name: string; path: string; children?: WorkspaceNode[]
 type ReaderWorkspace = { root: string; name: string; activeAncestors: string[]; } & (
   { nodes: WorkspaceNode[]; error?: never } | { nodes: null; error: string }
 );
-type ReaderCommand = 'openDocument' | 'saveSource' | 'toggleEdit' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu' | 'openDeveloperTools' | 'openSettings';
+type ReaderCommand = 'openDocument' | 'saveSource' | 'toggleEdit' | 'saveAs' | 'closeTab' | 'reloadDocument' | 'findInDocument' | 'nextTab' | 'previousTab' | 'quit' | 'zoomIn' | 'zoomOut' | 'zoomReset' | 'toggleFullscreen' | 'toggleFileMenu' | 'openDeveloperTools' | 'inspectElement' | 'openSettings';
 type EditorKind = 'markdown' | 'html';
 type StartupLayout = 'default' | 'focus';
 interface ReaderSettings { editors: Record<EditorKind, { program: string } | null>; startup: { layout: StartupLayout }; startupSupported: boolean; }

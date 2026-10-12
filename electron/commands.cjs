@@ -16,6 +16,7 @@ const definitions = [
   { id: 'toggleFullscreen', label: '全屏', platformBinding: 'fullscreen' },
   { id: 'toggleFileMenu', label: '文件菜单', key: 'F', modifiers: ['Alt'] },
   { id: 'openDeveloperTools', label: '开发者控制台', key: 'F12', modifiers: [] },
+  { id: 'inspectElement', label: '选择页面元素', key: 'C', modifiers: ['Primary', 'Shift'] },
   { id: 'openSettings', label: '设置…' },
 ];
 

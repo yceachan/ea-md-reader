@@ -124,13 +124,16 @@ test('logo 打开固定构建资料，图标紧邻链接且整组居中，用户
     const box = await card.boundingBox(), viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
     expect.soft(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(1);
     expect.soft(Math.abs(box.y + box.height / 2 - viewport.height / 2)).toBeLessThanOrEqual(1);
+    const linksBox = await card.locator('.profile-links').boundingBox();
+    expect.soft(Math.abs(linksBox.x + linksBox.width / 2 - box.x - box.width / 2)).toBeLessThanOrEqual(1);
+    const firstIcon = await card.getByRole('link').first().locator('svg').boundingBox();
     for (const link of await card.getByRole('link').all()) {
       const span = link.locator('span');
       const textBox = await span.boundingBox();
       const iconBox = await link.locator('svg').boundingBox();
       expect.soft(Math.abs(textBox.x - iconBox.x - iconBox.width - 10)).toBeLessThanOrEqual(1);
-      expect.soft(Math.abs((iconBox.x + textBox.x + textBox.width) / 2 - box.x - box.width / 2)).toBeLessThanOrEqual(1);
-      await expect.soft(span).toHaveCSS('text-align', 'center');
+      expect.soft(Math.abs(iconBox.x - firstIcon.x)).toBeLessThanOrEqual(1);
+      await expect.soft(span).toHaveCSS('text-align', 'left');
     }
     await card.screenshot({ path: test.info().outputPath('profile-card.png') });
     await application.evaluate(({ shell }) => { global.profileLinks = []; shell.openExternal = async (url) => { global.profileLinks.push(url); }; });

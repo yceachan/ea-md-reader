@@ -106,11 +106,11 @@ kbd { color: var(--kb-text-subtle); font-family: inherit; font-size: 11px; }
 .profile-photo { display: block; width: 132px; height: 132px; margin: 0 auto; border: 3px solid white; border-radius: 28px; object-fit: cover; box-shadow: 0 12px 24px #2c292614; }
 .profile-card h2 { margin: 24px 0 8px; font-size: 22px; font-weight: 650; }
 .profile-tagline { margin: 0; font-size: 14px; color: var(--kb-text-subtle); }
-.profile-links { display: grid; gap: 8px; margin: 28px 0; text-align: center; }
-.profile-links a { display: flex; justify-content: center; align-items: center; gap: 10px; min-width: 0; padding: 10px 8px; border-radius: 7px; color: var(--kb-text-muted); text-decoration: none; font-size: 13px; }
+.profile-links { display: grid; width: fit-content; max-width: 100%; gap: 8px; margin: 28px auto; text-align: left; }
+.profile-links a { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 8px; border-radius: 7px; color: var(--kb-text-muted); text-decoration: none; font-size: 13px; }
 .profile-links a:hover { background: var(--kb-accent-faint); color: var(--kb-accent); }
 .profile-links a:focus-visible { outline: 2px solid var(--kb-accent); outline-offset: -2px; }
-.profile-links svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.profile-links svg { width: 20px; height: 20px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .profile-links span { min-width: 0; overflow-wrap: anywhere; }
 .profile-footer { padding-top: 16px; border-top: 1px solid var(--kb-line); color: var(--kb-text-subtle); font-size: 11px; }
 .profile-footer p { margin: 0; }
