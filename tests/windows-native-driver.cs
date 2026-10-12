@@ -5,7 +5,7 @@ using System.Windows.Automation;
 using System.Web.Script.Serialization;
 
 public static class NativeDriver {
-  [DllImport("user32.dll")] static extern bool SetProcessDpiAwarenessContext(IntPtr context);
+  [DllImport("user32.dll")] static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
   [StructLayout(LayoutKind.Sequential)] struct Point { public int x, y; }
   [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr window, ref Point point);
   [DllImport("user32.dll")] static extern uint GetDpiForWindow(IntPtr window);
@@ -27,7 +27,8 @@ public static class NativeDriver {
   [STAThread]
   public static int Main(string[] args) {
     try {
-      if (!SetProcessDpiAwarenessContext(new IntPtr(-4))) throw new Exception("Cannot enable physical screen coordinates.");
+      // UI Automation can initialize process DPI before Main; coordinates use this STA thread.
+      if (SetThreadDpiAwarenessContext(new IntPtr(-4)) == IntPtr.Zero) throw new Exception("Cannot enable physical screen coordinates.");
       var window = new IntPtr(Int64.Parse(args[1]));
       object value;
       if (args[0].StartsWith("shell-")) {

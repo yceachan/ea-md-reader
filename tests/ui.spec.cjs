@@ -20,8 +20,8 @@ test('Appica 预览编辑开关、快捷键保存、切换自动保存与外部�
     await fs.writeFile(file, '\ufeff# 初始\r\n\r\n原文。\r\n');
     await fs.writeFile(other, '# 其他\n');
     application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, other, file] });
-    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1600, 850));
     const page = await application.firstWindow();
+    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1600, 850));
     const panel = page.locator('.document-panel:not([hidden])');
     const source = panel.getByRole('textbox', { name: 'Markdown 源码' });
     const preview = panel.getByRole('button', { name: '预览', exact: true });
