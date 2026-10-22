@@ -1,0 +1,22 @@
+2026-10-19
+Linux / Electron 44.5.1 / Xvfb + openbox
+
+Baseline: npm run test:ui -- tests/commands.spec.cjs --grep 自动查找完成 --output test-results/search-focus-baseline
+Exit 1: after typing a and receiving found-in-page finalUpdate, search was inactive.
+
+npm run check
+Exit 0
+
+npm run test:ui -- tests/commands.spec.cjs tests/reader.spec.cjs --grep "自动查找完成|真实键盘|HTML 内嵌" --output test-results/search-focus-verified
+Exit 0
+Running 4 tests using 1 worker
+
+(node:592436) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+
+
+[1/4] tests/commands.spec.cjs:8:36 › md 自动查找完成后保持输入焦点，允许继续输入和离开
+[2/4] tests/commands.spec.cjs:8:36 › html 自动查找完成后保持输入焦点，允许继续输入和离开
+[3/4] tests/commands.spec.cjs:240:1 › 真实键盘、按钮和原生菜单共用命令，查找输入保留复制粘贴
+[4/4] tests/reader.spec.cjs:29:1 › HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和原始字节另存为
+  4 passed (15.5s)

@@ -418,10 +418,25 @@ else {
       await openPaths([filePath]);
       if (href.includes('#')) send('emd:anchor', decodeURIComponent(href.slice(href.indexOf('#') + 1)));
     });
-    checkedHandler('emd:find', (text, forward) => {
-      if (typeof text !== 'string' || typeof forward !== 'boolean') throw new Error('无效的查找请求。');
-      if (text) window.webContents.findInPage(text, { forward, findNext: true });
-      else window.webContents.stopFindInPage('clearSelection');
+    let cancelFind;
+    checkedHandler('emd:find', (text, forward, newSession) => {
+      if (typeof text !== 'string' || typeof forward !== 'boolean' || typeof newSession !== 'boolean') throw new Error('无效的查找请求。');
+      cancelFind?.();
+      if (!text) { window.webContents.stopFindInPage('clearSelection'); return false; }
+      const contents = window.webContents;
+      const requestId = contents.findInPage(text, { forward, findNext: newSession });
+      return new Promise((resolve) => {
+        const finish = (completed) => {
+          contents.removeListener('found-in-page', onResult);
+          cancelFind = null;
+          resolve(completed);
+        };
+        const onResult = (_event, result) => {
+          if (result.requestId === requestId && result.finalUpdate) finish(true);
+        };
+        cancelFind = () => finish(false);
+        contents.on('found-in-page', onResult);
+      });
     });
     window.once('ready-to-show', () => {
       if (process.platform === 'win32' && placement?.geometry) window.setBounds(placement.geometry);

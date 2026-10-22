@@ -45,7 +45,7 @@ interface Window {
     close(id: string): Promise<void>;
     reload(id: string): Promise<ReaderDocument | null>;
     link(id: string, href: string): Promise<void>;
-    find(text: string, forward: boolean): Promise<void>;
+    find(text: string, forward: boolean, newSession: boolean): Promise<boolean | null>;
     onDocument(listener: (document: ReaderDocument) => void): () => void;
     onActivate(listener: (id: string) => void): () => void;
     onAction(listener: (action: CommandAction) => void): () => void;

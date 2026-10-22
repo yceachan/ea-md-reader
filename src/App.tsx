@@ -64,6 +64,9 @@ export default function App() {
   const [fileMenu, setFileMenu] = useState(false);
   const [progress, setProgress] = useState(0);
   const findInput = useRef<HTMLInputElement>(null);
+  const keepFindFocus = useRef(false);
+  const findRequest = useRef(0);
+  const findPending = useRef(false);
   const commands = useRef<(action: CommandAction) => void>(() => {});
   const workspaceActions = useRef<(action: WorkspaceAction) => void>(() => {});
   const workspaceElement = useRef<HTMLElement>(null);
@@ -78,6 +81,22 @@ export default function App() {
   const rightOverlay = availableWidth <= displayWidth / 2 || availableWidth < (panels.left && !leftOverlay ? leftWidth + PANEL_GUTTER : 0) + panelWidths.right + AUTO_READING_WIDTH + PANEL_GUTTER;
   const hasWorkspace = !!active || startupWorkspace;
   const overlaySide = hasWorkspace && panels.left && leftOverlay ? 'left' : active?.kind === 'markdown' && panels.right && rightOverlay ? 'right' : null;
+
+  async function find(text: string, forward: boolean, newSession: boolean) {
+    const request = ++findRequest.current;
+    findPending.current = !!text;
+    // The input's DOM selection must not become the native search start point.
+    window.getSelection()?.removeAllRanges();
+    const completed = await window.emd.find(text, forward, newSession);
+    if (request !== findRequest.current) return;
+    findPending.current = false;
+    const input = findInput.current;
+    if (!completed || !input || !keepFindFocus.current || !document.hasFocus() || document.activeElement !== input) return;
+    // HTML matches can move the native focused frame while DOM focus remains
+    // on this input. A fresh focus transition restores keyboard delivery too.
+    input.blur();
+    input.focus({ preventScroll: true });
+  }
 
   function closeOverlay(side = overlaySide) {
     if (!side) return;
@@ -273,11 +292,18 @@ export default function App() {
   useEffect(() => { updateProgress(activeId); }, [activeId]);
   useEffect(() => {
     if (finding) findInput.current?.focus();
-    else { setQuery(''); void window.emd.find('', true); }
+    else { setQuery(''); find('', true, true); }
   }, [finding]);
   useEffect(() => {
-    if (!query) { void window.emd.find('', true); return; }
-    const timer = setTimeout(() => { void window.emd.find(query, true); }, 120);
+    const release = (event: PointerEvent) => {
+      keepFindFocus.current = event.target === findInput.current;
+    };
+    document.addEventListener('pointerdown', release, true);
+    return () => document.removeEventListener('pointerdown', release, true);
+  }, []);
+  useEffect(() => {
+    if (!query) { find('', true, true); return; }
+    const timer = setTimeout(() => { find(query, true, true); }, 120);
     return () => clearTimeout(timer);
   }, [query, activeId, active?.path, active?.text]);
   useEffect(() => {
@@ -340,7 +366,18 @@ export default function App() {
       </div>)}
       <button className="new-tab" title="打开更多文件" aria-label="打开更多文件" onClick={() => { void window.emd.command('openDocument'); }}>+</button>
     </nav>}
-    {finding && <div className="findbar"><Icon name="search" /><input ref={findInput} aria-label="查找内容" placeholder="在文档中查找…" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void window.emd.find(query, !event.shiftKey); } }} /><button title="上一个" onClick={() => { void window.emd.find(query, false); }}>↑</button><button title="下一个" onClick={() => { void window.emd.find(query, true); }}>↓</button><button className="icon-button" aria-label="关闭查找" onClick={() => setFinding(false)}><Icon name="close" /></button></div>}
+    {finding && <div className="findbar"><Icon name="search" /><input ref={findInput}
+      onFocus={() => { keepFindFocus.current = true; }}
+      onBlur={(event) => {
+        // Chromium find clears the focused element synchronously. Keep typing
+        // focus unless the user chose another target or left the window.
+        if (event.relatedTarget || !document.hasFocus() || !findPending.current) keepFindFocus.current = false;
+        else if (keepFindFocus.current) event.currentTarget.focus({ preventScroll: true });
+      }}
+      aria-label="查找内容" placeholder="在文档中查找…" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => {
+        if (event.key === 'Tab') keepFindFocus.current = false;
+        if (event.key === 'Enter') { event.preventDefault(); find(query, !event.shiftKey, false); }
+      }} /><button title="上一个" onClick={() => { find(query, false, false); }}>↑</button><button title="下一个" onClick={() => { find(query, true, false); }}>↓</button><button className="icon-button" aria-label="关闭查找" onClick={() => setFinding(false)}><Icon name="close" /></button></div>}
     <main className="workspace" ref={workspaceElement}>
       {overlaySide && <button className="panel-backdrop" aria-label="关闭面板覆盖层" onClick={() => closeOverlay()} />}
       {hasWorkspace && panels.left && <>
@@ -363,7 +400,7 @@ export default function App() {
         <div className="welcome-footer"><span>ea-kb 的纸色与排版</span><span>预览与编辑 · 多标签页</span></div>
       </section>}
       {tabs.map((tab) => <section className={`document-panel ${tab.kind === 'html' ? 'html-panel' : ''}`} hidden={tab.id !== activeId} role="tabpanel" aria-labelledby={`tab-${tab.id}`} id={`panel-${tab.id}`} key={`${tab.id}-${tab.path}`} onScroll={() => updateProgress(tab.id)}>
-        {tab.kind === 'html' ? <iframe className="html-page" title={tab.name} src={tab.pageUrl} sandbox="allow-scripts" onLoad={() => { if (tab.id === activeId && query) void window.emd.find(query, true); }} /> : <article className="article">
+        {tab.kind === 'html' ? <iframe className="html-page" title={tab.name} src={tab.pageUrl} sandbox="allow-scripts" onLoad={() => { if (tab.id === activeId && query) find(query, true, true); }} /> : <article className="article">
           <div className="document-meta"><span>MARKDOWN</span><span className="meta-dot">·</span><span>{Math.max(1, Math.ceil(tab.text.length / 600))} 分钟阅读</span><SourceMode editing={!!drafts[tab.id]} disabled={savingIds.includes(tab.id)} onChange={(editing) => { void changeMode(tab.id, editing); }} /></div>
           {drafts[tab.id] ? <div className="source-editor">
             <div className="source-actions"><span>{savingIds.includes(tab.id) ? '保存中…' : drafts[tab.id].text !== drafts[tab.id].base ? '未保存' : '已保存'}</span><button disabled={savingIds.includes(tab.id) || drafts[tab.id].text === drafts[tab.id].base} onClick={() => { void saveDraft(tab.id); }}>保存 <kbd>{hints?.saveSource}</kbd></button>

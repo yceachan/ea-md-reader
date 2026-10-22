@@ -32,7 +32,7 @@ contextBridge.exposeInMainWorld('emd', {
   close: (id) => ipcRenderer.invoke('emd:close', id),
   reload: (id) => ipcRenderer.invoke('emd:reload', id),
   link: (id, href) => ipcRenderer.invoke('emd:link', id, href),
-  find: (text, forward) => ipcRenderer.invoke('emd:find', text, forward),
+  find: (text, forward, newSession) => ipcRenderer.invoke('emd:find', text, forward, newSession),
   onDocument: (listener) => subscribe('emd:document', listener),
   onActivate: (listener) => subscribe('emd:activate', listener),
   onAction: (listener) => subscribe('emd:action', listener),

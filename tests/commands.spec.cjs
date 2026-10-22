@@ -5,6 +5,79 @@ const os = require('node:os');
 const path = require('node:path');
 const platformArgs = process.platform === 'linux' ? [process.env.EMD_NATIVE_KDE === '1' ? '--ozone-platform=wayland' : '--ozone-platform=x11'] : [];
 
+for (const kind of ['md', 'html']) test(`${kind} 自动查找完成后保持输入焦点，允许继续输入和离开`, async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-find-focus-'));
+  let application;
+  try {
+    const fixture = path.join(directory, `查找.${kind}`);
+    await fs.writeFile(fixture, kind === 'md' ? '# 连续输入\n\nalpha alphabet alpha\n' : '<h1>连续输入</h1><p>alpha alphabet alpha</p>');
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, fixture] });
+    const page = await application.firstWindow();
+    const content = kind === 'md' ? page.locator('.vp-doc') : page.frameLocator('.html-page').locator('body');
+    await expect(content.locator('h1')).toHaveText('连续输入');
+    for (const name of ['显示工作区', '显示目录']) {
+      const toggle = page.getByRole('button', { name, exact: true });
+      if (await toggle.getAttribute('aria-pressed') === 'true') await toggle.click();
+    }
+    await application.evaluate(({ BrowserWindow }) => {
+      global.findResults = [];
+      BrowserWindow.getAllWindows()[0].webContents.on('found-in-page', (_event, result) => {
+        if (result.finalUpdate) global.findResults.push(result);
+      });
+    });
+    await page.getByRole('button', { name: '查找', exact: true }).click();
+    const search = page.getByRole('textbox', { name: '查找内容' });
+    await expect(search).toBeFocused();
+    await page.keyboard.type('a');
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(1);
+    await expect(search).toBeFocused();
+    await page.keyboard.type('lpha');
+    await expect(search).toHaveValue('alpha');
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(2);
+    await expect(search).toBeFocused();
+    expect(await search.evaluate((input) => [input.selectionStart, input.selectionEnd])).toEqual([5, 5]);
+    const first = await application.evaluate(() => global.findResults.at(-1));
+    expect(first.matches).toBe(4); // Three document matches and the search input.
+    await page.keyboard.press('Enter');
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(3);
+    const next = await application.evaluate(() => global.findResults.at(-1));
+    expect(next.activeMatchOrdinal).toBe(first.activeMatchOrdinal % first.matches + 1);
+    await expect(search).toBeFocused();
+    await page.keyboard.press('Shift+Enter');
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(4);
+    expect(await application.evaluate(() => global.findResults.at(-1).activeMatchOrdinal)).toBe(first.activeMatchOrdinal);
+    await expect(search).toBeFocused();
+    await page.locator('.findbar button[title="下一个"]').click();
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(5);
+    expect(await application.evaluate(() => global.findResults.at(-1).activeMatchOrdinal)).toBe(next.activeMatchOrdinal);
+    await page.locator('.findbar button[title="上一个"]').click();
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(6);
+    expect(await application.evaluate(() => global.findResults.at(-1).activeMatchOrdinal)).toBe(first.activeMatchOrdinal);
+    await search.click();
+    await page.keyboard.press('End');
+    await page.keyboard.press('Shift+ArrowLeft');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(7);
+    expect(await search.evaluate((input) => [input.selectionStart, input.selectionEnd])).toEqual([4, 5]);
+    await page.keyboard.press('Tab');
+    await expect(page.locator('.findbar button[title="上一个"]')).toBeFocused();
+    await search.click();
+    await content.locator('h1').click();
+    await expect(search).not.toBeFocused();
+    await search.click();
+    await page.keyboard.press('End');
+    await page.keyboard.type('x');
+    await expect.poll(() => application.evaluate(() => global.findResults.length)).toBe(8);
+    await expect(search).toHaveValue('alphax');
+    await expect(search).toBeFocused();
+    await page.getByRole('button', { name: '关闭查找' }).click();
+    await expect(search).toHaveCount(0);
+  } finally {
+    if (application) await close(application);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('工作树文件/目录与后台标签复制绝对和相对路径，空白处复制工作区路径', async () => {
   const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'emd-copy-path-')));
   let application, originalClipboard;
@@ -275,8 +348,7 @@ test('真实键盘、按钮和原生菜单共用命令，查找输入保留复�
         await application.evaluate(({ Menu }, action) => Menu.sendActionToFirstResponder(action), action);
       } else await key(keyCode, [primary]);
     }
-    // The debounced find can move DOM focus while window focus and input
-    // selection offsets remain unchanged. Complete it before native editing.
+    // Complete native find before testing clipboard editing and its responder.
     await focusAfterSearch('原生复制');
     await application.evaluate(({ clipboard }) => clipboard.writeText('等待复制'));
     await edit('A', 'selectAll:');
