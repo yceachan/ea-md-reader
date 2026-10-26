@@ -1,0 +1,22 @@
+CI run: https://github.com/yceachan/ea-md-reader/actions/runs/40336642304
+Commit: 7b02de546f0ba1003efc4202b88c706519777643
+
+第一次运行：Linux 和 macOS 全部通过。Windows 打包、50 项 Node 测试和
+24 项 UI 测试通过；安装升级测试在旧目录重命名时报告 EPERM。
+进程日志显示 launcher 在 14:12:41.292 UTC 已关闭，退出码 0。
+本机隔离桌面执行 npm run test:packaged -- --reporter=line：1 通过，2 平台跳过。
+
+第二次 Windows 运行：打包、Node 测试及安装升级测试通过。
+开发模式 UI 测试在 dev.spec.cjs:32 超时：.vp-doc h1 在 5000ms 内未出现。
+失败页面快照：MD 开发.md 标签已选中，正文显示“正在排版…”。
+网络 trace：首次加载的 wasm 模块请求耗时 3623ms，多个语言模块请求耗时约 2250ms。
+
+修改：仅将开发模式第一次 Markdown 标题断言设置为 30000ms，
+与同测试已使用的启动等待上限一致。正文渲染、热更新和重新加载断言保留。
+
+本机验证：在未激活的隔离 Windows 桌面执行
+npm run test:ui -- tests/dev.spec.cjs --repeat-each=3 --reporter=line
+3 passed (27.3s)，退出码 0。
+本地设 FORCE_COLOR=0，避开 Electron 控制台彩色诊断的一次初始化异常。
+
+第三次旧提交运行已取消，改为验证包含等待修正的新提交。

@@ -29,7 +29,8 @@ test('Vite 开发页面保留 IPC、HTML 隔离与资料加载，CSS 热更新�
     await expect(page.frameLocator('.html-page').getByRole('heading', { name: '开发 HTML' })).toBeVisible();
     expect(await page.frameLocator('.html-page').locator('body').getAttribute('data-bridge')).toBe('undefined');
     await page.getByRole('tab', { name: 'MD 开发.md', exact: true }).click();
-    await expect(page.locator('.vp-doc h1')).toHaveText('开发页面');
+    // Cold Vite startup also transforms the Markdown renderer's lazy modules.
+    await expect(page.locator('.vp-doc h1')).toHaveText('开发页面', { timeout: 30000 });
     await page.getByRole('button', { name: '个人资料', exact: true }).click();
     await expect.poll(() => page.locator('.profile-photo').evaluate(image => image.naturalWidth)).toBe(512);
     await page.getByRole('button', { name: '关闭个人资料', exact: true }).click();
