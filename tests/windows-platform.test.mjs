@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { access, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { access, cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -39,6 +39,34 @@ test('Windows 打包生成应用目录、NSIS 安装器与 ZIP', () => {
   assert.equal(packOptions.config.nsis.perMachine, false);
   assert.equal(packOptions.config.nsis.include, 'scripts/platforms/windows-associations.nsh');
   assert.equal(packOptions.config.fileAssociations, undefined);
+});
+
+test('Windows 打包前初始化 Electron，初始化失败时停止打包', async t => {
+  const { directory, root } = await fixture(t);
+  await cp(join(root, 'scripts/platforms/windows.mjs'), join(directory, 'windows.mjs'));
+  const electron = join(directory, 'node_modules/electron');
+  await mkdir(electron, { recursive: true });
+  await writeFile(join(electron, 'package.json'), '{"main":"index.cjs"}');
+  await writeFile(join(electron, 'index.cjs'), `
+    const fs = require('node:fs'), path = require('node:path');
+    if (fs.existsSync(path.join(__dirname, 'fail'))) throw new Error('runtime download failed');
+    fs.mkdirSync(path.join(__dirname, 'dist'));
+    fs.writeFileSync(path.join(__dirname, 'dist/electron.exe'), 'runtime');
+    module.exports = path.join(__dirname, 'dist/electron.exe');
+  `);
+  const probe = join(directory, 'pack.mjs');
+  await writeFile(probe, `
+    import { access } from 'node:fs/promises';
+    import { packOptions } from './windows.mjs';
+    await packOptions.config.beforePack();
+    await access(new URL('./' + packOptions.config.electronDist + '/electron.exe', import.meta.url));
+  `);
+  await writeFile(join(electron, 'fail'), 'fail');
+  assert.throws(() => execFileSync(process.execPath, [probe], { stdio: 'pipe' }), /runtime download failed/);
+  await missing(join(electron, 'dist'));
+  await rm(join(electron, 'fail'));
+  execFileSync(process.execPath, [probe], { stdio: 'pipe' });
+  assert.equal(await readFile(join(electron, 'dist/electron.exe'), 'utf8'), 'runtime');
 });
 
 test('Windows 直接复制已安装的 Electron，清理示例资源并保留运行时文件', async t => {

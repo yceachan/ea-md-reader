@@ -8,6 +8,10 @@ export const packOptions = {
     // Copy the installed runtime directly: Windows can lock freshly extracted
     // files while electron-builder renames win-unpacked.tmp to win-unpacked.
     electronDist: 'node_modules/electron/dist',
+    async beforePack() {
+      // Electron 44 downloads its runtime on first import, rather than npm ci.
+      await import('electron');
+    },
     async afterExtract({ appOutDir }) {
       // electron-builder skips these cleanups for an unpacked electronDist.
       await rm(join(appOutDir, 'resources', 'default_app.asar'));
