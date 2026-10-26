@@ -5,6 +5,14 @@ import { execFileSync } from 'node:child_process';
 export const packOptions = {
   win: ['dir', 'nsis', 'zip'],
   config: {
+    // Copy the installed runtime directly: Windows can lock freshly extracted
+    // files while electron-builder renames win-unpacked.tmp to win-unpacked.
+    electronDist: 'node_modules/electron/dist',
+    async afterExtract({ appOutDir }) {
+      // electron-builder skips these cleanups for an unpacked electronDist.
+      await rm(join(appOutDir, 'resources', 'default_app.asar'));
+      await rm(join(appOutDir, 'version'));
+    },
     extraResources: [{ from: 'native-build/emd-application-chooser.exe', to: 'emd-application-chooser.exe' }],
     win: { icon: 'assets/emd.png' },
     nsis: {

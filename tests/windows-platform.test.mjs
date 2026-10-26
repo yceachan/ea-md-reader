@@ -41,6 +41,18 @@ test('Windows 打包生成应用目录、NSIS 安装器与 ZIP', () => {
   assert.equal(packOptions.config.fileAssociations, undefined);
 });
 
+test('Windows 直接复制已安装的 Electron，清理示例资源并保留运行时文件', async t => {
+  const { source } = await fixture(t);
+  assert.equal(packOptions.config.electronDist, 'node_modules/electron/dist');
+  await writeFile(join(source, 'resources', 'default_app.asar'), 'Electron sample');
+  await writeFile(join(source, 'version'), '44.5.1');
+  await packOptions.config.afterExtract({ appOutDir: source });
+  await missing(join(source, 'resources', 'default_app.asar'));
+  await missing(join(source, 'version'));
+  assert.equal(await readFile(join(source, 'emd.exe'), 'utf8'), 'version one');
+  assert.equal(await readFile(join(source, 'resources', 'app.asar'), 'utf8'), 'package');
+});
+
 test('Windows 用户级安装支持升级、重复卸载并保留配置', async t => {
   const context = await fixture(t);
   await install(context);
