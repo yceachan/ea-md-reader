@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { access, cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { install, packOptions, uninstall } from '../scripts/platforms/windows.mjs';
 
 async function missing(file) {
@@ -103,6 +104,31 @@ test('Windows 用户级安装支持升级、重复卸载并保留配置', async 
   await missing(context.target);
   assert.match(await readFile(profile, 'utf8'), /retained/);
   assert.deepEqual(context.calls.slice(-2).map(({ args }) => args.at(-3)), ['uninstall', 'uninstall']);
+});
+
+test('Windows 升级等待真实文件锁释放，持续占用时保留旧应用并报错', { skip: process.platform !== 'win32' }, async t => {
+  const context = await fixture(t);
+  await install(context);
+  const locker = spawn('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', `
+    $stream = [IO.File]::Open($env:EMD_LOCK_TARGET, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+    try { [Console]::Out.WriteLine('locked'); [Console]::Out.Flush(); [Console]::In.ReadLine() | Out-Null }
+    finally { $stream.Dispose() }
+  `], { windowsHide: true, env: { ...process.env, EMD_LOCK_TARGET: context.executable }, stdio: ['pipe', 'pipe', 'pipe'] });
+  t.after(() => { if (locker.exitCode === null) locker.kill(); });
+  const closed = once(locker, 'close');
+  await Promise.race([
+    once(locker.stdout, 'data').then(([data]) => assert.match(data.toString(), /locked/)),
+    closed.then(([code]) => { throw new Error(`File locker exited before readiness: ${code}`); }),
+  ]);
+  await writeFile(join(context.source, 'emd.exe'), 'version two');
+  await assert.rejects(install(context), { code: 'EPERM' });
+  assert.equal(await readFile(context.executable, 'utf8'), 'version one');
+  assert.equal(context.calls.filter(({ args }) => args.at(-3) === 'install').length, 1);
+  const release = setTimeout(() => locker.stdin.end('\n'), 250);
+  try { await install(context); }
+  finally { clearTimeout(release); locker.stdin.end(); }
+  await closed;
+  assert.equal(await readFile(context.executable, 'utf8'), 'version two');
 });
 
 test('Windows 安装拒绝异物目标和快捷方式冲突', async t => {

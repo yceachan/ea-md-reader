@@ -1,0 +1,26 @@
+
+> emd@0.1.0 dist
+> node scripts/pack.mjs --dist --platform=windows
+
+复用最新构建：icons
+复用最新构建：native
+复用最新构建：renderer
+发行档案平台：Windows
+  • electron-builder  version=26.15.3 os=10.0.22631
+  • loaded configuration  file=package.json ("build" field)
+Downloading Electron binary...
+  • executing @electron/rebuild  electronVersion=44.5.1 arch=x64 buildFromSource=false workspaceRoot=C:\tmp\ea-md-reader\install-upgrade-2026-10-27\cold projectDir=./ appDir=./
+  • installing native dependencies  arch=x64
+  • completed installing native dependencies
+  • packaging       platform=win32 arch=x64 electron=44.5.1 appOutDir=release\win-unpacked
+  • using custom unpacked Electron distribution  electronDist=node_modules\electron\dist
+  • copying unpacked Electron  source=C:\tmp\ea-md-reader\install-upgrade-2026-10-27\cold\node_modules\electron\dist destination=C:\tmp\ea-md-reader\install-upgrade-2026-10-27\cold\release\win-unpacked
+  • searching for node modules  pm=npm searchDir=C:\tmp\ea-md-reader\install-upgrade-2026-10-27\cold
+  • updating asar integrity executable resource  executablePath=release\win-unpacked\emd.exe
+  • signing with signtool.exe  path=release\win-unpacked\emd.exe
+  • building        target=zip arch=x64 file=release\emd-0.1.0-win-x64.zip
+  • building        target=nsis file=release\emd-0.1.0-win-x64.exe archs=x64 oneClick=false perMachine=false
+  • signing with signtool.exe  path=release\win-unpacked\resources\elevate.exe
+  • signing with signtool.exe  path=release\emd-0.1.0-win-x64.__uninstaller.exe
+  • signing with signtool.exe  path=release\emd-0.1.0-win-x64.exe
+  • building block map  blockMapFile=release\emd-0.1.0-win-x64.exe.blockmap

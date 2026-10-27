@@ -1,6 +1,7 @@
 import { cp, lstat, mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
 
 export const packOptions = {
   win: ['dir', 'nsis', 'zip'],
@@ -77,6 +78,17 @@ function integrate({ root, executable, shortcut, env, run }, action) {
   ], { stdio: 'pipe', windowsHide: true });
 }
 
+async function renameApplication(source, target) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await rename(source, target); }
+    catch (error) {
+      if (!['EPERM', 'EBUSY'].includes(error.code) || attempt === 5) throw error;
+      if (attempt === 0) console.log(`Windows 正在占用应用目录，等待释放后重试：${source}`);
+      await delay(100 * 2 ** attempt);
+    }
+  }
+}
+
 export async function install({ root, home, source = join(root, 'release', 'win-unpacked'), env = process.env, run = execFileSync }) {
   const paths = locations(home, env);
   const packageDirectory = resolve(source);
@@ -96,15 +108,15 @@ export async function install({ root, home, source = join(root, 'release', 'win-
     await checkPackage(stagedApp);
     await writeFile(join(stagedApp, markerName), marker, { flag: 'wx' });
     try {
-      if (hasOldTarget) { await rename(paths.target, oldApp); movedOld = true; }
-      await rename(stagedApp, paths.target); installedNew = true;
+      if (hasOldTarget) { await renameApplication(paths.target, oldApp); movedOld = true; }
+      await renameApplication(stagedApp, paths.target); installedNew = true;
       integrate({ root, ...paths, env, run }, 'install');
     } catch (error) {
       const rollbackErrors = [];
       // PowerShell restores its registry and shortcut snapshot before reporting a failure.
       try {
         if (installedNew) await rm(paths.target, { recursive: true, force: true });
-        if (movedOld) { await rename(oldApp, paths.target); movedOld = false; }
+        if (movedOld) { await renameApplication(oldApp, paths.target); movedOld = false; }
       } catch (rollbackError) {
         preserveRecovery = movedOld;
         rollbackErrors.push(rollbackError);

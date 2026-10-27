@@ -21,6 +21,8 @@ npm run install:local
 
 安装只作用于当前用户，不改变现有默认文件关联。Linux 与 macOS 的终端入口位于 `~/.local/bin`，请将其加入 `PATH`。
 
+从源码升级时，先退出 emd，更新仓库后重新运行 `npm ci` 和 `npm run install:local`。Windows 与 Linux 均先准备完整的新应用目录，再替换旧目录，清除过期文件并保留用户配置。Windows 遇到短暂文件占用会在约 3 秒内重试；持续占用时安装报错并保留旧应用，释放占用后可再次执行安装。
+
 ```sh
 emd "文档.md" "页面.html"
 ```

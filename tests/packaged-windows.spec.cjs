@@ -61,6 +61,11 @@ test('Windows 原生包、隔离安装、二次启动打开、升级与重复卸
     await fs.writeFile(path.join(target, 'obsolete'), 'old');
     await install(context);
     await assert.rejects(fs.access(path.join(target, 'obsolete')), { code: 'ENOENT' });
+    assert.deepEqual(await fs.readFile(path.join(target, 'resources/app.asar')), await fs.readFile('release/win-unpacked/resources/app.asar'));
+    application = await launch({ executablePath: executable, args: [`--user-data-dir=${profile}`, first] });
+    await expect((await application.firstWindow()).locator('.document-panel:not([hidden]) h1')).toHaveText('Windows 原生包');
+    await close(application);
+    application = null;
     const archives = await fs.readdir('release');
     expect(archives.some((name) => name.endsWith('-win-x64.exe'))).toBe(true);
     expect(archives.some((name) => name.endsWith('-win-x64.zip'))).toBe(true);
