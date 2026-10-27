@@ -59,7 +59,16 @@ test('Windows 原生包、隔离安装、二次启动打开、升级与重复卸
     application = null;
 
     await fs.writeFile(path.join(target, 'obsolete'), 'old');
-    await install(context);
+    try { await install(context); }
+    catch (error) {
+      try {
+        const { stdout } = await execFile('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File',
+          path.resolve('tests/windows-lock-diagnostics.ps1'), target], { windowsHide: true });
+        console.error('Windows upgrade lock diagnostics:', stdout);
+        await test.info().attach('Windows upgrade lock diagnostics', { body: stdout, contentType: 'application/json' });
+      } catch (diagnosticError) { console.error('Windows lock diagnostics failed:', diagnosticError); }
+      throw error;
+    }
     await assert.rejects(fs.access(path.join(target, 'obsolete')), { code: 'ENOENT' });
     assert.deepEqual(await fs.readFile(path.join(target, 'resources/app.asar')), await fs.readFile('release/win-unpacked/resources/app.asar'));
     application = await launch({ executablePath: executable, args: [`--user-data-dir=${profile}`, first] });

@@ -73,6 +73,7 @@ test('文件树中键与非活动标签菜单编辑正确目标，同路径标�
     await expect.poll(async () => (await fs.readFile(file, 'utf8')).includes("replace('编辑后正文','编辑后正文')")).toBe(true);
     await page.getByRole('tab').last().click();
     const panel = page.locator('.document-panel:not([hidden])');
+    await expect(panel).toContainText("replace('编辑后正文','编辑后正文')");
     await panel.evaluate((element) => { element.scrollTop = 300; });
     await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace('# 编辑后正文', '# 保存后正文'));
     await expect(panel.locator('h1')).toHaveText('保存后正文');

@@ -1,0 +1,71 @@
+##[group]Run npm run test:packaged -- --reporter=line,html
+2026-10-27T12:31:02.8759578Z [36;1mnpm run test:packaged -- --reporter=line,html[0m
+2026-10-27T12:31:02.8836392Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-27T12:31:02.8837291Z env:
+2026-10-27T12:31:02.8837606Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-10-27T12:31:02.8838057Z   CSC_FOR_PULL_REQUEST: true
+2026-10-27T12:31:02.8838474Z   XDG_CURRENT_DESKTOP: 
+2026-10-27T12:31:02.8838961Z   PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/packaged
+2026-10-27T12:31:02.8839500Z ##[endgroup]
+2026-10-27T12:31:03.7968446Z 
+2026-10-27T12:31:03.7969343Z > emd@0.1.0 test:packaged
+2026-10-27T12:31:03.7970417Z > node scripts/test-ui.mjs --packaged --reporter=line,html
+2026-10-27T12:31:03.7971105Z 
+2026-10-27T12:31:04.0026268Z 复用最新构建：icons
+2026-10-27T12:31:04.0471401Z 复用最新构建：native
+2026-10-27T12:31:04.4790163Z 复用最新构建：renderer
+2026-10-27T12:31:05.3367621Z 复用最新应用目录：Windows
+2026-10-27T12:31:06.1499016Z Electron test desktop: WinSta0\emd-test-756d1a14e1f84418819ecd7c1f3a88bf (never activated)
+2026-10-27T12:31:07.1698001Z 
+2026-10-27T12:31:07.1698564Z Running 3 tests using 1 worker
+2026-10-27T12:31:07.1700290Z 
+2026-10-27T12:31:07.6886933Z [1/3] tests\packaged-linux.spec.cjs:9:1 › Linux 原生包安装、启动、升级与卸载，保留配置和源文件
+2026-10-27T12:31:07.7423243Z [2/3] tests\packaged-mac.spec.cjs:10:1 › macOS 原生包、隔离安装、系统打开、升级与重复卸载
+2026-10-27T12:31:07.7676941Z [3/3] tests\packaged-windows.spec.cjs:13:1 › Windows 原生包、隔离安装、二次启动打开、升级与重复卸载
+2026-10-27T12:31:11.5045115Z tests\packaged-windows.spec.cjs:13:1 › Windows 原生包、隔离安装、二次启动打开、升级与重复卸载
+2026-10-27T12:31:11.5046912Z 已安装用户级 emd：C:\Users\runneradmin\AppData\Local\Temp\emd-packaged-totGN4\isolated home\AppData\Local\Programs\emd\emd.exe
+2026-10-27T12:31:11.5049390Z 开始菜单入口：C:\Users\runneradmin\AppData\Local\Temp\emd-packaged-totGN4\isolated home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\emd.lnk
+2026-10-27T12:31:11.5050461Z 
+2026-10-27T12:31:11.5050997Z 已注册 Markdown / HTML 打开方式，不修改默认应用。
+2026-10-27T12:31:11.5051328Z 
+2026-10-27T12:31:19.0333379Z Windows 正在占用应用目录，等待释放后重试：C:\Users\runneradmin\AppData\Local\Temp\emd-packaged-totGN4\isolated home\AppData\Local\Programs\emd
+2026-10-27T12:31:19.0334316Z 
+2026-10-27T12:31:23.3291184Z 已移除用户级 emd 应用、开始菜单入口和文件关联；配置与源文档保留。
+2026-10-27T12:31:23.3291601Z 
+2026-10-27T12:31:23.8174740Z   1) tests\packaged-windows.spec.cjs:13:1 › Windows 原生包、隔离安装、二次启动打开、升级与重复卸载 ────────────────────────
+2026-10-27T12:31:23.8175197Z 
+2026-10-27T12:31:23.8176286Z     Error: EPERM: operation not permitted, rename 'C:\Users\runneradmin\AppData\Local\Temp\emd-packaged-totGN4\isolated home\AppData\Local\Programs\emd' -> 'C:\Users\runneradmin\AppData\Local\Temp\emd-packaged-totGN4\isolated home\AppData\Local\Programs\.emd-install-0GA7LL\previous'
+2026-10-27T12:31:23.8177673Z 
+2026-10-27T12:31:23.8177909Z        at ..\scripts\platforms\windows.mjs:101
+2026-10-27T12:31:23.8178583Z 
+2026-10-27T12:31:23.8178938Z        99 |   await mkdir(paths.programs, { recursive: true });
+2026-10-27T12:31:23.8179727Z       100 |   await mkdir(dirname(paths.shortcut), { recursive: true });
+2026-10-27T12:31:23.8180550Z     > 101 |   integrate({ root, ...paths, env, run }, 'validate');
+2026-10-27T12:31:23.8181112Z           |              ^
+2026-10-27T12:31:23.8181783Z       102 |   const staging = await mkdtemp(join(paths.programs, '.emd-install-'));
+2026-10-27T12:31:23.8182569Z       103 |   const stagedApp = join(staging, 'emd');
+2026-10-27T12:31:23.8183560Z       104 |   const oldApp = join(staging, 'previous');
+2026-10-27T12:31:23.8184870Z         at renameApplication (D:\a\ea-md-reader\ea-md-reader\scripts\platforms\windows.mjs:101:14)
+2026-10-27T12:31:23.8186003Z         at install (D:\a\ea-md-reader\ea-md-reader\scripts\platforms\windows.mjs:149:9)
+2026-10-27T12:31:23.8186986Z         at D:\a\ea-md-reader\ea-md-reader\tests\packaged-windows.spec.cjs:62:5
+2026-10-27T12:31:23.8187508Z 
+2026-10-27T12:31:23.8191184Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-10-27T12:31:23.8192799Z     test-results\packaged\packaged-windows-Windows-原生包、隔离安装、二次启动打开、升级与重复卸载\test-failed-1.png
+2026-10-27T12:31:23.8194054Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-27T12:31:23.8194850Z 
+2026-10-27T12:31:23.8195732Z     Error Context: test-results\packaged\packaged-windows-Windows-原生包、隔离安装、二次启动打开、升级与重复卸载\error-context.md
+2026-10-27T12:31:23.8196448Z 
+2026-10-27T12:31:23.8196904Z     attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+2026-10-27T12:31:23.8197630Z     test-results\packaged\packaged-windows-Windows-原生包、隔离安装、二次启动打开、升级与重复卸载\trace.zip
+2026-10-27T12:31:23.8198047Z     Usage:
+2026-10-27T12:31:23.8198164Z 
+2026-10-27T12:31:23.8199102Z         npx playwright show-trace test-results\packaged\packaged-windows-Windows-原生包、隔离安装、二次启动打开、升级与重复卸载\trace.zip
+2026-10-27T12:31:23.8199570Z 
+2026-10-27T12:31:23.8199951Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-27T12:31:23.8200419Z 
+2026-10-27T12:31:23.8200427Z 
+2026-10-27T12:31:23.8408317Z   1 failed
+2026-10-27T12:31:23.8409568Z     tests\packaged-windows.spec.cjs:13:1 › Windows 原生包、隔离安装、二次启动打开、升级与重复卸载 ─────────────────────────
+2026-10-27T12:31:23.8410433Z   2 skipped
+2026-10-27T12:31:23.9893537Z ##[error]Process completed with exit code 1.
+2026-10-27T12:31:24.0140908Z 

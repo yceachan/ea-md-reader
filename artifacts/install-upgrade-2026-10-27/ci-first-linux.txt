@@ -1,0 +1,152 @@
+##[group]Run npm run test:ui -- --reporter=line,html
+2026-10-27T12:30:16.4504885Z [36;1mnpm run test:ui -- --reporter=line,html[0m
+2026-10-27T12:30:16.4602693Z shell: /usr/bin/bash -e {0}
+2026-10-27T12:30:16.4602975Z env:
+2026-10-27T12:30:16.4603201Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-10-27T12:30:16.4603499Z   CSC_FOR_PULL_REQUEST: true
+2026-10-27T12:30:16.4603750Z   XDG_CURRENT_DESKTOP: 
+2026-10-27T12:30:16.4604042Z   PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/reader
+2026-10-27T12:30:16.4604363Z ##[endgroup]
+2026-10-27T12:30:16.5684105Z 
+2026-10-27T12:30:16.5684558Z > emd@0.1.0 test:ui
+2026-10-27T12:30:16.5684965Z > node scripts/test-ui.mjs --reporter=line,html
+2026-10-27T12:30:16.5685219Z 
+2026-10-27T12:30:16.6343885Z 复用最新构建：icons
+2026-10-27T12:30:16.6506057Z 复用最新构建：native
+2026-10-27T12:30:16.8024083Z 复用最新构建：renderer
+2026-10-27T12:30:21.1461437Z 
+2026-10-27T12:30:21.1462033Z Running 27 tests using 1 worker
+2026-10-27T12:30:21.1463103Z 
+2026-10-27T12:30:21.5500807Z [1/27] tests/commands.spec.cjs:8:36 › md 自动查找完成后保持输入焦点，允许继续输入和离开
+2026-10-27T12:30:26.3711249Z [2/27] tests/commands.spec.cjs:8:36 › html 自动查找完成后保持输入焦点，允许继续输入和离开
+2026-10-27T12:30:29.3335542Z [3/27] tests/commands.spec.cjs:81:1 › 工作树文件/目录与后台标签复制绝对和相对路径，空白处复制工作区路径
+2026-10-27T12:30:30.7431413Z [4/27] tests/commands.spec.cjs:135:1 › Reader 的元素选择快捷键在首次打开和连续选择后均可重新启用
+2026-10-27T12:30:34.3660878Z [5/27] tests/commands.spec.cjs:181:6 › TODO: F12 与文件菜单打开独立控制台，复用、关闭重开且不改变阅读尺寸
+2026-10-27T12:30:34.3661751Z [6/27] tests/commands.spec.cjs:240:1 › 真实键盘、按钮和原生菜单共用命令，查找输入保留复制粘贴
+2026-10-27T12:30:36.9457304Z [7/27] tests/commands.spec.cjs:407:1 › 全屏使用本平台绑定，工作区祖先由主进程返回
+2026-10-27T12:30:38.1886376Z [8/27] tests/dev.spec.cjs:7:1 › Vite 开发页面保留 IPC、HTML 隔离与资料加载，CSS 热更新和整页重载可用
+2026-10-27T12:30:41.9046662Z tests/dev.spec.cjs:7:1 › Vite 开发页面保留 IPC、HTML 隔离与资料加载，CSS 热更新和整页重载可用
+2026-10-27T12:30:41.9048197Z 12:30:41 PM [vite] (client) hmr update /src/app.css
+2026-10-27T12:30:41.9049335Z 
+2026-10-27T12:30:42.8533791Z [9/27] tests/editors.spec.cjs:8:1 › 打开后直接监听 Markdown 和 HTML 的外部保存，原子替换后仍持续更新
+2026-10-27T12:30:44.5411435Z [10/27] tests/editors.spec.cjs:34:1 › 文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭
+2026-10-27T12:30:51.7583280Z   1) tests/editors.spec.cjs:34:1 › 文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭 ───────────────────────────
+2026-10-27T12:30:51.7583681Z 
+2026-10-27T12:30:51.7583928Z     Error: expect(received).toBe(expected) // Object.is equality
+2026-10-27T12:30:51.7584381Z 
+2026-10-27T12:30:51.7584517Z     Expected: 300
+2026-10-27T12:30:51.7584855Z     Received: 0
+2026-10-27T12:30:51.7585054Z 
+2026-10-27T12:30:51.7585196Z     Call Log:
+2026-10-27T12:30:51.7585719Z     - Timeout 5000ms exceeded while waiting on the predicate
+2026-10-27T12:30:51.7586133Z 
+2026-10-27T12:30:51.7586870Z       77 |     await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace('# 编辑后正文', '# 保存后正文'));
+2026-10-27T12:30:51.7587921Z       78 |     await expect(panel.locator('h1')).toHaveText('保存后正文');
+2026-10-27T12:30:51.7589100Z     > 79 |     await expect.poll(() => panel.evaluate((element) => element.scrollTop)).toBe(300);
+2026-10-27T12:30:51.7589975Z          |                                                                             ^
+2026-10-27T12:30:51.7591232Z       80 |     const progress = await panel.evaluate((element) => Math.round(element.scrollTop / (element.scrollHeight - element.clientHeight) * 100));
+2026-10-27T12:30:51.7592541Z       81 |     await expect(page.locator('.progress')).toHaveText(`${progress}%`);
+2026-10-27T12:30:51.7593526Z       82 |     await page.getByRole('tab', { name: 'MD 其他.md' }).click();
+2026-10-27T12:30:51.7594395Z         at /home/runner/work/ea-md-reader/ea-md-reader/tests/editors.spec.cjs:79:77
+2026-10-27T12:30:51.7594929Z 
+2026-10-27T12:30:51.7595665Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-10-27T12:30:51.7596925Z     test-results/reader/editors-文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭/test-failed-1.png
+2026-10-27T12:30:51.7598624Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-27T12:30:51.7599398Z 
+2026-10-27T12:30:51.7600203Z     Error Context: test-results/reader/editors-文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭/error-context.md
+2026-10-27T12:30:51.7600808Z 
+2026-10-27T12:30:51.7601509Z     attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+2026-10-27T12:30:51.7602705Z     test-results/reader/editors-文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭/trace.zip
+2026-10-27T12:30:51.7603376Z     Usage:
+2026-10-27T12:30:51.7603606Z 
+2026-10-27T12:30:51.7604327Z         npx playwright show-trace test-results/reader/editors-文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭/trace.zip
+2026-10-27T12:30:51.7604933Z 
+2026-10-27T12:30:51.7605472Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-27T12:30:51.7605919Z 
+2026-10-27T12:30:51.7605927Z 
+2026-10-27T12:30:52.1957146Z [11/27] tests/reader.spec.cjs:10:1 › Markdown 与 Mermaid 数学标签共用修补后的 KaTeX
+2026-10-27T12:30:53.5747139Z [12/27] tests/reader.spec.cjs:29:1 › HTML 内嵌脚本与样式、隔离、工作区切换、查找、重读和原始字节另存为
+2026-10-27T12:30:56.3596128Z [13/27] tests/reader.spec.cjs:108:1 › 渲染、只读、多标签、另存为、重读、第二次启动及相对图片
+2026-10-27T12:30:58.0230560Z tests/reader.spec.cjs:108:1 › 渲染、只读、多标签、另存为、重读、第二次启动及相对图片
+2026-10-27T12:30:58.0233195Z Native normal-window state: {
+2026-10-27T12:30:58.0233998Z   maximized: false,
+2026-10-27T12:30:58.0236514Z   bounds: { x: 690, y: 295, width: 1180, height: 850 },
+2026-10-27T12:30:58.0238139Z   workArea: { x: 0, y: 0, width: 2560, height: 1440 }
+2026-10-27T12:30:58.0239104Z }
+2026-10-27T12:30:58.0239478Z 
+2026-10-27T12:30:59.2945841Z [14/27] tests/reader.spec.cjs:230:1 › 工作区切换、右键菜单、面板拖拽与容器自适应
+2026-10-27T12:31:02.5985956Z [15/27] tests/reader.spec.cjs:415:1 › macOS Finder 打开恢复窗口、Dock 激活及 Command 快捷键
+2026-10-27T12:31:02.6149601Z [16/27] tests/startup.spec.cjs:14:1 › KDE/Windows 专注启动按 pwd 当前层统一计数，零/单/多文档布局与欢迎页工作树正确
+2026-10-27T12:31:05.3356989Z [17/27] tests/startup.spec.cjs:68:1 › 默认布局尺寸受屏幕工作区限制并展开工作树和 TOC，折叠按钮悬浮且不划分内容列
+2026-10-27T12:31:06.4343986Z [18/27] tests/startup.spec.cjs:96:1 › KDE/Windows 设置保存默认/专注偏好，下次启动生效且保留编辑器配置
+2026-10-27T12:31:07.3758635Z [19/27] tests/ui.spec.cjs:15:1 › Appica 预览编辑开关、快捷键保存、切换自动保存与外部冲突保留草稿
+2026-10-27T12:31:09.4266373Z [20/27] tests/ui.spec.cjs:77:1 › 源码保存失败保留编辑模式，未保存草稿阻止未经确认的窗口关闭
+2026-10-27T12:31:10.6269709Z [21/27] tests/ui.spec.cjs:105:1 › logo 打开固定构建资料，图标紧邻链接且整组居中，用户配置无法更改卡片或链接
+2026-10-27T12:31:11.8766734Z [22/27] tests/ui.spec.cjs:158:1 › 多标签滚轮纵向输入横向移动，无原生滚动条且活动标签可见
+2026-10-27T12:31:13.3367028Z [23/27] tests/ui.spec.cjs:191:1 › 默认展开双面板，窄屏覆盖层互斥且不改变正文，空白菜单重载工作树
+2026-10-27T12:31:15.4557366Z [24/27] tests/ui.spec.cjs:293:1 › 设置两处入口共用弹窗，编辑器选择、取消、清除与持久化
+2026-10-27T12:31:16.5633630Z [25/27] tests/windows-shell.spec.cjs:8:1 › Windows 11 Shell：最大化按钮悬停显示分屏菜单，拖至右边缘真实吸附
+2026-10-27T12:31:16.5738896Z [26/27] tests/windows-window.spec.cjs:8:1 › Windows 原生标题栏按钮命中、拖动区域、最大化还原与分屏尺寸
+2026-10-27T12:31:16.5814492Z [27/27] tests/windows-window.spec.cjs:49:1 › Windows 原生应用 GUI 取消与选择结果持久化
+2026-10-27T12:31:16.6207976Z   1 failed
+2026-10-27T12:31:16.6209395Z     tests/editors.spec.cjs:34:1 › 文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭 ────────────────────────────
+2026-10-27T12:31:16.6210071Z   5 skipped
+2026-10-27T12:31:16.6210391Z   21 passed (55.9s)
+2026-10-27T12:31:16.7449480Z ##[error]Process completed with exit code 1.
+2026-10-27T12:31:16.7505060Z ##[group]Run npm run test:packaged -- --reporter=line,html
+2026-10-27T12:31:16.7505508Z [36;1mnpm run test:packaged -- --reporter=line,html[0m
+2026-10-27T12:31:16.7575764Z shell: /usr/bin/bash -e {0}
+2026-10-27T12:31:16.7576126Z env:
+2026-10-27T12:31:16.7576347Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-10-27T12:31:16.7576637Z   CSC_FOR_PULL_REQUEST: true
+2026-10-27T12:31:16.7576889Z   XDG_CURRENT_DESKTOP: 
+2026-10-27T12:31:16.7577192Z   PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/packaged
+2026-10-27T12:31:16.7577525Z ##[endgroup]
+2026-10-27T12:31:16.8605262Z 
+2026-10-27T12:31:16.8605803Z > emd@0.1.0 test:packaged
+2026-10-27T12:31:16.8606297Z > node scripts/test-ui.mjs --packaged --reporter=line,html
+2026-10-27T12:31:16.8606621Z 
+2026-10-27T12:31:16.9626118Z 复用最新构建：icons
+2026-10-27T12:31:16.9790986Z 复用最新构建：native
+2026-10-27T12:31:17.1457668Z 复用最新构建：renderer
+2026-10-27T12:31:17.5954935Z 复用最新应用目录：KDE/Linux
+2026-10-27T12:31:18.4843065Z 
+2026-10-27T12:31:18.4843670Z Running 3 tests using 1 worker
+2026-10-27T12:31:18.4844555Z 
+2026-10-27T12:31:18.8784949Z [1/3] tests/packaged-linux.spec.cjs:9:1 › Linux 原生包安装、启动、升级与卸载，保留配置和源文件
+2026-10-27T12:31:19.3847289Z tests/packaged-linux.spec.cjs:9:1 › Linux 原生包安装、启动、升级与卸载，保留配置和源文件
+2026-10-27T12:31:19.3847628Z 
+2026-10-27T12:31:19.3847642Z 
+2026-10-27T12:31:19.3877287Z 
+2026-10-27T12:31:19.3877383Z 
+2026-10-27T12:31:19.3880681Z 已安装 emd：/tmp/emd-packaged-fPSFCd/home/.local/bin/emd
+2026-10-27T12:31:19.3881460Z 桌面 / Dolphin 入口：/tmp/emd-packaged-fPSFCd/data/applications/io.github.yceachan.emd.desktop
+2026-10-27T12:31:19.3881972Z 
+2026-10-27T12:31:19.3979605Z 
+2026-10-27T12:31:19.3979640Z 
+2026-10-27T12:31:19.4071862Z 
+2026-10-27T12:31:19.4071937Z 
+2026-10-27T12:31:21.7288369Z 
+2026-10-27T12:31:21.7288390Z 
+2026-10-27T12:31:21.7324566Z 
+2026-10-27T12:31:21.7324582Z 
+2026-10-27T12:31:21.7326162Z 已安装 emd：/tmp/emd-packaged-fPSFCd/home/.local/bin/emd
+2026-10-27T12:31:21.7326993Z 桌面 / Dolphin 入口：/tmp/emd-packaged-fPSFCd/data/applications/io.github.yceachan.emd.desktop
+2026-10-27T12:31:21.7327520Z 
+2026-10-27T12:31:21.7430854Z 
+2026-10-27T12:31:21.7430867Z 
+2026-10-27T12:31:21.7531815Z 
+2026-10-27T12:31:21.7531830Z 
+2026-10-27T12:31:22.7045154Z 
+2026-10-27T12:31:22.7045171Z 
+2026-10-27T12:31:22.7046560Z 已移除用户级 emd 安装；配置和日志保留。
+2026-10-27T12:31:22.7047009Z 
+2026-10-27T12:31:22.7092815Z 
+2026-10-27T12:31:22.7092995Z 
+2026-10-27T12:31:22.7093541Z 已移除用户级 emd 安装；配置和日志保留。
+2026-10-27T12:31:22.7093811Z 
+2026-10-27T12:31:22.7265992Z [2/3] tests/packaged-mac.spec.cjs:10:1 › macOS 原生包、隔离安装、系统打开、升级与重复卸载
+2026-10-27T12:31:22.7522331Z [3/3] tests/packaged-windows.spec.cjs:13:1 › Windows 原生包、隔离安装、二次启动打开、升级与重复卸载
+2026-10-27T12:31:22.7890723Z   2 skipped
+2026-10-27T12:31:22.7891552Z   1 passed (4.5s)
+2026-10-27T12:31:22.8543300Z 
