@@ -1,0 +1,27 @@
+
+> emd@0.1.0 test:ui
+> node scripts/test-ui.mjs tests/editors.spec.cjs --grep 文件树 --repeat-each=3
+
+复用最新构建：icons
+复用最新构建：native
+复用最新构建：renderer
+Electron test desktop: WinSta0\emd-test-f7dc7aee59ff4430857d5dd895f12349 (never activated)
+
+Running 3 tests using 1 worker
+
+
+
+(node:29528) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/3] tests\editors.spec.cjs:34:1 › 文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭
+
+
+(node:11672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2/3] tests\editors.spec.cjs:34:1 › 文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭
+(node:20736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[3/3] tests\editors.spec.cjs:34:1 › 文件树中键与非活动标签菜单编辑正确目标，同路径标签自动更新而标签中键只关闭
+  3 passed (11.2s)

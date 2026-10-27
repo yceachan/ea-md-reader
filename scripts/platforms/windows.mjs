@@ -82,7 +82,7 @@ async function renameApplication(source, target) {
   for (let attempt = 0; ; attempt++) {
     try { return await rename(source, target); }
     catch (error) {
-      if (!['EPERM', 'EBUSY'].includes(error.code) || attempt === 5) throw error;
+      if (!['EPERM', 'EBUSY'].includes(error.code) || attempt === 7) throw error;
       if (attempt === 0) console.log(`Windows 正在占用应用目录，等待释放后重试：${source}`);
       await delay(100 * 2 ** attempt);
     }

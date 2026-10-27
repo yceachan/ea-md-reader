@@ -1,0 +1,6 @@
+{"time":"2026-10-27T12:31:11.852Z","event":"launch","launcherPid":2324,"exitCode":null,"signalCode":null}
+[electron-diagnostics] {"time":"2026-10-27T12:31:11.862Z","event":"main-process","pid":1284,"electron":"44.5.1"}
+Debugger ending on ws://127.0.0.1:59980/e0fd171a-d3b6-44e7-8654-b35b9d94efd4
+For help, see: https://nodejs.org/learn/getting-started/debugging
+{"time":"2026-10-27T12:31:17.661Z","event":"exit","code":0,"signal":null}
+{"time":"2026-10-27T12:31:17.662Z","event":"close","code":0,"signal":null}

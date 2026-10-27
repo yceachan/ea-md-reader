@@ -124,7 +124,8 @@ test('Windows 升级等待真实文件锁释放，持续占用时保留旧应用
   await assert.rejects(install(context), { code: 'EPERM' });
   assert.equal(await readFile(context.executable, 'utf8'), 'version one');
   assert.equal(context.calls.filter(({ args }) => args.at(-3) === 'install').length, 1);
-  const release = setTimeout(() => locker.stdin.end('\n'), 250);
+  // CI retained the lock beyond the old 3.1 s retry window after app close.
+  const release = setTimeout(() => locker.stdin.end('\n'), 4000);
   try { await install(context); }
   finally { clearTimeout(release); locker.stdin.end(); }
   await closed;
