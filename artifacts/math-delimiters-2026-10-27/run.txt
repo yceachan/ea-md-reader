@@ -1,0 +1,306 @@
+{
+  "baselineRevision": "d4ef9d310cb1178de3e99e62d077dd30b5b2562c",
+  "versions": {
+    "marked": "18.0.14",
+    "marked-katex-extension": "5.1.13",
+    "katex": "0.18.10"
+  },
+  "formula": "$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$",
+  "directKatexValid": true,
+  "displayCount": 42,
+  "multilineCompactCount": 23,
+  "results": {
+    "baseline": {
+      "reported": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "singleLine": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "standalone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "standaloneBlank": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "openingAlone": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "closingAlone": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "aligned": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "adjacentDisplays": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 2
+      },
+      "codeFence": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "inlineCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "escaped": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "inlineCjk": {
+        "math": 2,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "singleDollarMultiline": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "unclosed": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "paragraphBoundary": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 2
+      },
+      "quote": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "list": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "callout": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "calloutWithoutIcon": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "escapedDollarInMath": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "tripleDollar": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "indentedCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "crlf": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "document": {
+        "math": 124,
+        "display": 19,
+        "errors": 0,
+        "literalDelimiters": 23
+      }
+    },
+    "fixed": {
+      "reported": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "singleLine": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "standalone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "standaloneBlank": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "openingAlone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "closingAlone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "aligned": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "adjacentDisplays": {
+        "math": 2,
+        "display": 2,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "codeFence": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "inlineCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "escaped": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "inlineCjk": {
+        "math": 2,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "singleDollarMultiline": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "unclosed": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "paragraphBoundary": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 2
+      },
+      "quote": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "list": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "callout": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "calloutWithoutIcon": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "escapedDollarInMath": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "tripleDollar": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1
+      },
+      "indentedCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "crlf": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0
+      },
+      "document": {
+        "math": 147,
+        "display": 42,
+        "errors": 0,
+        "literalDelimiters": 0
+      }
+    }
+  }
+}

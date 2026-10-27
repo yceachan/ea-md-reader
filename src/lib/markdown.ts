@@ -122,6 +122,23 @@ md.use(markedKatex({ throwOnError: false, nonStandard: true }));
 
 md.use({
 	extensions: [
+		// Accept paragraph-level $$formula\ncontinuation$$ as display math too.
+		// The plugin handles single-line math and delimiters on separate lines;
+		// reuse its block token/renderer for the compact multiline form.
+		{
+			name: "blockKatex",
+			level: "block",
+			tokenizer(src: string) {
+				const match = /^ {0,3}\$\$(?!\$)((?:\\[\s\S]|[^\\$]|\$(?!\$))+?)\$\$(?!\$)[\t ]*(?:\n|$)/.exec(src);
+				if (!match || !match[1].includes("\n") || /\n[\t ]*\n/.test(match[1])) return undefined;
+				return {
+					type: "blockKatex",
+					raw: match[0],
+					text: match[1].trim(),
+					displayMode: true,
+				};
+			},
+		},
 		// :::callout 💡 ... ::: — baseline `markdown-it-container` port
 		{
 			name: "callout",

@@ -1,0 +1,374 @@
+{
+  "baselineRevision": "d4ef9d310cb1178de3e99e62d077dd30b5b2562c",
+  "versions": {
+    "marked": "18.0.14",
+    "marked-katex-extension": "5.1.13",
+    "katex": "0.18.10"
+  },
+  "formula": "$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$",
+  "directKatexValid": true,
+  "currentTokens": [
+    {
+      "type": "paragraph",
+      "raw": "$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$",
+      "text": "$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$",
+      "tokens": [
+        {
+          "type": "text",
+          "raw": "$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$",
+          "text": "$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$",
+          "escaped": false
+        }
+      ]
+    }
+  ],
+  "standardTokens": [
+    {
+      "type": "blockKatex",
+      "text": "\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).",
+      "displayMode": true
+    }
+  ],
+  "displayCount": 42,
+  "multilineCompactCount": 23,
+  "results": {
+    "baseline": {
+      "reported": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$</p>\n"
+      },
+      "singleLine": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<p><span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span></p>\n"
+      },
+      "standalone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span>\n"
+      },
+      "standaloneBlank": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y\n\n=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span>\n"
+      },
+      "openingAlone": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$\nx+y\n=z$$</p>\n"
+      },
+      "closingAlone": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$x+y\n=z\n$$</p>\n"
+      },
+      "aligned": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$\\begin{aligned}\na&amp;=b\\\nc&amp;=d\n\\end{aligned}$$</p>\n"
+      },
+      "adjacentDisplays": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 2,
+        "html": "<p>$$a\n=b$$</p>\n<p>$$c\n=d$$</p>\n"
+      },
+      "codeFence": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<pre class=\"shiki vp-code\"><code>$$a\n=b$$</code></pre>"
+      },
+      "inlineCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p><code>$$a = b$$</code></p>\n"
+      },
+      "escaped": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$a\n=b$$</p>\n"
+      },
+      "inlineCjk": {
+        "math": 2,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<p>公式 <span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>x</mi></mrow>x</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\">x</span></span></span></span>（说明）；<span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>y</mi></mrow>y</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span></span></span></span>。</p>\n"
+      },
+      "singleDollarMultiline": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<p>$a\n=b$</p>\n"
+      },
+      "unclosed": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$a\n=b</p>\n"
+      },
+      "paragraphBoundary": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 2,
+        "html": "<p>$$a</p>\n<p>正文\n$$b\n=c$$</p>\n"
+      },
+      "quote": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<blockquote>\n<p>$$a\n=b$$</p>\n</blockquote>\n"
+      },
+      "list": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<ul>\n<li>$$a\n=b$$</li>\n</ul>\n"
+      },
+      "callout": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<div class=\"callout custom-block\"><span class=\"callout-icon\">💡</span><div class=\"callout-content\"><p>$$a\n=b$$</p>\n</div></div>"
+      },
+      "calloutWithoutIcon": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<div class=\"callout custom-block\"><span class=\"callout-icon\">$$a</span><div class=\"callout-content\"><p>=b$$</p>\n</div></div>"
+      },
+      "escapedDollarInMath": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$a+$\n=b$$</p>\n"
+      },
+      "tripleDollar": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$$a\n=b$$$</p>\n"
+      },
+      "indentedCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<pre class=\"shiki vp-code\"><code>$$a\n=b$$</code></pre>"
+      },
+      "crlf": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$</p>\n"
+      },
+      "document": {
+        "math": 124,
+        "display": 19,
+        "errors": 0,
+        "literalDelimiters": 23
+      }
+    },
+    "fixed": {
+      "reported": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><msub><mi>β</mi><mrow><mi>F</mi><mi>M</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi mathvariant=\"normal\">Δ</mi><msub><mi>f</mi><mi>max</mi><mo>⁡</mo></msub></mrow><msub><mi>f</mi><mi>m</mi></msub></mfrac><mo separator=\"true\">,</mo><mspace width=\"2em\"></mspace><msub><mi>B</mi><mrow><mi>F</mi><mi>M</mi></mrow></msub><mo>≈</mo><mn>2</mn><mo stretchy=\"false\">(</mo><mi mathvariant=\"normal\">Δ</mi><msub><mi>f</mi><mi>max</mi><mo>⁡</mo></msub><mo>+</mo><msub><mi>f</mi><mi>m</mi></msub><mo stretchy=\"false\">)</mo><mi mathvariant=\"normal\">.</mi></mrow>\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.8889em;vertical-align:-0.1944em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.0528em;\">β</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.3283em;\"><span style=\"top:-2.55em;margin-left:-0.0528em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mord mathnormal mtight\" style=\"margin-right:0.1389em;\">F</span><span class=\"mord mathnormal mtight\" style=\"margin-right:0.109em;\">M</span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:2.2519em;vertical-align:-0.8804em;\"></span><span class=\"mord\"><span class=\"mopen nulldelimiter\"></span><span class=\"mfrac\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.3714em;\"><span style=\"top:-2.314em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mathnormal mtight\">m</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span></span></span><span style=\"top:-3.23em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"frac-line\" style=\"border-bottom-width:0.04em;\"></span></span><span style=\"top:-3.677em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\">Δ</span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mop mtight\"><span class=\"mtight\">m</span><span class=\"mtight\">a</span><span class=\"mtight\">x</span></span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8804em;\"><span></span></span></span></span></span><span class=\"mclose nulldelimiter\"></span></span><span class=\"mpunct\">,</span><span class=\"mspace\" style=\"margin-right:2em;\"></span><span class=\"mspace\" style=\"margin-right:0.1667em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.0502em;\">B</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.3283em;\"><span style=\"top:-2.55em;margin-left:-0.0502em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mord mathnormal mtight\" style=\"margin-right:0.1389em;\">F</span><span class=\"mord mathnormal mtight\" style=\"margin-right:0.109em;\">M</span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">≈</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:1em;vertical-align:-0.25em;\"></span><span class=\"mord\">2</span><span class=\"mopen\">(</span><span class=\"mord\">Δ</span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mop mtight\"><span class=\"mtight\">m</span><span class=\"mtight\">a</span><span class=\"mtight\">x</span></span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:1em;vertical-align:-0.25em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mathnormal mtight\">m</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mclose\">)</span><span class=\"mord\">.</span></span></span></span></span>\n"
+      },
+      "singleLine": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<p><span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span></p>\n"
+      },
+      "standalone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span>\n"
+      },
+      "standaloneBlank": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y\n\n=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span>\n"
+      },
+      "openingAlone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y\n=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span>\n"
+      },
+      "closingAlone": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mi>z</mi></mrow>x+y\n=z</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.044em;\">z</span></span></span></span></span>\n"
+      },
+      "aligned": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mtable rowspacing=\"0.25em\" columnalign=\"right left\" columnspacing=\"0em\"><mtr><mtd><mstyle scriptlevel=\"0\" displaystyle=\"true\"><mi>a</mi></mstyle></mtd><mtd><mstyle scriptlevel=\"0\" displaystyle=\"true\"><mrow><mrow></mrow><mo>=</mo><mi>b</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel=\"0\" displaystyle=\"true\"><mi>c</mi></mstyle></mtd><mtd><mstyle scriptlevel=\"0\" displaystyle=\"true\"><mrow><mrow></mrow><mo>=</mo><mi>d</mi></mrow></mstyle></mtd></mtr></mtable>\\begin{aligned}\na&amp;=b\\\\\nc&amp;=d\n\\end{aligned}</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:2.7em;vertical-align:-1.1em;\"></span><span class=\"mord\"><span class=\"mtable\"><span class=\"col-align-r\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.6em;\"><span style=\"top:-3.76em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\">a</span></span></span><span style=\"top:-2.26em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\">c</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.1em;\"><span></span></span></span></span></span><span class=\"col-align-l\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.6em;\"><span style=\"top:-3.76em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\"></span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mord mathnormal\">b</span></span></span><span style=\"top:-2.26em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\"></span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mord mathnormal\">d</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.1em;\"><span></span></span></span></span></span></span></span></span></span></span></span>\n"
+      },
+      "adjacentDisplays": {
+        "math": 2,
+        "display": 2,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>a</mi><mo>=</mo><mi>b</mi></mrow>a\n=b</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\">a</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6944em;\"></span><span class=\"mord mathnormal\">b</span></span></span></span></span>\n<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>c</mi><mo>=</mo><mi>d</mi></mrow>c\n=d</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\">c</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6944em;\"></span><span class=\"mord mathnormal\">d</span></span></span></span></span>\n"
+      },
+      "codeFence": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<pre class=\"shiki vp-code\"><code>$$a\n=b$$</code></pre>"
+      },
+      "inlineCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p><code>$$a = b$$</code></p>\n"
+      },
+      "escaped": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$a\n=b$$</p>\n"
+      },
+      "inlineCjk": {
+        "math": 2,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<p>公式 <span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>x</mi></mrow>x</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\">x</span></span></span></span>（说明）；<span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>y</mi></mrow>y</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.625em;vertical-align:-0.1944em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">y</span></span></span></span>。</p>\n"
+      },
+      "singleDollarMultiline": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<p>$a\n=b$</p>\n"
+      },
+      "unclosed": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$a\n=b</p>\n"
+      },
+      "paragraphBoundary": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 2,
+        "html": "<p>$$a</p>\n<p>正文\n$$b\n=c$$</p>\n"
+      },
+      "quote": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<blockquote>\n<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>a</mi><mo>=</mo><mi>b</mi></mrow>a\n=b</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\">a</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6944em;\"></span><span class=\"mord mathnormal\">b</span></span></span></span></span>\n</blockquote>\n"
+      },
+      "list": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<ul>\n<li><span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>a</mi><mo>=</mo><mi>b</mi></mrow>a\n=b</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\">a</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6944em;\"></span><span class=\"mord mathnormal\">b</span></span></span></span></span>\n</li>\n</ul>\n"
+      },
+      "callout": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<div class=\"callout custom-block\"><span class=\"callout-icon\">💡</span><div class=\"callout-content\"><span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>a</mi><mo>=</mo><mi>b</mi></mrow>a\n=b</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.4306em;\"></span><span class=\"mord mathnormal\">a</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6944em;\"></span><span class=\"mord mathnormal\">b</span></span></span></span></span>\n</div></div>"
+      },
+      "calloutWithoutIcon": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<div class=\"callout custom-block\"><span class=\"callout-icon\">$$a</span><div class=\"callout-content\"><p>=b$$</p>\n</div></div>"
+      },
+      "escapedDollarInMath": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>a</mi><mo>+</mo><mi mathvariant=\"normal\">$</mi><mo>=</mo><mi>b</mi></mrow>a+\\$\n=b</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6667em;vertical-align:-0.0833em;\"></span><span class=\"mord mathnormal\">a</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.8056em;vertical-align:-0.0556em;\"></span><span class=\"mord\">$</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6944em;\"></span><span class=\"mord mathnormal\">b</span></span></span></span></span>\n"
+      },
+      "tripleDollar": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 1,
+        "html": "<p>$$$a\n=b$$$</p>\n"
+      },
+      "indentedCode": {
+        "math": 0,
+        "display": 0,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<pre class=\"shiki vp-code\"><code>$$a\n=b$$</code></pre>"
+      },
+      "crlf": {
+        "math": 1,
+        "display": 1,
+        "errors": 0,
+        "literalDelimiters": 0,
+        "html": "<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><msub><mi>β</mi><mrow><mi>F</mi><mi>M</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi mathvariant=\"normal\">Δ</mi><msub><mi>f</mi><mi>max</mi><mo>⁡</mo></msub></mrow><msub><mi>f</mi><mi>m</mi></msub></mfrac><mo separator=\"true\">,</mo><mspace width=\"2em\"></mspace><msub><mi>B</mi><mrow><mi>F</mi><mi>M</mi></mrow></msub><mo>≈</mo><mn>2</mn><mo stretchy=\"false\">(</mo><mi mathvariant=\"normal\">Δ</mi><msub><mi>f</mi><mi>max</mi><mo>⁡</mo></msub><mo>+</mo><msub><mi>f</mi><mi>m</mi></msub><mo stretchy=\"false\">)</mo><mi mathvariant=\"normal\">.</mi></mrow>\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).</math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.8889em;vertical-align:-0.1944em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.0528em;\">β</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.3283em;\"><span style=\"top:-2.55em;margin-left:-0.0528em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mord mathnormal mtight\" style=\"margin-right:0.1389em;\">F</span><span class=\"mord mathnormal mtight\" style=\"margin-right:0.109em;\">M</span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:2.2519em;vertical-align:-0.8804em;\"></span><span class=\"mord\"><span class=\"mopen nulldelimiter\"></span><span class=\"mfrac\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.3714em;\"><span style=\"top:-2.314em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mathnormal mtight\">m</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span></span></span><span style=\"top:-3.23em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"frac-line\" style=\"border-bottom-width:0.04em;\"></span></span><span style=\"top:-3.677em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\">Δ</span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mop mtight\"><span class=\"mtight\">m</span><span class=\"mtight\">a</span><span class=\"mtight\">x</span></span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8804em;\"><span></span></span></span></span></span><span class=\"mclose nulldelimiter\"></span></span><span class=\"mpunct\">,</span><span class=\"mspace\" style=\"margin-right:2em;\"></span><span class=\"mspace\" style=\"margin-right:0.1667em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.0502em;\">B</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.3283em;\"><span style=\"top:-2.55em;margin-left:-0.0502em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mord mathnormal mtight\" style=\"margin-right:0.1389em;\">F</span><span class=\"mord mathnormal mtight\" style=\"margin-right:0.109em;\">M</span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">≈</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:1em;vertical-align:-0.25em;\"></span><span class=\"mord\">2</span><span class=\"mopen\">(</span><span class=\"mord\">Δ</span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mop mtight\"><span class=\"mtight\">m</span><span class=\"mtight\">a</span><span class=\"mtight\">x</span></span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:1em;vertical-align:-0.25em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\" style=\"margin-right:0.1076em;\">f</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1514em;\"><span style=\"top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mathnormal mtight\">m</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.15em;\"><span></span></span></span></span></span></span><span class=\"mclose\">)</span><span class=\"mord\">.</span></span></span></span></span>\n"
+      },
+      "document": {
+        "math": 147,
+        "display": 42,
+        "errors": 0,
+        "literalDelimiters": 0
+      }
+    }
+  }
+}

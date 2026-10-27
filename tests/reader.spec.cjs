@@ -7,6 +7,47 @@ const { spawn, execFileSync } = require('node:child_process');
 const platformArgs = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
 const { pathToFileURL } = require('node:url');
 
+test('行内公式与跨行块公式保留数学、代码和转义边界', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-math-delimiters-'));
+  let application;
+  try {
+    const fixture = path.join(directory, '公式分隔符.md');
+    const cases = [
+      { name: 'inline', source: String.raw`公式 $E=mc^2$（说明）。`, math: 1, display: 0 },
+      { name: 'canonical', source: '$$\n\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).\n$$', math: 1, display: 1 },
+      { name: 'compact', source: '$$\\beta_{FM}=\\frac{\\Delta f_{\\max}}{f_m},\\qquad\nB_{FM}\\approx2(\\Delta f_{\\max}+f_m).$$', math: 1, display: 1 },
+      { name: 'opening', source: '$$\na+b\n=c$$', math: 1, display: 1 },
+      { name: 'closing', source: '$$a+b\n=c\n$$', math: 1, display: 1 },
+      { name: 'aligned', source: '$$\\begin{aligned}\na&=b\\\\\nc&=d\n\\end{aligned}$$', math: 1, display: 1 },
+      { name: 'single', source: '$$a+b=c$$', math: 1, display: 1 },
+      { name: 'quote', source: '> $$a+b\n> =c$$', math: 1, display: 1 },
+      { name: 'list', source: '- $$a+b\n  =c$$', math: 1, display: 1 },
+      { name: 'code', source: '```tex\n$$a+b\n=c$$\n```\n\n`$$a+b=c$$`', math: 0, display: 0 },
+      { name: 'escaped', source: '\\$\\$a+b\n=c\\$\\$', math: 0, display: 0 },
+      { name: 'unclosed', source: '$$a+b\n=c', math: 0, display: 0 },
+      { name: 'blank', source: '$$a+b\n\n正文', math: 0, display: 0 },
+      { name: 'last', source: '$$d+e\n=f$$', math: 1, display: 1 },
+    ];
+    await fs.writeFile(fixture, ['# 公式分隔符', ...cases.map(({ name, source }) => `## ${name}\n\n${source}`)].join('\n\n').replace(/\n/g, '\r\n'));
+    application = await launch({ args: [path.resolve('.'), ...platformArgs, `--user-data-dir=${path.join(directory, 'profile')}`, fixture],
+      env: { ...process.env, XDG_CONFIG_HOME: path.join(directory, 'config'), XDG_CACHE_HOME: path.join(directory, 'cache') } });
+    const page = await application.firstWindow();
+    await expect(page.locator('.vp-doc h1')).toHaveText('公式分隔符');
+    const actual = await page.locator('.vp-doc h2').evaluateAll((headings) => headings.map((heading) => {
+      const content = document.createElement('div');
+      for (let node = heading.nextElementSibling; node && node.tagName !== 'H2'; node = node.nextElementSibling) content.append(node.cloneNode(true));
+      return { name: heading.textContent, math: content.querySelectorAll('.katex').length, display: content.querySelectorAll('.katex-display').length };
+    }));
+    expect(actual).toEqual(cases.map(({ name, math, display }) => ({ name, math, display })));
+    await expect(page.locator('.katex-error')).toHaveCount(0);
+    await expect(page.locator('.vp-doc pre')).toContainText('$$a+b\n=c$$');
+    await expect(page.locator('.vp-doc > p > code')).toHaveText('$$a+b=c$$');
+  } finally {
+    if (application) await close(application);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('Markdown 与 Mermaid 数学标签共用修补后的 KaTeX', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'emd-math-ui-'));
   let application;
