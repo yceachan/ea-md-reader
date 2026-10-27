@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { cp, mkdtemp, mkdir, readFile, writeFile, rm, stat, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
 import { parsePlatformArgs, selectPlatform } from '../scripts/platforms.mjs';
 
 test('平台选择支持 KDE、macOS 和 Windows，TODO 平台和错误参数明确失败', async () => {
@@ -88,9 +89,24 @@ test('KDE 模块保留安装产物、启动器、desktop 校验与卸载行为',
     assert.match(desktop, /^Keywords=emd;Ea\.Md\.Reader;Markdown;HTML;Reader;$/m);
     assert.ok((await stat(join(data, 'icons/hicolor/256x256/apps/io.github.yceachan.emd.png'))).size > 0);
     await writeFile(join(state, 'emd/emd.log'), '日志保留');
+    // A live native executable cannot be overwritten on Linux (ETXTBSY).
+    // Upgrading swaps directories and leaves that process's mapped inode alive.
+    await cp('/bin/sleep', join(source, 'emd'));
+    execFileSync(process.execPath, ['--input-type=module', '-e', "import { install } from './scripts/platforms/kde.mjs'; await install(JSON.parse(process.argv[1]));", context], { env });
+    const running = spawn(join(data, 'emd/emd'), ['30']);
+    const exited = once(running, 'exit');
+    try {
+      await once(running, 'spawn');
+      await writeFile(join(data, 'emd/obsolete'), 'old');
+      await writeFile(join(source, 'emd'), '#!/bin/sh\nexit 0\n');
+      execFileSync(process.execPath, ['--input-type=module', '-e', "import { install } from './scripts/platforms/kde.mjs'; await install(JSON.parse(process.argv[1]));", context], { env });
+      assert.equal(running.exitCode, null);
+      await assert.rejects(access(join(data, 'emd/obsolete')), { code: 'ENOENT' });
+      execFileSync(join(data, 'emd/emd'));
+    } finally { running.kill(); await exited; }
     execFileSync(process.execPath, ['--input-type=module', '-e', "import { uninstall } from './scripts/platforms/kde.mjs'; await uninstall(JSON.parse(process.argv[1]));", context], { env });
     for (const file of [launcher, join(data, 'emd'), join(data, 'applications/io.github.yceachan.emd.desktop')]) await assert.rejects(access(file), { code: 'ENOENT' });
     assert.equal(await readFile(join(state, 'emd/emd.log'), 'utf8'), '日志保留');
-    assert.deepEqual((await readFile(calls, 'utf8')).trim().split('\n'), ['update-desktop-database', 'kbuildsycoca6', 'update-desktop-database', 'kbuildsycoca6']);
+    assert.deepEqual((await readFile(calls, 'utf8')).trim().split('\n'), Array(4).fill(['update-desktop-database', 'kbuildsycoca6']).flat());
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

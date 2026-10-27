@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile, chmod, access } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile, chmod, access } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
@@ -43,9 +43,32 @@ export async function uninstall({ home }) {
 export async function install({ root, home, source = join(root, 'release/linux-unpacked') }) {
   const { data, state, bin, target, desktop, icon, rasterIcons } = locations(home);
   await access(join(source, 'emd'));
-  for (const directory of [target, bin, dirname(desktop), dirname(icon), join(state, 'emd')]) await mkdir(directory, { recursive: true });
-  await cp(source, target, { recursive: true });
-  await chmod(join(target, 'emd'), 0o755);
+  for (const directory of [data, bin, dirname(desktop), dirname(icon), join(state, 'emd')]) await mkdir(directory, { recursive: true });
+  // Stage a complete directory so upgrades remove obsolete files and never
+  // overwrite an executable still mapped by a running Linux process.
+  const staging = await mkdtemp(join(data, '.emd-install-'));
+  const stagedApp = join(staging, 'emd');
+  const oldApp = join(staging, 'previous');
+  let movedOld = false, preserveRecovery = false;
+  try {
+    await cp(source, stagedApp, { recursive: true });
+    await chmod(join(stagedApp, 'emd'), 0o755);
+    try { await rename(target, oldApp); movedOld = true; }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    try { await rename(stagedApp, target); }
+    catch (error) {
+      if (movedOld) {
+        try { await rename(oldApp, target); movedOld = false; }
+        catch (recoveryError) {
+          preserveRecovery = true;
+          throw new AggregateError([error, recoveryError], `安装失败；旧应用保留在 ${oldApp}，请手动恢复。`);
+        }
+      }
+      throw error;
+    }
+  } finally {
+    if (!preserveRecovery) await rm(staging, { recursive: true, force: true });
+  }
   // setsid plus redirected stdio detaches the application from the invoking shell.
   const launcher = `#!/bin/sh\nset -eu\nif ! command -v setsid >/dev/null 2>&1; then\n  echo 'emd requires setsid (util-linux).' >&2\n  exit 1\nfi\nmkdir -p ${quote(join(state, 'emd'))}\nsetsid ${quote(join(target, 'emd'))} "$@" </dev/null >>${quote(join(state, 'emd/emd.log'))} 2>&1 &\n`;
   await writeFile(join(bin, 'emd'), launcher, { mode: 0o755 });
