@@ -9,3 +9,4 @@ playwright-report/
 assets/emd.png
 assets/icons/
 /build/
+**artifacts/

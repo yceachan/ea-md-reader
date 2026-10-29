@@ -109,6 +109,16 @@ test('首次补齐构建，内容与增删文件使对应组件过期，恢复�
   assert.deepEqual(await calls(directory), previousCalls);
 });
 
+test('依赖缺失时提示 npm ci，并在构建和安装前停止', async t => {
+  const { directory, platform } = await fixture(t);
+  await rm(join(directory, 'node_modules/mermaid'), { recursive: true });
+  const result = cli(directory, 'install.mjs', [`--platform=${platform}`]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /缺少依赖 mermaid.*npm ci/);
+  await assert.rejects(access(join(directory, 'calls.json')), { code: 'ENOENT' });
+  await assert.rejects(access(join(directory, 'installed-source')), { code: 'ENOENT' });
+});
+
 test('start 自动准备当前构建并传递文件参数，不在测试中启动 Reader', async t => {
   const { directory } = await fixture(t);
   successful(cli(directory, 'start.mjs', ['document.md']));

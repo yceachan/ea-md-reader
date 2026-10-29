@@ -51,7 +51,12 @@ async function dependencyInputs(directory) {
   const files = ['node_modules/.package-lock.json'];
   for (const name of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies }).sort()) {
     const file = `node_modules/${name}/package.json`;
-    const installed = JSON.parse(await readFile(join(directory, file), 'utf8'));
+    let installed;
+    try { installed = JSON.parse(await readFile(join(directory, file), 'utf8')); }
+    catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      throw new Error(`缺少依赖 ${name}；请先运行 npm ci。`, { cause: error });
+    }
     const expected = lock.packages[`node_modules/${name}`].version;
     if (installed.version !== expected) throw new Error(`${name} 已安装 ${installed.version}，锁文件要求 ${expected}；请先运行 npm ci。`);
     files.push(file);
